@@ -95,4 +95,18 @@ func LoadEnv() {
 	GlobalWebRateLimitEnable = GetEnvOrDefaultBool("GLOBAL_WEB_RATE_LIMIT_ENABLE", true)
 	GlobalWebRateLimitNum = GetEnvOrDefault("GLOBAL_WEB_RATE_LIMIT", 60)
 	GlobalWebRateLimitDuration = int64(GetEnvOrDefault("GLOBAL_WEB_RATE_LIMIT_DURATION", 180))
+
+	// Load Check-in Timezone
+	checkinTimezone := os.Getenv("CHECKIN_TIMEZONE")
+	if checkinTimezone != "" {
+		loc, err := time.LoadLocation(checkinTimezone)
+		if err != nil {
+			SysLog(fmt.Sprintf("WARNING: Invalid CHECKIN_TIMEZONE '%s', using UTC. Error: %v", checkinTimezone, err))
+		} else {
+			CheckinLocation = loc
+			SysLog(fmt.Sprintf("Using check-in timezone: %s", CheckinLocation.String()))
+		}
+	} else {
+		SysLog("CHECKIN_TIMEZONE not set, using default: UTC")
+	}
 }

@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 )
+
+var CheckinLocation *time.Location = time.UTC // Default to UTC, will be updated in init
 
 func GetEnvOrDefault(env string, defaultValue int) int {
 	if env == "" || os.Getenv(env) == "" {

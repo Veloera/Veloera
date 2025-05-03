@@ -872,15 +872,14 @@ func beginCheckInTransaction(userId int) (*gorm.DB, error) {
 func calculateCheckInReward(user *User, minQuota int, maxQuota int) (reward int, canCheckIn bool, err error) {
 	// Check if user can check in today
 	canCheckIn = true
-	nowUTC := time.Now().UTC() // Get current time in UTC
+	now := time.Now().In(common.CheckinLocation) // Get current time in configured timezone
 
 	if user.LastCheckInTime != nil {
-		lastCheckIn := *user.LastCheckInTime
-		lastCheckInUTC := lastCheckIn.UTC() // Convert stored time to UTC for comparison
-		// Compare Year, Month, Day in UTC
-		if lastCheckInUTC.Year() == nowUTC.Year() && lastCheckInUTC.Month() == nowUTC.Month() && lastCheckInUTC.Day() == nowUTC.Day() {
+		lastCheckIn := (*user.LastCheckInTime).In(common.CheckinLocation) // Convert stored time to configured timezone for comparison
+		// Compare Year, Month, Day in configured timezone
+		if lastCheckIn.Year() == now.Year() && lastCheckIn.Month() == now.Month() && lastCheckIn.Day() == now.Day() {
 			canCheckIn = false
-			return 0, false, nil // Already checked in today (UTC)
+			return 0, false, nil // Already checked in today (in configured timezone)
 		}
 	}
 
@@ -936,20 +935,18 @@ func finalizeCheckIn(tx *gorm.DB, userId int, quota int) error {
 	return nil
 }
 
-// CanCheckInToday checks if the user can check in today based on UTC date
+// CanCheckInToday checks if the user can check in today based on the configured timezone
 func (user *User) CanCheckInToday() bool {
 	if user.LastCheckInTime == nil {
-		return true
+		return true // Never checked in before
 	}
 
-	nowUTC := time.Now().UTC()
-	lastCheckIn := *user.LastCheckInTime
-	lastCheckInUTC := lastCheckIn.UTC() // Convert stored time to UTC
-
-	// Compare Year, Month, Day in UTC
-	alreadyCheckedInToday := lastCheckInUTC.Year() == nowUTC.Year() &&
-		lastCheckInUTC.Month() == nowUTC.Month() &&
-		lastCheckInUTC.Day() == nowUTC.Day()
+	now := time.Now().In(common.CheckinLocation)
+	lastCheckIn := (*user.LastCheckInTime).In(common.CheckinLocation) // Convert stored time to configured timezone
+	// Compare Year, Month, Day in the configured timezone
+	alreadyCheckedInToday := lastCheckIn.Year() == now.Year() &&
+		lastCheckIn.Month() == now.Month() &&
+		lastCheckIn.Day() == now.Day()
 
 	return !alreadyCheckedInToday
 }
