@@ -872,12 +872,15 @@ func beginCheckInTransaction(userId int) (*gorm.DB, error) {
 func calculateCheckInReward(user *User, minQuota int, maxQuota int) (reward int, canCheckIn bool, err error) {
 	// Check if user can check in today
 	canCheckIn = true
-	now := time.Now()
+	nowUTC := time.Now().UTC() // Get current time in UTC
+
 	if user.LastCheckInTime != nil {
 		lastCheckIn := *user.LastCheckInTime
-		if lastCheckIn.Year() == now.Year() && lastCheckIn.Month() == now.Month() && lastCheckIn.Day() == now.Day() {
+		lastCheckInUTC := lastCheckIn.UTC() // Convert stored time to UTC for comparison
+		// Compare Year, Month, Day in UTC
+		if lastCheckInUTC.Year() == nowUTC.Year() && lastCheckInUTC.Month() == nowUTC.Month() && lastCheckInUTC.Day() == nowUTC.Day() {
 			canCheckIn = false
-			return 0, false, nil
+			return 0, false, nil // Already checked in today (UTC)
 		}
 	}
 
@@ -933,16 +936,20 @@ func finalizeCheckIn(tx *gorm.DB, userId int, quota int) error {
 	return nil
 }
 
-// CanCheckInToday checks if the user can check in today
+// CanCheckInToday checks if the user can check in today based on UTC date
 func (user *User) CanCheckInToday() bool {
 	if user.LastCheckInTime == nil {
 		return true
 	}
 
-	now := time.Now()
+	nowUTC := time.Now().UTC()
 	lastCheckIn := *user.LastCheckInTime
+	lastCheckInUTC := lastCheckIn.UTC() // Convert stored time to UTC
 
-	return !(lastCheckIn.Year() == now.Year() &&
-		lastCheckIn.Month() == now.Month() &&
-		lastCheckIn.Day() == now.Day())
+	// Compare Year, Month, Day in UTC
+	alreadyCheckedInToday := lastCheckInUTC.Year() == nowUTC.Year() &&
+		lastCheckInUTC.Month() == nowUTC.Month() &&
+		lastCheckInUTC.Day() == nowUTC.Day()
+
+	return !alreadyCheckedInToday
 }
