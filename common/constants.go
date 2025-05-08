@@ -295,3 +295,8 @@ var ChannelBaseURLs = []string{
 	"",                                          //47
 	"https://api.x.ai",                          //48
 }
+const (
+	TopUpStatusPending = "pending"
+	TopUpStatusSuccess = "success"
+	TopUpStatusExpired = "expired"
+)

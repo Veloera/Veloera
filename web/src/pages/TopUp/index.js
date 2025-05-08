@@ -31,12 +31,18 @@ const TopUp = () => {
   const [minTopupCount, setMinTopUpCount] = useState(1);
   const [amount, setAmount] = useState(0.0);
   const [minTopUp, setMinTopUp] = useState(1);
+  const [stripeTopUpCount, setStripeTopUpCount] = useState(0);
+  const [stripeAmount, setStripeAmount] = useState(0.0);
+  const [stripeMinTopUp, setStripeMinTopUp] = useState(1);
   const [topUpLink, setTopUpLink] = useState('');
   const [enableOnlineTopUp, setEnableOnlineTopUp] = useState(false);
+  const [enableStripeTopUp, setEnableStripeTopUp] = useState(false);
   const [userQuota, setUserQuota] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [open, setOpen] = useState(false);
+  const [stripeOpen, setStripeOpen] = useState(false);
   const [payWay, setPayWay] = useState('');
+  const [isPaying, setIsPaying] = useState(false);
 
   const topUp = async () => {
     if (redemptionCode === '') {
@@ -164,19 +170,25 @@ const TopUp = () => {
   };
 
   useEffect(() => {
-    let status = localStorage.getItem('status');
-    if (status) {
-      status = JSON.parse(status);
-      if (status.top_up_link) {
-        setTopUpLink(status.top_up_link);
-      }
-      if (status.min_topup) {
-        setMinTopUp(status.min_topup);
-      }
-      if (status.enable_online_topup) {
-        setEnableOnlineTopUp(status.enable_online_topup);
+    const getStatus = async () => {
+      const res = await API.get('/api/status');
+      const { success, data } = res.data;
+      if (success) {
+        if (data.min_topup) {
+          setMinTopUp(data.min_topup);
+        }
+        if (data.stripe_min_topup) {
+          setStripeMinTopUp(data.stripe_min_topup)
+        }
+        if (data.enable_online_topup) {
+          setEnableOnlineTopUp(data.enable_online_topup);
+        }
+        if (data.enable_stripe_topup) {
+          setEnableStripeTopUp(data.enable_stripe_topup)
+        }
       }
     }
+    getStatus().then();
     getUserQuota().then();
   }, []);
 
@@ -217,6 +229,88 @@ const TopUp = () => {
   const handleCancel = () => {
     setOpen(false);
   };
+const stripePreTopUp = async () => {
+  if (!enableStripeTopUp) {
+    showError(t('管理员未开启在线充值！'));
+    return;
+  }
+  await getStripeAmount();
+  if (stripeTopUpCount < stripeMinTopUp) {
+    showError(t('充值数量不能小于') + stripeMinTopUp);
+    return;
+  }
+  setStripeOpen(true);
+}
+
+const onlineStripeTopUp = async () => {
+  if (stripeAmount === 0) {
+    await getStripeAmount();
+  }
+  if (stripeTopUpCount < stripeMinTopUp) {
+    showError('充值数量不能小于' + stripeMinTopUp);
+    return;
+  }
+  setStripeOpen(false);
+  try {
+    setIsPaying(true);
+    const res = await API.post('/api/user/stripe/pay', {
+      amount: parseInt(stripeTopUpCount),
+      payment_method: "stripe",
+    });
+    if (res !== undefined) {
+      const { message, data } = res.data;
+      if (message === 'success') {
+        processStripeCallback(data)
+      } else {
+        showError(data);
+      }
+    } else {
+      showError(res);
+    }
+  } catch (err) {
+    console.log(err);
+  } finally {
+    setIsPaying(false);
+  }
+}
+
+const processStripeCallback = (data) => {
+  location.href = data.pay_link;
+};
+
+const renderStripeAmount = () => {
+  return stripeAmount + '元';
+};
+
+const getStripeAmount = async (value) => {
+  if (value === undefined) {
+    value = stripeTopUpCount
+  }
+  try {
+    const res = await API.post('/api/user/stripe/amount', {
+      amount: parseFloat(value),
+    });
+    if (res !== undefined) {
+      const { message, data } = res.data;
+      // showInfo(message);
+      if (message === 'success') {
+        setStripeAmount(parseFloat(data))
+      } else {
+        setStripeAmount( 0)
+        Toast.error({ content: '错误：' + data, id: 'getAmount' });
+      }
+    } else {
+      showError(res);
+    }
+  } catch (err) {
+    console.log(err);
+  } finally {
+  }
+}
+
+const handleStripeCancel = () => {
+  setStripeOpen(false);
+};
 
   return (
     <div>
@@ -242,93 +336,161 @@ const TopUp = () => {
             </p>
             <p>{t('是否确认充值？')}</p>
           </Modal>
+          <Modal
+              title={t('确定要充值吗')}
+              visible={stripeOpen}
+              onOk={onlineStripeTopUp}
+              onCancel={handleStripeCancel}
+              maskClosable={false}
+              size={'small'}
+              centered={true}
+          >
+            <p>
+              {t('充值数量')}：{stripeTopUpCount}
+            </p>
+            <p>
+              {t('实付金额')}：{renderStripeAmount()}
+            </p>
+            <p>{t('是否确认充值？')}</p>
+          </Modal>
           <div
             style={{ marginTop: 20, display: 'flex', justifyContent: 'center' }}
           >
-            <Card style={{ width: '500px', padding: '20px' }}>
-              <Title level={3} style={{ textAlign: 'center' }}>
-                {t('余额')} {renderQuota(userQuota)}
-              </Title>
-              <div style={{ marginTop: 20 }}>
-                <Divider>{t('兑换余额')}</Divider>
-                <Form>
-                  <Form.Input
-                    field={'redemptionCode'}
-                    label={t('兑换码')}
-                    placeholder={t('兑换码')}
-                    name='redemptionCode'
-                    value={redemptionCode}
-                    onChange={(value) => {
-                      setRedemptionCode(value);
+            <Card
+              style={{
+                width: '100%',
+                maxWidth: '800px',
+                padding: '20px',
+              }}
+            >
+              <Typography.Title heading={3}>
+                {t('充值额度')}
+              </Typography.Title>
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <Text>{t('当前剩余额度：') + renderQuota(userQuota)}</Text>
+              </div>
+              <Divider />
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <Typography.Title heading={5}>
+                  {t('使用兑换码')}
+                </Typography.Title>
+              </div>
+              <Form>
+                <Form.Input
+                  field={'redemptionCode'}
+                  label={t('兑换码')}
+                  placeholder={t('请输入兑换码')}
+                  name='redemptionCode'
+                  value={redemptionCode}
+                  onChange={(value) => setRedemptionCode(value)}
+                />
+                <Space>
+                  <Button
+                    style={{backgroundColor: '#b161fe'}}
+                    type={'primary'}
+                    theme={'solid'}
+                    onClick={async () => {
+                      await topUp();
                     }}
-                  />
-                  <Space>
-                    {topUpLink ? (
+                  >
+                    {t('兑换')}
+                  </Button>
+                </Space>
+              </Form>
+              {enableOnlineTopUp ? (
+                <div>
+                  <Divider />
+                  <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <Typography.Title heading={5}>
+                      {t('在线充值')}
+                    </Typography.Title>
+                  </div>
+                  <Form>
+                    <Form.Input
+                      disabled={!enableOnlineTopUp}
+                      field={'redemptionCount'}
+                      label={t('实付金额：') + ' ' + renderAmount()}
+                      placeholder={t('充值数量，最低 ') + minTopUp + '元'}
+                      name='redemptionCount'
+                      type={'number'}
+                      value={topUpCount}
+                      suffix={t('元')}
+                      min={minTopUp}
+                      defaultValue={minTopUp}
+                      max={100000}
+                      onChange={async (value) => {
+                        if (value < 1) {
+                          value = 1;
+                        }
+                        if (value > 100000) {
+                          value = 100000;
+                        }
+                        setTopUpCount(value);
+                        await getAmount(value);
+                      }}
+                    />
+                    <Space>
                       <Button
+                        style={{backgroundColor: '#b161fe'}}
                         type={'primary'}
+                        disabled={isPaying}
                         theme={'solid'}
-                        onClick={openTopUpLink}
+                        onClick={async () => {
+                          preTopUp('zfb');
+                        }}
                       >
-                        {t('获取兑换码')}
+                        {isPaying ? t('支付中...') : t('去支付')}
                       </Button>
-                    ) : null}
-                    <Button
-                      type={'warning'}
-                      theme={'solid'}
-                      onClick={topUp}
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? t('兑换中...') : t('兑换')}
-                    </Button>
-                  </Space>
-                </Form>
-              </div>
-              <div style={{ marginTop: 20 }}>
-                <Divider>{t('在线充值')}</Divider>
-                <Form>
-                  <Form.Input
-                    disabled={!enableOnlineTopUp}
-                    field={'redemptionCount'}
-                    label={t('实付金额：') + ' ' + renderAmount()}
-                    placeholder={
-                      t('充值数量，最低 ') + renderQuotaWithAmount(minTopUp)
-                    }
-                    name='redemptionCount'
-                    type={'number'}
-                    value={topUpCount}
-                    onChange={async (value) => {
-                      if (value < 1) {
-                        value = 1;
-                      }
-                      setTopUpCount(value);
-                      await getAmount(value);
-                    }}
-                  />
-                  <Space>
-                    <Button
-                      type={'primary'}
-                      theme={'solid'}
-                      onClick={async () => {
-                        preTopUp('zfb');
-                      }}
-                    >
-                      {t('支付宝')}
-                    </Button>
-                    <Button
-                      style={{
-                        backgroundColor: 'rgba(var(--semi-green-5), 1)',
-                      }}
-                      type={'primary'}
-                      theme={'solid'}
-                      onClick={async () => {
-                        preTopUp('wx');
-                      }}
-                    >
-                      {t('微信')}
-                    </Button>
-                  </Space>
-                </Form>
-              </div>
+                    </Space>
+                  </Form>
+                </div>
+              ) : (
+                <></>
+              )}
+                {enableStripeTopUp ? (
+                    <div>
+                      <Form>
+                        <Form.Input
+                            disabled={!enableStripeTopUp}
+                            field={'redemptionCount'}
+                            label={t('实付金额：') + ' ' + renderStripeAmount()}
+                            placeholder={t('充值数量，最低 ') + stripeMinTopUp + '$'}
+                            name='redemptionCount'
+                            type={'number'}
+                            value={stripeTopUpCount}
+                            suffix={'$'}
+                            min={stripeMinTopUp}
+                            defaultValue={stripeMinTopUp}
+                            max={100000}
+                            onChange={async (value) => {
+                              if (value < 1) {
+                                value = 1;
+                              }
+                              if (value > 100000) {
+                                value = 100000;
+                              }
+                              setStripeTopUpCount(value);
+                              await getStripeAmount( value);
+                            }}
+                        />
+                        <Space>
+                          <Button
+                              style={{backgroundColor: '#b161fe'}}
+                              type={'primary'}
+                              disabled={isPaying}
+                              theme={'solid'}
+                              onClick={async () => {
+                                stripePreTopUp();
+                              }}
+                          >
+                            {isPaying ? '支付中...' : '去支付'}
+                          </Button>
+                        </Space>
+                      </Form>
+                    </div>
+                ) : (
+                    <></>
+                )}
               {/*<div style={{ display: 'flex', justifyContent: 'right' }}>*/}
               {/*    <Text>*/}
               {/*        <Link onClick={*/}
