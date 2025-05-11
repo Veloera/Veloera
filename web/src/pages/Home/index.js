@@ -74,6 +74,11 @@ const Home = () => {
     <>
       {homePageContentLoaded && homePageContent === '' ? (
         <>
+          <div style={{margin: "40px 20px 20px 20px"}}>
+            <h1>此系统由 Veloera for Non-Profits 提供支持</h1>
+            <p>这意味着, 此站点可以被归类为公益站, 因为此系统不具备充值功能. </p>
+          </div>
+
           <Card
             bordered={false}
             headerLine={false}
