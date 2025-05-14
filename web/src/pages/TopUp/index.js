@@ -275,7 +275,7 @@ const onlineStripeTopUp = async () => {
 }
 
 const processStripeCallback = (data) => {
-  location.href = data.pay_link;
+  location.href = escape(data.pay_link);
 };
 
 const renderStripeAmount = () => {
