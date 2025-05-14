@@ -51,11 +51,6 @@ const SystemSetting = () => {
     TopupGroupRatio: '',
     PayAddress: '',
     CustomCallbackAddress: '',
-    StripeApiSecret: '',
-    StripeWebhookSecret: '',
-    StripePriceId: '',
-    StripeUnitPrice: 8.0,
-    StripeMinTopUp: 1,
     Footer: '',
     WeChatAuthEnabled: '',
     WeChatServerAddress: '',
@@ -119,8 +114,6 @@ const SystemSetting = () => {
             break;
           case 'Price':
           case 'MinTopUp':
-          case 'StripeUnitPrice':
-          case 'StripeMinTopUp':
             item.value = parseFloat(item.value);
             break;
           default:
@@ -228,18 +221,14 @@ const SystemSetting = () => {
       }
     }
 
-    const options = [];
-
-    if (inputs.PayAddress !== undefined && inputs.PayAddress !== '') {
-        options.push({key: 'PayAddress', value: removeTrailingSlash(inputs.PayAddress)})
-    } else {
-        options.push({key: 'PayAddress', value: inputs.PayAddress});
-    }
+    const options = [
+      { key: 'PayAddress', value: removeTrailingSlash(inputs.PayAddress) },
+    ];
 
     if (inputs.EpayId !== '') {
       options.push({ key: 'EpayId', value: inputs.EpayId });
     }
-    if (inputs.EpayKey !== '' && inputs.EpayKey !== undefined) {
+    if (inputs.EpayKey !== undefined && inputs.EpayKey !== '') {
       options.push({ key: 'EpayKey', value: inputs.EpayKey });
     }
     if (inputs.Price !== '') {
@@ -254,38 +243,6 @@ const SystemSetting = () => {
         value: inputs.CustomCallbackAddress,
       });
     }
-
-    if (inputs.StripeApiSecret && inputs.StripeApiSecret !== '') {
-      let stripeApiSecret = removeTrailingSlash(inputs.StripeApiSecret);
-      if (stripeApiSecret && !stripeApiSecret.startsWith('sk_') && !stripeApiSecret.startsWith('rk_')) {
-        showError('输入了无效的Stripe API密钥');
-        return;
-      }
-      options.push({ key: 'StripeApiSecret', value: stripeApiSecret });
-    }
-    if (inputs.StripeWebhookSecret && inputs.StripeWebhookSecret !== '') {
-      let stripeWebhookSecret = removeTrailingSlash(inputs.StripeWebhookSecret);
-      if (stripeWebhookSecret && !stripeWebhookSecret.startsWith('whsec_')) {
-        showError('输入了无效的Stripe Webhook签名密钥');
-        return;
-      }
-      options.push({ key: 'StripeWebhookSecret', value: stripeWebhookSecret });
-    }
-    if (inputs.StripePriceId !== '') {
-      let stripePriceId = removeTrailingSlash(inputs.StripePriceId);
-      if (stripePriceId && !stripePriceId.startsWith('price_')) {
-        showError('输入了无效的Stripe 物品价格ID');
-        return;
-      }
-      options.push({ key: 'StripePriceId', value: stripePriceId });
-    }
-    if (inputs.StripeUnitPrice !== '') {
-      options.push({ key: 'StripeUnitPrice', value: inputs.StripeUnitPrice.toString() });
-    }
-    if (inputs.StripeMinTopUp !== '') {
-      options.push({ key: 'StripeMinTopUp', value: inputs.StripeMinTopUp.toString() });
-    }
-
     if (originInputs['TopupGroupRatio'] !== inputs.TopupGroupRatio) {
       options.push({ key: 'TopupGroupRatio', value: inputs.TopupGroupRatio });
     }
