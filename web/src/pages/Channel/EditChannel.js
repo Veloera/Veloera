@@ -232,7 +232,7 @@ function type2secretPrompt(type) {
     case 15:
       return '按照如下格式输入：APIKey|SecretKey，多个密钥使用英文逗号分隔';
     case 18:
-      return '按照如下格式输入：APPID|APISecret|APIKey，多个密钥使用英文逗文分隔';
+      return '按照如下格式输入：APPID|APISecret|APIKey，多个密钥使用英文逗号分隔';
     case 22:
       return '按照如下格式输入：APIKey-AppId，例如：fastgpt-0sp2gtvfdgyi4k30jwlgwf1i-64f335d84283f05518e9e041，多个密钥使用英文逗号分隔';
     case 23:
