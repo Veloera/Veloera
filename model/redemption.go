@@ -209,6 +209,14 @@ func Redeem(key string, userId int) (quota int, isGift bool, err error) {
 		map[bool]string{true: "礼品码", false: "兑换码"}[redemption.IsGift],
 		common.LogQuota(redemption.Quota),
 		redemption.Id))
+
+	// 处理返佣逻辑
+	rebateType := map[bool]string{true: "礼品码", false: "兑换码"}[redemption.IsGift]
+	err = ProcessRebate(userId, redemption.Quota, rebateType)
+	if err != nil {
+		common.SysError("处理兑换码返佣失败: " + err.Error())
+	}
+
 	return redemption.Quota, redemption.IsGift, nil
 }
 

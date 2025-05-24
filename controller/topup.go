@@ -234,6 +234,12 @@ func EpayNotify(c *gin.Context) {
 			}
 			log.Printf("易支付回调更新用户成功 %v", topUp)
 			model.RecordLog(topUp.UserId, model.LogTypeTopup, fmt.Sprintf("使用在线充值成功，充值金额: %v，支付金额：%f", common.LogQuota(quotaToAdd), topUp.Money))
+
+			// 处理返佣逻辑
+			err = model.ProcessRebate(topUp.UserId, quotaToAdd, "充值")
+			if err != nil {
+				log.Printf("处理充值返佣失败: %v", err)
+			}
 		}
 	} else {
 		log.Printf("易支付异常回调: %v", verifyInfo)

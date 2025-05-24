@@ -105,6 +105,10 @@ var CheckInEnabled = false
 var CheckInQuota = 1000
 var CheckInMaxQuota = 0
 
+// 返佣设置
+var RebateEnabled = false
+var RebatePercentage = 0.0
+
 //var RootUserEmail = ""
 
 var IsMasterNode bool
