@@ -265,6 +265,45 @@ func inviteUser(inviterId int) (err error) {
 	return DB.Save(user).Error
 }
 
+// ProcessRebate 处理返佣逻辑
+func ProcessRebate(userId int, amount int, rebateType string) error {
+	// 检查返佣功能是否启用
+	if !common.RebateEnabled || common.RebatePercentage <= 0 {
+		return nil
+	}
+
+	// 获取用户信息
+	user, err := GetUserById(userId, true)
+	if err != nil {
+		return err
+	}
+
+	// 如果用户没有邀请者，则不进行返佣
+	if user.InviterId == 0 {
+		return nil
+	}
+
+	// 计算返佣金额
+	rebateAmount := int(float64(amount) * common.RebatePercentage / 100.0)
+	if rebateAmount <= 0 {
+		return nil
+	}
+
+	// 给邀请者增加返佣额度
+	err = IncreaseUserQuota(user.InviterId, rebateAmount, false)
+	if err != nil {
+		return err
+	}
+
+	// 记录返佣日志
+	RecordLog(user.InviterId, LogTypeSystem, fmt.Sprintf("获得%s返佣 %s，返佣比例：%.1f%%",
+		rebateType, common.LogQuota(rebateAmount), common.RebatePercentage))
+	RecordLog(userId, LogTypeSystem, fmt.Sprintf("为邀请者产生%s返佣 %s",
+		rebateType, common.LogQuota(rebateAmount)))
+
+	return nil
+}
+
 func (user *User) TransferAffQuotaToQuota(quota int) error {
 	// 检查quota是否小于最小额度
 	if float64(quota) < common.QuotaPerUnit {
