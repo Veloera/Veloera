@@ -8,6 +8,7 @@ import SettingsDataDashboard from '../pages/Setting/Operation/SettingsDataDashbo
 import SettingsMonitoring from '../pages/Setting/Operation/SettingsMonitoring.js';
 import SettingsCheckIn from '../pages/Setting/Operation/SettingsCheckIn.js';
 import SettingsCreditLimit from '../pages/Setting/Operation/SettingsCreditLimit.js';
+import SettingsRebate from '../pages/Setting/Operation/SettingsRebate.js';
 import ModelSettingsVisualEditor from '../pages/Setting/Operation/ModelSettingsVisualEditor.js';
 import GroupRatioSettings from '../pages/Setting/Operation/GroupRatioSettings.js';
 import ModelRatioSettings from '../pages/Setting/Operation/ModelRatioSettings.js';
@@ -65,6 +66,8 @@ const OperationSetting = () => {
     CheckInEnabled: false,
     CheckInQuota: '',
     CheckInMaxQuota: '',
+    RebateEnabled: false,
+    RebatePercentage: 0,
   });
 
   let [loading, setLoading] = useState(false);
@@ -150,6 +153,10 @@ const OperationSetting = () => {
         {/* 额度设置 */}
         <Card style={{ marginTop: '10px' }}>
           <SettingsCreditLimit options={inputs} refresh={onRefresh} />
+        </Card>
+        {/* 返佣设置 */}
+        <Card style={{ marginTop: '10px' }}>
+          <SettingsRebate options={inputs} refresh={onRefresh} />
         </Card>
         {/* 聊天设置 */}
         <Card style={{ marginTop: '10px' }}>

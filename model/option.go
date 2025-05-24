@@ -46,6 +46,8 @@ func InitOptionMap() {
 	common.OptionMap["CheckInEnabled"] = strconv.FormatBool(common.CheckInEnabled)
 	common.OptionMap["CheckInQuota"] = strconv.Itoa(common.CheckInQuota)
 	common.OptionMap["CheckInMaxQuota"] = strconv.Itoa(common.CheckInMaxQuota)
+	common.OptionMap["RebateEnabled"] = strconv.FormatBool(common.RebateEnabled)
+	common.OptionMap["RebatePercentage"] = strconv.FormatFloat(common.RebatePercentage, 'f', -1, 64)
 	common.OptionMap["DisplayInCurrencyEnabled"] = strconv.FormatBool(common.DisplayInCurrencyEnabled)
 	common.OptionMap["DisplayTokenStatEnabled"] = strconv.FormatBool(common.DisplayTokenStatEnabled)
 	common.OptionMap["DrawingEnabled"] = strconv.FormatBool(common.DrawingEnabled)
@@ -229,6 +231,8 @@ func updateOptionMap(key string, value string) (err error) {
 			common.CheckInQuota, _ = strconv.Atoi(value)
 		case "CheckInMaxQuota":
 			common.CheckInMaxQuota, _ = strconv.Atoi(value)
+		case "RebateEnabled":
+			common.RebateEnabled = boolValue
 		case "DisplayInCurrencyEnabled":
 			common.DisplayInCurrencyEnabled = boolValue
 		case "DisplayTokenStatEnabled":
@@ -381,6 +385,8 @@ func updateOptionMap(key string, value string) (err error) {
 		operation_setting.AutomaticDisableKeywordsFromString(value)
 	case "StreamCacheQueueLength":
 		setting.StreamCacheQueueLength, _ = strconv.Atoi(value)
+	case "RebatePercentage":
+		common.RebatePercentage, _ = strconv.ParseFloat(value, 64)
 	}
 	return err
 }
