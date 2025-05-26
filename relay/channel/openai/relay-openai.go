@@ -232,25 +232,19 @@ func OaiStreamHandler(c *gin.Context, resp *http.Response, info *relaycommon.Rel
 			info.Other["system_prompt"] = systemPrompt
 		}
 		info.Other["context"] = contextMessages
-		if common.LogContentEnabled {
-			if userMessage != nil {
-				info.Other["input_content"] = userMessage
-			} else {
-				// 如果没有找到user消息，保存最后一条消息作为输入
-				if len(messages) > 0 {
-					info.Other["input_content"] = messages[len(messages)-1]
-				}
+		if userMessage != nil {
+			info.Other["input_content"] = userMessage
+		} else {
+			// 如果没有找到user消息，保存最后一条消息作为输入
+			if len(messages) > 0 {
+				info.Other["input_content"] = messages[len(messages)-1]
 			}
 		}
 	} else {
-		if common.LogContentEnabled {
-			info.Other["input_content"] = info.PromptMessages // 备用方案，保存全部输入内容
-		}
+		info.Other["input_content"] = info.PromptMessages // 备用方案，保存全部输入内容
 	}
 
-	if common.LogContentEnabled {
-		info.Other["output_content"] = responseText // 保存输出内容
-	}
+	info.Other["output_content"] = responseText // 保存输出内容
 
 	if common.IsEmptyOrWhitespace(responseText) && toolCount == 0 {
 		// 空回复或全是空格不计费，返回零使用量（而不是只设置CompletionTokens为0）
@@ -352,20 +346,16 @@ func OpenaiHandler(c *gin.Context, resp *http.Response, info *relaycommon.RelayI
 			info.Other["system_prompt"] = systemPrompt
 		}
 		info.Other["context"] = contextMessages
-		if common.LogContentEnabled {
-			if userMessage != nil {
-				info.Other["input_content"] = userMessage
-			} else {
-				// 如果没有找到user消息，保存最后一条消息作为输入
-				if len(messages) > 0 {
-					info.Other["input_content"] = messages[len(messages)-1]
-				}
+		if userMessage != nil {
+			info.Other["input_content"] = userMessage
+		} else {
+			// 如果没有找到user消息，保存最后一条消息作为输入
+			if len(messages) > 0 {
+				info.Other["input_content"] = messages[len(messages)-1]
 			}
 		}
 	} else {
-		if common.LogContentEnabled {
-			info.Other["input_content"] = info.PromptMessages // 备用方案，保存全部输入内容
-		}
+		info.Other["input_content"] = info.PromptMessages // 备用方案，保存全部输入内容
 	}
 
 	// 提取输出内容
@@ -373,9 +363,7 @@ func OpenaiHandler(c *gin.Context, resp *http.Response, info *relaycommon.RelayI
 	for _, choice := range simpleResponse.Choices {
 		outputContent += choice.Message.StringContent() + choice.Message.ReasoningContent + choice.Message.Reasoning
 	}
-	if common.LogContentEnabled {
-		info.Other["output_content"] = outputContent // 保存输出内容
-	}
+	info.Other["output_content"] = outputContent // 保存输出内容
 
 	switch info.RelayFormat {
 	case relaycommon.RelayFormatOpenAI:

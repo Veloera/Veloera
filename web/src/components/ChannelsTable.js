@@ -875,12 +875,21 @@ const ChannelsTable = () => {
       showError(t('渠道复制失败: ') + error.message);
     }
   };
-
-  const refresh = async () => {
-    await loadChannels(activePage - 1, pageSize, idSort, enableTagMode);
+ 
+   const refresh = async () => {
+    if (searchKeyword === '' && searchGroup === '' && searchModel === '') {
+      await loadChannels(activePage - 1, pageSize, idSort, enableTagMode);
+    } else {
+      await searchChannels(
+        searchKeyword,
+        searchGroup,
+        searchModel,
+        enableTagMode,
+      );
+    }
   };
-
-  useEffect(() => {
+ 
+   useEffect(() => {
     // console.log('default effect')
     const localIdSort = localStorage.getItem('id-sort') === 'true';
     const localPageSize =
@@ -985,8 +994,8 @@ const ChannelsTable = () => {
     enableTagMode,
   ) => {
     if (searchKeyword === '' && searchGroup === '' && searchModel === '') {
-      await loadChannels(0, pageSize, idSort, enableTagMode);
-      setActivePage(1);
+      await loadChannels(activePage - 1, pageSize, idSort, enableTagMode);
+      // setActivePage(1);
       return;
     }
     setSearching(true);

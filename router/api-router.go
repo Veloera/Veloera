@@ -147,7 +147,7 @@ func SetApiRouter(router *gin.Engine) {
 
 		logRoute.Use(middleware.CORS())
 		{
-			logRoute.GET("/token", controller.GetLogByKey)
+			logRoute.GET("/token", middleware.UserAuth(), controller.GetLogByKey)
 
 		}
 		groupRoute := apiRouter.Group("/group")

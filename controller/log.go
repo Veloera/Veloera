@@ -125,7 +125,8 @@ func SearchUserLogs(c *gin.Context) {
 
 func GetLogByKey(c *gin.Context) {
 	key := c.Query("key")
-	logs, err := model.GetLogByKey(key)
+	userId := c.GetInt("id") // 获取用户ID
+	logs, err := model.GetLogByKey(key, userId)
 	if err != nil {
 		c.JSON(200, gin.H{
 			"success": false,

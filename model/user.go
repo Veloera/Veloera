@@ -110,7 +110,7 @@ func CheckUserExistOrDeleted(username string, email string) (bool, error) {
 
 func GetMaxUserId() int {
 	var user User
-	DB.Last(&user)
+	DB.Unscoped().Last(&user)
 	return user.Id
 }
 

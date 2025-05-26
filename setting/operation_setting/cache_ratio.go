@@ -36,6 +36,10 @@ var defaultCacheRatio = map[string]float64{
 	"claude-3-5-sonnet-20241022":          0.1,
 	"claude-3-7-sonnet-20250219":          0.1,
 	"claude-3-7-sonnet-20250219-thinking": 0.1,
+	"claude-sonnet-4-20250514":            0.1,
+	"claude-sonnet-4-20250514-thinking":   0.1,
+	"claude-opus-4-20250514":              0.1,
+	"claude-opus-4-20250514-thinking":     0.1,
 }
 
 var defaultCreateCacheRatio = map[string]float64{
@@ -47,6 +51,10 @@ var defaultCreateCacheRatio = map[string]float64{
 	"claude-3-5-sonnet-20241022":          1.25,
 	"claude-3-7-sonnet-20250219":          1.25,
 	"claude-3-7-sonnet-20250219-thinking": 1.25,
+	"claude-sonnet-4-20250514":            1.25,
+	"claude-sonnet-4-20250514-thinking":   1.25,
+	"claude-opus-4-20250514":              1.25,
+	"claude-opus-4-20250514-thinking":     1.25,
 }
 
 //var defaultCreateCacheRatio = map[string]float64{}

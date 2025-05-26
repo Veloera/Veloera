@@ -389,6 +389,7 @@ func SetupContextForSelectedChannel(c *gin.Context, channel *model.Channel, mode
 	c.Set("channel_id", channel.Id)
 	c.Set("channel_name", channel.Name)
 	c.Set("channel_type", channel.Type)
+c.Set("channel_create_time", channel.CreatedTime)
 	c.Set("channel_setting", channel.GetSetting())
 	c.Set("param_override", channel.GetParamOverride())
 

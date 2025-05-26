@@ -87,6 +87,7 @@ type RelayInfo struct {
 	UserQuota            int
 	RelayFormat          string
 	SendResponseCount    int
+	ChannelCreateTime    int64
 	PromptMessages       interface{}            // 保存请求的消息内容
 	Other                map[string]interface{} // 用于存储额外信息，如输入输出内容
 	ThinkingContentInfo
@@ -182,15 +183,16 @@ func GenRelayInfo(c *gin.Context) *RelayInfo {
 		OriginModelName:   originalModel,                 // Use the prefixed model name for display
 		UpstreamModelName: c.GetString("original_model"), // Use the unprefixed model name for upstream
 		//RecodeModelName:   c.GetString("original_model"),
-		IsModelMapped:  false,
-		ApiType:        apiType,
-		ApiVersion:     c.GetString("api_version"),
-		ApiKey:         strings.TrimPrefix(c.Request.Header.Get("Authorization"), "Bearer "),
-		Organization:   c.GetString("channel_organization"),
-		ChannelSetting: channelSetting,
-		ParamOverride:  paramOverride,
-		Other:          make(map[string]interface{}),
-		RelayFormat:    RelayFormatOpenAI,
+		IsModelMapped:     false,
+		ApiType:           apiType,
+		ApiVersion:        c.GetString("api_version"),
+		ApiKey:            strings.TrimPrefix(c.Request.Header.Get("Authorization"), "Bearer "),
+		Organization:      c.GetString("channel_organization"),
+		ChannelSetting:    channelSetting,
+		ChannelCreateTime: c.GetInt64("channel_create_time"),
+		ParamOverride:     paramOverride,
+		Other:             make(map[string]interface{}),
+		RelayFormat:       RelayFormatOpenAI,
 		ThinkingContentInfo: ThinkingContentInfo{
 			IsFirstThinkingContent:  true,
 			SendLastThinkingContent: false,

@@ -1177,7 +1177,28 @@ const EditChannel = (props) => {
               <div style={{ marginTop: 10 }}>
                 <Banner
                   type={'warning'}
-                  description={t('注意，系统请求的时模型名称中的点会被剔除，例如：gpt-4.5-preview会请求为gpt-45-preview，所以部署的模型名称需要去掉点')}
+                  description={
+                    <>
+                      {t('2025年5月10日后添加的渠道，不需要再在部署的时候移除模型名称中的"."')}
+                      {/*<br />*/}
+                      {/*<Typography.Text*/}
+                      {/*  style={{*/}
+                      {/*    color: 'rgba(var(--semi-blue-5), 1)',*/}
+                      {/*    userSelect: 'none',*/}
+                      {/*    cursor: 'pointer',*/}
+                      {/*  }}*/}
+                      {/*  onClick={() => {*/}
+                      {/*    setModalImageUrl(*/}
+                      {/*      '/azure_model_name.png',*/}
+                      {/*    );*/}
+                      {/*    setIsModalOpenurl(true)*/}
+
+                      {/*  }}*/}
+                      {/*>*/}
+                      {/*  {t('查看示例')}*/}
+                      {/*</Typography.Text>*/}
+                    </>
+                  }
                 ></Banner>
               </div>
               <div style={{ marginTop: 10 }}>
