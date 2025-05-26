@@ -716,7 +716,13 @@ const ChannelsTable = () => {
   const [editingTag, setEditingTag] = useState('');
   const [selectedChannels, setSelectedChannels] = useState([]);
   const [showEditPriority, setShowEditPriority] = useState(false);
-  const [enableTagMode, setEnableTagMode] = useState(false);
+  const [enableTagMode, setEnableTagMode] = useState(() => {
+    const savedState = localStorage.getItem('channel-tag-mode');
+    return savedState !== null ? JSON.parse(savedState) : false;
+  });
+  useEffect(() => {
+    localStorage.setItem('channel-tag-mode', JSON.stringify(enableTagMode));
+  }, [enableTagMode]);
   const [showBatchSetTag, setShowBatchSetTag] = useState(false);
   const [batchSetTagValue, setBatchSetTagValue] = useState('');
   const [showModelTestModal, setShowModelTestModal] = useState(false);
