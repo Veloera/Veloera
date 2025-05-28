@@ -1,32 +1,35 @@
 import React, { lazy, Suspense, useContext, useEffect } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import Loading from './components/Loading';
-import User from './pages/User';
 import { PrivateRoute } from './components/PrivateRoute';
-import RegisterForm from './components/RegisterForm';
-import LoginForm from './components/LoginForm';
-import NotFound from './pages/NotFound';
-import Setting from './pages/Setting';
-import EditUser from './pages/User/EditUser';
-import PasswordResetForm from './components/PasswordResetForm';
-import PasswordResetConfirm from './components/PasswordResetConfirm';
-import Channel from './pages/Channel';
-import Token from './pages/Token';
-import EditChannel from './pages/Channel/EditChannel';
-import Redemption from './pages/Redemption';
-import TopUp from './pages/TopUp';
-import Log from './pages/Log';
-import Chat from './pages/Chat';
-import Chat2Link from './pages/Chat2Link';
-import { Layout } from '@douyinfe/semi-ui';
-import Midjourney from './pages/Midjourney';
-import Pricing from './pages/Pricing/index.js';
-import Task from './pages/Task/index.js';
-import Playground from './pages/Playground/Playground.js';
-import OAuth2Callback from './components/OAuth2Callback.js';
-import PersonalSetting from './components/PersonalSetting.js';
-import Setup from './pages/Setup/index.js';
 import SetupCheck from './components/SetupCheck';
+import { Layout } from '@douyinfe/semi-ui';
+
+const User = lazy(() => import('./pages/User'));
+const RegisterForm = lazy(() => import('./components/RegisterForm'));
+const LoginForm = lazy(() => import('./components/LoginForm'));
+const NotFound = lazy(() => import('./pages/NotFound'));
+const Setting = lazy(() => import('./pages/Setting'));
+const EditUser = lazy(() => import('./pages/User/EditUser'));
+const PasswordResetForm = lazy(() => import('./components/PasswordResetForm'));
+const PasswordResetConfirm = lazy(
+  () => import('./components/PasswordResetConfirm'),
+);
+const Channel = lazy(() => import('./pages/Channel'));
+const Token = lazy(() => import('./pages/Token'));
+const EditChannel = lazy(() => import('./pages/Channel/EditChannel'));
+const Redemption = lazy(() => import('./pages/Redemption'));
+const TopUp = lazy(() => import('./pages/TopUp'));
+const Log = lazy(() => import('./pages/Log'));
+const Chat = lazy(() => import('./pages/Chat'));
+const Chat2Link = lazy(() => import('./pages/Chat2Link'));
+const Midjourney = lazy(() => import('./pages/Midjourney'));
+const Pricing = lazy(() => import('./pages/Pricing/index.js'));
+const Task = lazy(() => import('./pages/Task/index.js'));
+const Playground = lazy(() => import('./pages/Playground/Playground.js'));
+const OAuth2Callback = lazy(() => import('./components/OAuth2Callback.js'));
+const PersonalSetting = lazy(() => import('./components/PersonalSetting.js'));
+const Setup = lazy(() => import('./pages/Setup/index.js'));
 
 const Home = lazy(() => import('./pages/Home'));
 const Detail = lazy(() => import('./pages/Detail'));
@@ -37,256 +40,138 @@ function App() {
 
   return (
     <SetupCheck>
-      <Routes>
-        <Route
-          path='/'
-          element={
-            <Suspense fallback={<Loading></Loading>} key={location.pathname}>
-              <Home />
-            </Suspense>
-          }
-        />
-        <Route
-          path='/setup'
-          element={
-            <Suspense fallback={<Loading></Loading>} key={location.pathname}>
-              <Setup />
-            </Suspense>
-          }
-        />
-        <Route
-          path='/channel'
-          element={
-            <PrivateRoute>
-              <Channel />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path='/channel/edit/:id'
-          element={
-            <Suspense fallback={<Loading></Loading>} key={location.pathname}>
-              <EditChannel />
-            </Suspense>
-          }
-        />
-        <Route
-          path='/channel/add'
-          element={
-            <Suspense fallback={<Loading></Loading>} key={location.pathname}>
-              <EditChannel />
-            </Suspense>
-          }
-        />
-        <Route
-          path='/token'
-          element={
-            <PrivateRoute>
-              <Token />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path='/playground'
-          element={
-            <PrivateRoute>
-              <Playground />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path='/redemption'
-          element={
-            <PrivateRoute>
-              <Redemption />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path='/user'
-          element={
-            <PrivateRoute>
-              <User />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path='/user/edit/:id'
-          element={
-            <Suspense fallback={<Loading></Loading>} key={location.pathname}>
-              <EditUser />
-            </Suspense>
-          }
-        />
-        <Route
-          path='/user/edit'
-          element={
-            <Suspense fallback={<Loading></Loading>} key={location.pathname}>
-              <EditUser />
-            </Suspense>
-          }
-        />
-        <Route
-          path='/user/reset'
-          element={
-            <Suspense fallback={<Loading></Loading>} key={location.pathname}>
-              <PasswordResetConfirm />
-            </Suspense>
-          }
-        />
-        <Route
-          path='/login'
-          element={
-            <Suspense fallback={<Loading></Loading>} key={location.pathname}>
-              <LoginForm />
-            </Suspense>
-          }
-        />
-        <Route
-          path='/register'
-          element={
-            <Suspense fallback={<Loading></Loading>} key={location.pathname}>
-              <RegisterForm />
-            </Suspense>
-          }
-        />
-        <Route
-          path='/reset'
-          element={
-            <Suspense fallback={<Loading></Loading>} key={location.pathname}>
-              <PasswordResetForm />
-            </Suspense>
-          }
-        />
-        <Route
-          path='/oauth/github'
-          element={
-            <Suspense fallback={<Loading></Loading>} key={location.pathname}>
-              <OAuth2Callback type='github'></OAuth2Callback>
-            </Suspense>
-          }
-        />
-        <Route
-          path='/oauth/oidc'
-          element={
-            <Suspense fallback={<Loading></Loading>}>
-              <OAuth2Callback type='oidc'></OAuth2Callback>
-            </Suspense>
-          }
-        />
-        <Route
-          path='/oauth/linuxdo'
-          element={
-            <Suspense fallback={<Loading></Loading>} key={location.pathname}>
-              <OAuth2Callback type='linuxdo'></OAuth2Callback>
-            </Suspense>
-          }
-        />
-        <Route
-          path='/setting'
-          element={
-            <PrivateRoute>
-              <Suspense fallback={<Loading></Loading>} key={location.pathname}>
+      <Suspense fallback={<Loading />} key={location.pathname}>
+        <Routes>
+          <Route path='/' element={<Home />} />
+          <Route path='/setup' element={<Setup />} />
+          <Route
+            path='/channel'
+            element={
+              <PrivateRoute>
+                <Channel />
+              </PrivateRoute>
+            }
+          />
+          <Route path='/channel/edit/:id' element={<EditChannel />} />
+          <Route path='/channel/add' element={<EditChannel />} />
+          <Route
+            path='/token'
+            element={
+              <PrivateRoute>
+                <Token />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path='/playground'
+            element={
+              <PrivateRoute>
+                <Playground />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path='/redemption'
+            element={
+              <PrivateRoute>
+                <Redemption />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path='/user'
+            element={
+              <PrivateRoute>
+                <User />
+              </PrivateRoute>
+            }
+          />
+          <Route path='/user/edit/:id' element={<EditUser />} />
+          <Route path='/user/edit' element={<EditUser />} />
+          <Route path='/user/reset' element={<PasswordResetConfirm />} />
+          <Route path='/login' element={<LoginForm />} />
+          <Route path='/register' element={<RegisterForm />} />
+          <Route path='/reset' element={<PasswordResetForm />} />
+          <Route
+            path='/oauth/github'
+            element={<OAuth2Callback type='github' />}
+          />
+          <Route path='/oauth/oidc' element={<OAuth2Callback type='oidc' />} />
+          <Route
+            path='/oauth/linuxdo'
+            element={<OAuth2Callback type='linuxdo' />}
+          />
+          <Route
+            path='/setting'
+            element={
+              <PrivateRoute>
                 <Setting />
-              </Suspense>
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path='/personal'
-          element={
-            <PrivateRoute>
-              <Suspense fallback={<Loading></Loading>} key={location.pathname}>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path='/personal'
+            element={
+              <PrivateRoute>
                 <PersonalSetting />
-              </Suspense>
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path='/topup'
-          element={
-            <PrivateRoute>
-              <Suspense fallback={<Loading></Loading>} key={location.pathname}>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path='/topup'
+            element={
+              <PrivateRoute>
                 <TopUp />
-              </Suspense>
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path='/log'
-          element={
-            <PrivateRoute>
-              <Log />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path='/detail'
-          element={
-            <PrivateRoute>
-              <Suspense fallback={<Loading></Loading>} key={location.pathname}>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path='/log'
+            element={
+              <PrivateRoute>
+                <Log />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path='/detail'
+            element={
+              <PrivateRoute>
                 <Detail />
-              </Suspense>
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path='/midjourney'
-          element={
-            <PrivateRoute>
-              <Suspense fallback={<Loading></Loading>} key={location.pathname}>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path='/midjourney'
+            element={
+              <PrivateRoute>
                 <Midjourney />
-              </Suspense>
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path='/task'
-          element={
-            <PrivateRoute>
-              <Suspense fallback={<Loading></Loading>} key={location.pathname}>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path='/task'
+            element={
+              <PrivateRoute>
                 <Task />
-              </Suspense>
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path='/pricing'
-          element={
-            <Suspense fallback={<Loading></Loading>} key={location.pathname}>
-              <Pricing />
-            </Suspense>
-          }
-        />
-        <Route
-          path='/about'
-          element={
-            <Suspense fallback={<Loading></Loading>} key={location.pathname}>
-              <About />
-            </Suspense>
-          }
-        />
-        <Route
-          path='/chat/:id?'
-          element={
-            <Suspense fallback={<Loading></Loading>} key={location.pathname}>
-              <Chat />
-            </Suspense>
-          }
-        />
-        {/* 方便使用chat2link直接跳转聊天... */}
-        <Route
-          path='/chat2link'
-          element={
-            <PrivateRoute>
-              <Suspense fallback={<Loading></Loading>} key={location.pathname}>
+              </PrivateRoute>
+            }
+          />
+          <Route path='/pricing' element={<Pricing />} />
+          <Route path='/about' element={<About />} />
+          <Route path='/chat/:id?' element={<Chat />} />
+          {/* 方便使用chat2link直接跳转聊天... */}
+          <Route
+            path='/chat2link'
+            element={
+              <PrivateRoute>
                 <Chat2Link />
-              </Suspense>
-            </PrivateRoute>
-          }
-        />
-        <Route path='*' element={<NotFound />} />
-      </Routes>
+              </PrivateRoute>
+            }
+          />
+          <Route path='*' element={<NotFound />} />
+        </Routes>
+      </Suspense>
     </SetupCheck>
   );
 }

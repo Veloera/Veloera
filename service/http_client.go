@@ -14,17 +14,28 @@ import (
 var httpClient *http.Client
 var impatientHTTPClient *http.Client
 
+func newTransport() *http.Transport {
+	return &http.Transport{
+		MaxIdleConns:        100,
+		MaxIdleConnsPerHost: 100,
+		IdleConnTimeout:     90 * time.Second,
+	}
+}
+
 func init() {
+	transport := newTransport()
 	if common.RelayTimeout == 0 {
-		httpClient = &http.Client{}
+		httpClient = &http.Client{Transport: transport}
 	} else {
 		httpClient = &http.Client{
-			Timeout: time.Duration(common.RelayTimeout) * time.Second,
+			Timeout:   time.Duration(common.RelayTimeout) * time.Second,
+			Transport: transport,
 		}
 	}
 
 	impatientHTTPClient = &http.Client{
-		Timeout: 5 * time.Second,
+		Timeout:   5 * time.Second,
+		Transport: newTransport(),
 	}
 }
 
@@ -49,11 +60,9 @@ func NewProxyHttpClient(proxyURL string) (*http.Client, error) {
 
 	switch parsedURL.Scheme {
 	case "http", "https":
-		return &http.Client{
-			Transport: &http.Transport{
-				Proxy: http.ProxyURL(parsedURL),
-			},
-		}, nil
+		t := newTransport()
+		t.Proxy = http.ProxyURL(parsedURL)
+		return &http.Client{Transport: t}, nil
 
 	case "socks5":
 		// 获取认证信息
@@ -74,13 +83,11 @@ func NewProxyHttpClient(proxyURL string) (*http.Client, error) {
 			return nil, err
 		}
 
-		return &http.Client{
-			Transport: &http.Transport{
-				DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
-					return dialer.Dial(network, addr)
-				},
-			},
-		}, nil
+		t := newTransport()
+		t.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
+			return dialer.Dial(network, addr)
+		}
+		return &http.Client{Transport: t}, nil
 
 	default:
 		return nil, fmt.Errorf("unsupported proxy scheme: %s", parsedURL.Scheme)
