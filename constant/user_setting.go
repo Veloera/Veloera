@@ -7,6 +7,8 @@ var (
 	UserSettingWebhookSecret         = "webhook_secret"                 // WebhookSecret webhook密钥
 	UserSettingNotificationEmail     = "notification_email"             // NotificationEmail 通知邮箱地址
 	UserAcceptUnsetRatioModel        = "accept_unset_model_ratio_model" // AcceptUnsetRatioModel 是否接受未设置价格的模型
+	UserSettingNonStreamOnly         = "non_stream_only"                // NonStreamOnly 强制非流式
+	UserSettingStreamKeepAlive       = "stream_keep_alive"              // StreamKeepAlive 流式保活
 )
 
 var (

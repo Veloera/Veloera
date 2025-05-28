@@ -157,7 +157,7 @@ func OaiStreamHandler(c *gin.Context, resp *http.Response, info *relaycommon.Rel
 	)
 
 	helper.StreamScannerHandler(c, resp, info, func(data string) bool {
-		if lastStreamData != "" {
+		if lastStreamData != "" && !info.FakeNonStream {
 			err := handleStreamFormat(c, info, lastStreamData, forceFormat, thinkToContent, thinkTagToReasoning)
 			if err != nil {
 				common.SysError("error handling stream format: " + err.Error())
@@ -191,8 +191,9 @@ func OaiStreamHandler(c *gin.Context, resp *http.Response, info *relaycommon.Rel
 	}
 
 	if shouldSendLastResp {
-		sendStreamData(c, info, lastStreamData, forceFormat, thinkToContent, thinkTagToReasoning)
-		//err = handleStreamFormat(c, info, lastStreamData, forceFormat, thinkToContent)
+		if !info.FakeNonStream {
+			sendStreamData(c, info, lastStreamData, forceFormat, thinkToContent, thinkTagToReasoning)
+		}
 	}
 
 	// 处理token计算
@@ -290,7 +291,28 @@ func OaiStreamHandler(c *gin.Context, resp *http.Response, info *relaycommon.Rel
 		}
 	}
 
-	handleFinalResponse(c, info, lastStreamData, responseId, createAt, model, systemFingerprint, usage, containStreamUsage)
+	if info.FakeNonStream {
+		textResp := dto.OpenAITextResponse{
+			Id:      responseId,
+			Model:   model,
+			Object:  "chat.completion",
+			Created: createAt,
+			Choices: []dto.OpenAITextResponseChoice{{
+				Index:   0,
+				Message: dto.Message{Role: "assistant"},
+			}},
+			Usage: *usage,
+		}
+		if len(lastStreamResponse.Choices) > 0 && lastStreamResponse.Choices[0].FinishReason != nil {
+			textResp.Choices[0].FinishReason = *lastStreamResponse.Choices[0].FinishReason
+		}
+		textResp.Choices[0].Message.SetStringContent(responseText)
+		respBytes, _ := json.Marshal(textResp)
+		c.Writer.Header().Set("Content-Type", "application/json")
+		_, _ = c.Writer.Write(respBytes)
+	} else {
+		handleFinalResponse(c, info, lastStreamData, responseId, createAt, model, systemFingerprint, usage, containStreamUsage)
+	}
 
 	return nil, usage
 }

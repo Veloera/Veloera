@@ -47,6 +47,9 @@ func StreamScannerHandler(c *gin.Context, resp *http.Response, info *relaycommon
 
 	generalSettings := operation_setting.GetGeneralSetting()
 	pingEnabled := generalSettings.PingIntervalEnabled
+	if info.KeepAlive {
+		pingEnabled = true
+	}
 	pingInterval := time.Duration(generalSettings.PingIntervalSeconds) * time.Second
 	if pingInterval <= 0 {
 		pingInterval = DefaultPingInterval

@@ -982,6 +982,8 @@ type UpdateUserSettingRequest struct {
 	WebhookSecret              string  `json:"webhook_secret,omitempty"`
 	NotificationEmail          string  `json:"notification_email,omitempty"`
 	AcceptUnsetModelRatioModel bool    `json:"accept_unset_model_ratio_model"`
+	NonStreamOnly              bool    `json:"non_stream_only"`
+	StreamKeepAlive            bool    `json:"stream_keep_alive"`
 }
 
 func UpdateUserSetting(c *gin.Context) {
@@ -1058,6 +1060,8 @@ func UpdateUserSetting(c *gin.Context) {
 		constant.UserSettingNotifyType:            req.QuotaWarningType,
 		constant.UserSettingQuotaWarningThreshold: req.QuotaWarningThreshold,
 		"accept_unset_model_ratio_model":          req.AcceptUnsetModelRatioModel,
+		constant.UserSettingNonStreamOnly:         req.NonStreamOnly,
+		constant.UserSettingStreamKeepAlive:       req.StreamKeepAlive,
 	}
 
 	// 如果是webhook类型,添加webhook相关设置

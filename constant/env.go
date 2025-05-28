@@ -8,6 +8,8 @@ var StreamingTimeout int
 var DifyDebug bool
 var MaxFileDownloadMB int
 var ForceStreamOption bool
+var ForceNonStreamOption bool
+var ForceStreamKeepAlive bool
 var GetMediaToken bool
 var GetMediaTokenNotStream bool
 var UpdateTask bool
@@ -27,6 +29,8 @@ func InitEnv() {
 	MaxFileDownloadMB = common.GetEnvOrDefault("MAX_FILE_DOWNLOAD_MB", 20)
 	// ForceStreamOption 覆盖请求参数，强制返回usage信息
 	ForceStreamOption = common.GetEnvOrDefaultBool("FORCE_STREAM_OPTION", true)
+	ForceNonStreamOption = common.GetEnvOrDefaultBool("FORCE_NON_STREAM_OPTION", false)
+	ForceStreamKeepAlive = common.GetEnvOrDefaultBool("FORCE_STREAM_KEEP_ALIVE", false)
 	GetMediaToken = common.GetEnvOrDefaultBool("GET_MEDIA_TOKEN", true)
 	GetMediaTokenNotStream = common.GetEnvOrDefaultBool("GET_MEDIA_TOKEN_NOT_STREAM", true)
 	UpdateTask = common.GetEnvOrDefaultBool("UPDATE_TASK", true)

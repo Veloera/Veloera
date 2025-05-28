@@ -70,6 +70,8 @@ docker-compose up -d
 - `STREAMING_TIMEOUT`：流式回复超时时间，默认 60 秒
 - `DIFY_DEBUG`：Dify 渠道是否输出工作流和节点信息，默认 `true`
 - `FORCE_STREAM_OPTION`：是否覆盖客户端 stream_options 参数，默认 `true`
+- `FORCE_NON_STREAM_OPTION`：强制非流式模式，后台等待上游完成后一次返回
+- `FORCE_STREAM_KEEP_ALIVE`：强制在流式请求无输出时周期发送隐藏字符保持连接
 - `GET_MEDIA_TOKEN`：是否统计图片 token，默认 `true`
 - `GET_MEDIA_TOKEN_NOT_STREAM`：非流情况下是否统计图片 token，默认 `true`
 - `UPDATE_TASK`：是否更新异步任务（Midjourney、Suno），默认 `true`
@@ -189,6 +191,8 @@ New API提供了丰富的功能，详细特性请参考[特性说明](https://do
 - `STREAMING_TIMEOUT`：流式回复超时时间，默认60秒
 - `DIFY_DEBUG`：Dify渠道是否输出工作流和节点信息，默认 `true`
 - `FORCE_STREAM_OPTION`：是否覆盖客户端stream_options参数，默认 `true`
+- `FORCE_NON_STREAM_OPTION`：强制非流式模式，后台等待上游完成后一次返回
+- `FORCE_STREAM_KEEP_ALIVE`：强制在流式请求无输出时周期发送隐藏字符保持连接
 - `GET_MEDIA_TOKEN`：是否统计图片token，默认 `true`
 - `GET_MEDIA_TOKEN_NOT_STREAM`：非流情况下是否统计图片token，默认 `true`
 - `UPDATE_TASK`：是否更新异步任务（Midjourney、Suno），默认 `true`

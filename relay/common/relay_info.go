@@ -93,6 +93,8 @@ type RelayInfo struct {
 	ThinkingContentInfo
 	*ClaudeConvertInfo
 	*RerankerInfo
+	FakeNonStream bool
+	KeepAlive     bool
 }
 
 // 定义支持流式选项的通道类型
@@ -218,6 +220,22 @@ func GenRelayInfo(c *gin.Context) *RelayInfo {
 	// responses 模式不支持 StreamOptions
 	if relayconstant.RelayModeResponses == info.RelayMode {
 		info.SupportStreamOptions = false
+	}
+	if val, ok := info.UserSetting[constant.UserSettingStreamKeepAlive]; ok {
+		if b, ok := val.(bool); ok {
+			info.KeepAlive = b
+		}
+	}
+	if constant.ForceStreamKeepAlive {
+		info.KeepAlive = true
+	}
+	if val, ok := info.UserSetting[constant.UserSettingNonStreamOnly]; ok {
+		if b, ok := val.(bool); ok {
+			info.FakeNonStream = b
+		}
+	}
+	if constant.ForceNonStreamOption {
+		info.FakeNonStream = true
 	}
 	return info
 }
