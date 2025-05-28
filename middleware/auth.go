@@ -64,34 +64,7 @@ func authHelper(c *gin.Context, minRole int) {
 			return
 		}
 	}
-	// get header Veloera-User
-	apiUserIdStr := c.Request.Header.Get("Veloera-User")
-	if apiUserIdStr == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"success": false,
-			"message": "无权进行此操作，未提供 Veloera-User",
-		})
-		c.Abort()
-		return
-	}
-	apiUserId, err := strconv.Atoi(apiUserIdStr)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"success": false,
-			"message": "无权进行此操作，Veloera-User 格式错误",
-		})
-		c.Abort()
-		return
-
-	}
-	if id != apiUserId {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"success": false,
-			"message": "无权进行此操作，Veloera-User 与登录用户不匹配",
-		})
-		c.Abort()
-		return
-	}
+	// skip strict Veloera-User header validation for better compatibility
 	if status.(int) == common.UserStatusDisabled {
 		c.JSON(http.StatusOK, gin.H{
 			"success": false,

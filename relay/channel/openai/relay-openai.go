@@ -9,6 +9,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"regexp"
 	"strings"
 	"veloera/common"
 	"veloera/constant"
@@ -23,18 +24,33 @@ import (
 	"github.com/pkg/errors"
 )
 
-func sendStreamData(c *gin.Context, info *relaycommon.RelayInfo, data string, forceFormat bool, thinkToContent bool) error {
+func sendStreamData(c *gin.Context, info *relaycommon.RelayInfo, data string, forceFormat bool, thinkToContent bool, thinkTagToReasoning bool) error {
 	if data == "" {
 		return nil
 	}
 
-	if !forceFormat && !thinkToContent {
+	if !forceFormat && !thinkToContent && !thinkTagToReasoning {
 		return helper.StringData(c, data)
 	}
 
 	var lastStreamResponse dto.ChatCompletionsStreamResponse
 	if err := common.DecodeJsonStr(data, &lastStreamResponse); err != nil {
 		return err
+	}
+
+	if thinkTagToReasoning {
+		re := regexp.MustCompile(`(?s)<(?:think|thinking)>(.*?)</(?:think|thinking)>`)
+		for i, choice := range lastStreamResponse.Choices {
+			content := choice.Delta.GetContentString()
+			if content == "" {
+				continue
+			}
+			if matches := re.FindStringSubmatch(content); len(matches) > 1 {
+				lastStreamResponse.Choices[i].Delta.SetReasoningContent(matches[1])
+				newContent := re.ReplaceAllString(content, "")
+				lastStreamResponse.Choices[i].Delta.SetContentString(newContent)
+			}
+		}
 	}
 
 	if !thinkToContent {
@@ -122,6 +138,7 @@ func OaiStreamHandler(c *gin.Context, resp *http.Response, info *relaycommon.Rel
 	var streamItems []string // store stream items
 	var forceFormat bool
 	var thinkToContent bool
+	var thinkTagToReasoning bool
 
 	if forceFmt, ok := info.ChannelSetting[constant.ForceFormat].(bool); ok {
 		forceFormat = forceFmt
@@ -131,13 +148,17 @@ func OaiStreamHandler(c *gin.Context, resp *http.Response, info *relaycommon.Rel
 		thinkToContent = think2Content
 	}
 
+	if tag2Reasoning, ok := info.ChannelSetting[constant.ChannelSettingThinkTagToReasoning].(bool); ok {
+		thinkTagToReasoning = tag2Reasoning
+	}
+
 	var (
 		lastStreamData string
 	)
 
 	helper.StreamScannerHandler(c, resp, info, func(data string) bool {
 		if lastStreamData != "" {
-			err := handleStreamFormat(c, info, lastStreamData, forceFormat, thinkToContent)
+			err := handleStreamFormat(c, info, lastStreamData, forceFormat, thinkToContent, thinkTagToReasoning)
 			if err != nil {
 				common.SysError("error handling stream format: " + err.Error())
 			}
@@ -170,7 +191,7 @@ func OaiStreamHandler(c *gin.Context, resp *http.Response, info *relaycommon.Rel
 	}
 
 	if shouldSendLastResp {
-		sendStreamData(c, info, lastStreamData, forceFormat, thinkToContent)
+		sendStreamData(c, info, lastStreamData, forceFormat, thinkToContent, thinkTagToReasoning)
 		//err = handleStreamFormat(c, info, lastStreamData, forceFormat, thinkToContent)
 	}
 

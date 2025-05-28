@@ -75,12 +75,24 @@ func recordRedisRequest(ctx context.Context, rdb *redis.Client, key string, maxC
 func redisRateLimitHandler(duration int64, totalMaxCount, successMaxCount int) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId := strconv.Itoa(c.GetInt("id"))
+		tokenId := strconv.Itoa(c.GetInt("token_id"))
+		ip := c.ClientIP()
 		ctx := context.Background()
 		rdb := common.RDB
 
 		// 1. 检查总请求数限制（当totalMaxCount为0时会自动跳过）
-		totalKey := fmt.Sprintf("rateLimit:%s:%s", ModelRequestRateLimitCountMark, userId)
-		allowed, err := checkRedisRateLimit(ctx, rdb, totalKey, totalMaxCount, duration)
+		totalKeys := []string{
+			fmt.Sprintf("rateLimit:%s:user:%s", ModelRequestRateLimitCountMark, userId),
+			fmt.Sprintf("rateLimit:%s:ip:%s", ModelRequestRateLimitCountMark, ip),
+			fmt.Sprintf("rateLimit:%s:token:%s", ModelRequestRateLimitCountMark, tokenId),
+		}
+		allowed, err := true, error(nil)
+		for _, tk := range totalKeys {
+			allowed, err = checkRedisRateLimit(ctx, rdb, tk, totalMaxCount, duration)
+			if err != nil || !allowed {
+				break
+			}
+		}
 		if err != nil {
 			fmt.Println("检查总请求数限制失败:", err.Error())
 			abortWithOpenAiMessage(c, http.StatusInternalServerError, "rate_limit_check_failed")
@@ -91,8 +103,17 @@ func redisRateLimitHandler(duration int64, totalMaxCount, successMaxCount int) g
 		}
 
 		// 2. 检查成功请求数限制
-		successKey := fmt.Sprintf("rateLimit:%s:%s", ModelRequestRateLimitSuccessCountMark, userId)
-		allowed, err = checkRedisRateLimit(ctx, rdb, successKey, successMaxCount, duration)
+		successKeys := []string{
+			fmt.Sprintf("rateLimit:%s:user:%s", ModelRequestRateLimitSuccessCountMark, userId),
+			fmt.Sprintf("rateLimit:%s:ip:%s", ModelRequestRateLimitSuccessCountMark, ip),
+			fmt.Sprintf("rateLimit:%s:token:%s", ModelRequestRateLimitSuccessCountMark, tokenId),
+		}
+		for _, sk := range successKeys {
+			allowed, err = checkRedisRateLimit(ctx, rdb, sk, successMaxCount, duration)
+			if err != nil || !allowed {
+				break
+			}
+		}
 		if err != nil {
 			fmt.Println("检查成功请求数限制失败:", err.Error())
 			abortWithOpenAiMessage(c, http.StatusInternalServerError, "rate_limit_check_failed")
@@ -104,14 +125,18 @@ func redisRateLimitHandler(duration int64, totalMaxCount, successMaxCount int) g
 		}
 
 		// 3. 记录总请求（当totalMaxCount为0时会自动跳过）
-		recordRedisRequest(ctx, rdb, totalKey, totalMaxCount)
+		for _, tk := range totalKeys {
+			recordRedisRequest(ctx, rdb, tk, totalMaxCount)
+		}
 
 		// 4. 处理请求
 		c.Next()
 
 		// 5. 如果请求成功，记录成功请求
 		if c.Writer.Status() < 400 {
-			recordRedisRequest(ctx, rdb, successKey, successMaxCount)
+			for _, sk := range successKeys {
+				recordRedisRequest(ctx, rdb, sk, successMaxCount)
+			}
 		}
 	}
 }
@@ -122,23 +147,42 @@ func memoryRateLimitHandler(duration int64, totalMaxCount, successMaxCount int) 
 
 	return func(c *gin.Context) {
 		userId := strconv.Itoa(c.GetInt("id"))
-		totalKey := ModelRequestRateLimitCountMark + userId
-		successKey := ModelRequestRateLimitSuccessCountMark + userId
+		tokenId := strconv.Itoa(c.GetInt("token_id"))
+		ip := c.ClientIP()
+		totalKeys := []string{
+			ModelRequestRateLimitCountMark + "user:" + userId,
+			ModelRequestRateLimitCountMark + "ip:" + ip,
+			ModelRequestRateLimitCountMark + "token:" + tokenId,
+		}
+		successKeys := []string{
+			ModelRequestRateLimitSuccessCountMark + "user:" + userId,
+			ModelRequestRateLimitSuccessCountMark + "ip:" + ip,
+			ModelRequestRateLimitSuccessCountMark + "token:" + tokenId,
+		}
 
 		// 1. 检查总请求数限制（当totalMaxCount为0时跳过）
-		if totalMaxCount > 0 && !inMemoryRateLimiter.Request(totalKey, totalMaxCount, duration) {
-			c.Status(http.StatusTooManyRequests)
-			c.Abort()
-			return
+		if totalMaxCount > 0 {
+			for _, tk := range totalKeys {
+				if !inMemoryRateLimiter.Request(tk, totalMaxCount, duration) {
+					c.Status(http.StatusTooManyRequests)
+					c.Abort()
+					return
+				}
+			}
 		}
 
 		// 2. 检查成功请求数限制
 		// 使用一个临时key来检查限制，这样可以避免实际记录
-		checkKey := successKey + "_check"
-		if !inMemoryRateLimiter.Request(checkKey, successMaxCount, duration) {
-			c.Status(http.StatusTooManyRequests)
-			c.Abort()
-			return
+		checkKeys := []string{}
+		for _, sk := range successKeys {
+			checkKeys = append(checkKeys, sk+"_check")
+		}
+		for _, ck := range checkKeys {
+			if !inMemoryRateLimiter.Request(ck, successMaxCount, duration) {
+				c.Status(http.StatusTooManyRequests)
+				c.Abort()
+				return
+			}
 		}
 
 		// 3. 处理请求
@@ -146,7 +190,9 @@ func memoryRateLimitHandler(duration int64, totalMaxCount, successMaxCount int) 
 
 		// 4. 如果请求成功，记录到实际的成功请求计数中
 		if c.Writer.Status() < 400 {
-			inMemoryRateLimiter.Request(successKey, successMaxCount, duration)
+			for _, sk := range successKeys {
+				inMemoryRateLimiter.Request(sk, successMaxCount, duration)
+			}
 		}
 	}
 }

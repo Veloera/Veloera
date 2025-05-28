@@ -13,6 +13,9 @@
 3. thinking_to_content
    - 用于标识是否将思考内容`reasoning_content`转换为`<think>`标签拼接到内容中返回
    - 类型为布尔值，设置为 true 时启用思考内容转换
+4. think_tag_to_reasoning
+   - 将回复中的 `<think>` 或 `<thinking>` 标签内容填充到 `reasoning_content` 字段
+   - 类型为布尔值，设置为 true 时启用标签转换
 
 --------------------------------------------------------------
 
@@ -24,6 +27,7 @@
 {
     "force_format": true,
    "thinking_to_content": true,
+   "think_tag_to_reasoning": true,
     "proxy": "socks5://xxxxxxx"
 }
 ```
