@@ -1707,7 +1707,7 @@ const EditChannel = (props) => {
                 }}
                 onClick={() => {
                   window.open(
-                    'https://github.com/Veloera/Veloera/blob/main/docs/channel/other_setting.md',
+                    'https://github.com/Veloera/Veloera/blob/main/new-api-stuffs/docs/channel/other_setting.md',
                   );
                 }}
               >
