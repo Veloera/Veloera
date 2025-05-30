@@ -25,19 +25,8 @@ func (p PriceData) ToSetting() string {
 	return fmt.Sprintf("ModelPrice: %f, ModelRatio: %f, CompletionRatio: %f, CacheRatio: %f, GroupRatio: %f, UsePrice: %t, CacheCreationRatio: %f, ShouldPreConsumedQuota: %d", p.ModelPrice, p.ModelRatio, p.CompletionRatio, p.CacheRatio, p.GroupRatio, p.UsePrice, p.CacheCreationRatio, p.ShouldPreConsumedQuota)
 }
 
-func ModelPriceHelper(c *gin.Context, info *relaycommon.RelayInfo, promptTokens int, completionTokens int) (PriceData, error) {
-	// Extract the base model name if it has a prefix
-	modelName := info.OriginModelName
-	modelNameForPrice := modelName
-	modelNameForRatio := modelName
-
-	// Check if the model has a prefix by looking at the difference between OriginModelName and UpstreamModelName
-	if info.OriginModelName != info.UpstreamModelName {
-		modelNameForPrice = info.UpstreamModelName
-		modelNameForRatio = info.UpstreamModelName
-	}
-
-	modelPrice, usePrice := operation_setting.GetModelPrice(modelNameForPrice, false)
+func ModelPriceHelper(c *gin.Context, info *relaycommon.RelayInfo, promptTokens int, maxTokens int) (PriceData, error) {
+	modelPrice, usePrice := operation_setting.GetModelPrice(info.OriginModelName, false)
 	groupRatio := setting.GetGroupRatio(info.Group)
 	var preConsumedQuota int
 	var modelRatio float64
@@ -46,11 +35,11 @@ func ModelPriceHelper(c *gin.Context, info *relaycommon.RelayInfo, promptTokens 
 	var cacheCreationRatio float64
 	if !usePrice {
 		preConsumedTokens := common.PreConsumedQuota
-		if completionTokens != 0 {
-			preConsumedTokens = promptTokens + completionTokens
+		if maxTokens != 0 {
+			preConsumedTokens = promptTokens + maxTokens
 		}
 		var success bool
-		modelRatio, success = operation_setting.GetModelRatio(modelNameForRatio)
+		modelRatio, success = operation_setting.GetModelRatio(info.OriginModelName)
 		if !success {
 			acceptUnsetRatio := false
 			if accept, ok := info.UserSetting[constant2.UserAcceptUnsetRatioModel]; ok {
@@ -60,12 +49,16 @@ func ModelPriceHelper(c *gin.Context, info *relaycommon.RelayInfo, promptTokens 
 				}
 			}
 			if !acceptUnsetRatio {
-				return PriceData{}, fmt.Errorf("模型 %s 倍率或价格未配置，请联系管理员设置或开始自用模式；Model %s ratio or price not set, please set or start self-use mode", info.OriginModelName, info.OriginModelName)
+				if info.UserId == 1 {
+					return PriceData{}, fmt.Errorf("模型 %s 倍率或价格未配置，请设置或开始自用模式；Model %s ratio or price not set, please set or start self-use mode", info.OriginModelName, info.OriginModelName)
+				} else {
+					return PriceData{}, fmt.Errorf("模型 %s 倍率或价格未配置, 请联系管理员设置；Model %s ratio or price not set, please contact administrator to set", info.OriginModelName, info.OriginModelName)
+				}
 			}
 		}
-		completionRatio = operation_setting.GetCompletionRatio(modelNameForRatio)
-		cacheRatio, _ = operation_setting.GetCacheRatio(modelNameForRatio)
-		cacheCreationRatio, _ = operation_setting.GetCreateCacheRatio(modelNameForRatio)
+		completionRatio = operation_setting.GetCompletionRatio(info.OriginModelName)
+		cacheRatio, _ = operation_setting.GetCacheRatio(info.OriginModelName)
+		cacheCreationRatio, _ = operation_setting.GetCreateCacheRatio(info.OriginModelName)
 		ratio := modelRatio * groupRatio
 		preConsumedQuota = int(float64(preConsumedTokens) * ratio)
 	} else {

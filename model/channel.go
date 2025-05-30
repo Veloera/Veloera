@@ -37,7 +37,6 @@ type Channel struct {
 	Tag               *string `json:"tag" gorm:"index"`
 	Setting           *string `json:"setting" gorm:"type:text"`
 	ParamOverride     *string `json:"param_override" gorm:"type:text"`
-	ModelPrefix       *string `json:"model_prefix" gorm:"type:varchar(64);default:''"`
 }
 
 func (channel *Channel) GetModels() []string {
@@ -494,12 +493,6 @@ func SearchTags(keyword string, group string, model string, idSort bool) ([]*str
 }
 
 // Get model prefix from channel
-func (channel *Channel) GetModelPrefix() string {
-	if channel.ModelPrefix == nil {
-		return ""
-	}
-	return *channel.ModelPrefix
-}
 
 func (channel *Channel) GetSetting() map[string]interface{} {
 	setting := make(map[string]interface{})

@@ -153,15 +153,7 @@ func GenRelayInfo(c *gin.Context) *RelayInfo {
 
 	apiType, _ := relayconstant.ChannelType2APIType(channelType)
 
-	// Get the original model name (with prefix if any)
-	prefixedModel := c.GetString("prefixed_model")
 	originalModel := c.GetString("original_model")
-
-	// If we have a prefixed model, use it as the origin model name for display
-	// but use the unprefixed model name for the upstream
-	if prefixedModel != "" {
-		originalModel = prefixedModel
-	}
 
 	info := &RelayInfo{
 		UserQuota:         c.GetInt(constant.ContextKeyUserQuota),
@@ -180,8 +172,8 @@ func GenRelayInfo(c *gin.Context) *RelayInfo {
 		TokenUnlimited:    tokenUnlimited,
 		StartTime:         startTime,
 		FirstResponseTime: startTime.Add(-time.Second),
-		OriginModelName:   originalModel,                 // Use the prefixed model name for display
-		UpstreamModelName: c.GetString("original_model"), // Use the unprefixed model name for upstream
+		OriginModelName:   c.GetString("original_model"),
+		UpstreamModelName: c.GetString("original_model"),
 		//RecodeModelName:   c.GetString("original_model"),
 		IsModelMapped:     false,
 		ApiType:           apiType,

@@ -23,45 +23,12 @@ type ModelRequest struct {
 	Model string `json:"model"`
 }
 
-// Cache for storing channels by prefix
+// Round-robin key selection state
 var (
-	prefixChannelsMutex       sync.RWMutex
-	prefixChannelsCache       = make(map[string]map[string][]*model.Channel) // group -> prefix -> channels
-	prefixChannelsCacheExpiry = make(map[string]int64)                       // group -> expiry timestamp
-
-	// Round-robin key selection state
 	channelKeysMutex sync.Mutex
 	channelKeysIndex = make(map[int]int)    // channel_id -> current key index
 	channelKeysHash  = make(map[int]string) // channel_id -> hash of keys
 )
-
-// getPrefixChannels returns a map of prefix -> channels for a given group
-// The cache is refreshed every hour
-func getPrefixChannels(group string) map[string][]*model.Channel {
-	prefixChannelsMutex.RLock()
-	expiry, ok := prefixChannelsCacheExpiry[group]
-	prefixChannelsMutex.RUnlock()
-
-	currentTime := time.Now().Unix()
-	if !ok || expiry < currentTime {
-		// Cache expired, refresh it
-		return refreshPrefixChannelsCache(group)
-	}
-
-	prefixChannelsMutex.RLock()
-	defer prefixChannelsMutex.RUnlock()
-	prefixMap, ok := prefixChannelsCache[group]
-	if !ok {
-		return make(map[string][]*model.Channel)
-	}
-
-	return prefixMap
-}
-
-// GetPrefixChannels is the exported version of getPrefixChannels for use by other packages
-func GetPrefixChannels(group string) map[string][]*model.Channel {
-	return getPrefixChannels(group)
-}
 
 // ResetChannelKeyIndex resets the round-robin key index for a specific channel
 // This can be called when a channel's keys are updated
@@ -72,99 +39,6 @@ func ResetChannelKeyIndex(channelId int) {
 	// Reset the key index and hash to force recalculation next time
 	delete(channelKeysIndex, channelId)
 	delete(channelKeysHash, channelId)
-}
-
-// refreshPrefixChannelsCache refreshes the prefix channels cache for a given group
-func refreshPrefixChannelsCache(group string) map[string][]*model.Channel {
-	var channels []*model.Channel
-
-	// Get channels for this group from the database
-	db := model.DB.Model(&model.Channel{}).Where("status = ?", common.ChannelStatusEnabled)
-	if group != "" {
-		var condition string
-		groupCol := "`group`"
-		if common.UsingPostgreSQL {
-			groupCol = "\"group\""
-		}
-		if common.UsingMySQL {
-			condition = fmt.Sprintf("CONCAT(',', %s, ',') LIKE '%%,%s,%%'", groupCol, group)
-		} else {
-			// sqlite, PostgreSQL
-			condition = fmt.Sprintf("(',' || %s || ',') LIKE '%%,%s,%%'", groupCol, group)
-		}
-		db = db.Where(condition)
-	}
-
-	db.Order("priority desc").Find(&channels)
-	prefixMap := make(map[string][]*model.Channel)
-
-	// Group channels by prefix
-	for _, channel := range channels {
-		prefix := ""
-		if channel.ModelPrefix != nil {
-			prefix = *channel.ModelPrefix
-		}
-		prefixMap[prefix] = append(prefixMap[prefix], channel)
-	}
-
-	// Store in cache
-	prefixChannelsMutex.Lock()
-	prefixChannelsCache[group] = prefixMap
-	prefixChannelsCacheExpiry[group] = time.Now().Add(1 * time.Hour).Unix()
-	prefixChannelsMutex.Unlock()
-
-	return prefixMap
-}
-
-// selectChannelByPrefix selects a channel based on the model prefix
-func selectChannelByPrefix(group, prefix, originalModel string) (*model.Channel, error) {
-	prefixMap := getPrefixChannels(group)
-
-	channels, ok := prefixMap[prefix]
-	if !ok || len(channels) == 0 {
-		return nil, fmt.Errorf("no channels found for prefix %s", prefix)
-	}
-
-	// Filter channels that support the model (without prefix)
-	var compatibleChannels []*model.Channel
-	for _, channel := range channels {
-		// Check if the channel supports the model
-		for _, model := range channel.GetModels() {
-			if model == originalModel {
-				compatibleChannels = append(compatibleChannels, channel)
-				break
-			}
-		}
-	}
-
-	if len(compatibleChannels) == 0 {
-		return nil, fmt.Errorf("no channels supporting model %s found for prefix %s", originalModel, prefix)
-	}
-
-	// Select a random channel based on weight
-	totalWeight := 0
-	for _, channel := range compatibleChannels {
-		totalWeight += channel.GetWeight()
-	}
-
-	if totalWeight <= 0 {
-		// If no weight or all zero weights, select randomly
-		return compatibleChannels[common.GetRandomInt(len(compatibleChannels))], nil
-	}
-
-	// Weighted random selection
-	randWeight := common.GetRandomInt(totalWeight)
-	currentWeight := 0
-
-	for _, channel := range compatibleChannels {
-		currentWeight += channel.GetWeight()
-		if randWeight < currentWeight {
-			return channel, nil
-		}
-	}
-
-	// Fallback - should not happen unless there's a calculation error
-	return compatibleChannels[0], nil
 }
 
 func Distribute() func(c *gin.Context) {
@@ -201,23 +75,7 @@ func Distribute() func(c *gin.Context) {
 		}
 		c.Set("group", userGroup)
 
-		// Check if the model has a prefix, which is used for routing
 		originalModel := modelRequest.Model
-		prefixedModel, hasPrefixedModel := c.Get("prefixed_model")
-		modelPrefix := ""
-		prefixedModelStr := ""
-		if hasPrefixedModel {
-			prefixedModelStr = prefixedModel.(string)
-			// Extract prefix from the model name if it exists
-			for prefix := range getPrefixChannels(userGroup) {
-				if prefix != "" && strings.HasPrefix(prefixedModelStr, prefix) {
-					modelPrefix = prefix
-					// Update the model name to strip the prefix for channel selection
-					modelRequest.Model = strings.TrimPrefix(prefixedModelStr, prefix)
-					break
-				}
-			}
-		}
 
 		if ok {
 			id, err := strconv.Atoi(channelId.(string))
@@ -247,9 +105,8 @@ func Distribute() func(c *gin.Context) {
 					tokenModelLimit = map[string]bool{}
 				}
 				if tokenModelLimit != nil {
-					// Check access against the original (prefixed) model name
-					if _, ok := tokenModelLimit[originalModel]; !ok {
-						abortWithOpenAiMessage(c, http.StatusForbidden, "该令牌无权访问模型 "+originalModel)
+					if _, ok := tokenModelLimit[modelRequest.Model]; !ok {
+						abortWithOpenAiMessage(c, http.StatusForbidden, "该令牌无权访问模型 "+modelRequest.Model)
 						return
 					}
 				} else {
@@ -260,12 +117,7 @@ func Distribute() func(c *gin.Context) {
 			}
 
 			if shouldSelectChannel {
-				// If we have a model prefix, use it to select among specific channels
-				if modelPrefix != "" {
-					channel, err = selectChannelByPrefix(userGroup, modelPrefix, modelRequest.Model)
-				} else {
-					channel, err = model.CacheGetRandomSatisfiedChannel(userGroup, modelRequest.Model, 0)
-				}
+				channel, err = model.CacheGetRandomSatisfiedChannel(userGroup, modelRequest.Model, 0)
 
 				if err != nil {
 					message := fmt.Sprintf("当前分组 %s 下对于模型 %s 无可用渠道", userGroup, originalModel)
@@ -372,12 +224,6 @@ func getModelRequest(c *gin.Context) (*ModelRequest, bool, error) {
 		c.Set("relay_mode", relayMode)
 	}
 
-	// Check if the model name has a prefix that needs to be used for routing
-	// We save both the original model name (with prefix) and the model name without prefix
-	if modelRequest.Model != "" {
-		c.Set("prefixed_model", modelRequest.Model) // Store the original model name for later reference
-	}
-
 	return &modelRequest, shouldSelectChannel, nil
 }
 
@@ -389,14 +235,9 @@ func SetupContextForSelectedChannel(c *gin.Context, channel *model.Channel, mode
 	c.Set("channel_id", channel.Id)
 	c.Set("channel_name", channel.Name)
 	c.Set("channel_type", channel.Type)
-c.Set("channel_create_time", channel.CreatedTime)
+	c.Set("channel_create_time", channel.CreatedTime)
 	c.Set("channel_setting", channel.GetSetting())
 	c.Set("param_override", channel.GetParamOverride())
-
-	// Set model prefix if available
-	if channel.ModelPrefix != nil && *channel.ModelPrefix != "" {
-		c.Set("model_prefix", *channel.ModelPrefix)
-	}
 
 	if nil != channel.OpenAIOrganization && "" != *channel.OpenAIOrganization {
 		c.Set("channel_organization", *channel.OpenAIOrganization)

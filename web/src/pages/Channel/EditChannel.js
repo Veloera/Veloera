@@ -35,32 +35,44 @@ import {
   IconEyeClosedSolid,
   IconRefresh,
   IconPlusCircle,
-  IconMinusCircle
+  IconMinusCircle,
 } from '@douyinfe/semi-icons';
 
 // ModelSelector component for advanced model selection
-const ModelSelector = ({ channelId, type, apiKey, baseUrl, isEdit, selectedModels, onSelect }) => {
+const ModelSelector = ({
+  channelId,
+  type,
+  apiKey,
+  baseUrl,
+  isEdit,
+  selectedModels,
+  onSelect,
+}) => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
-  const [localSelectedModels, setLocalSelectedModels] = useState([...selectedModels]);
+  const [localSelectedModels, setLocalSelectedModels] = useState([
+    ...selectedModels,
+  ]);
   const [search, setSearch] = useState('');
   const [availableModels, setAvailableModels] = useState([]);
 
   // Create options from available models
-  const allOptions = availableModels.map(model => ({
+  const allOptions = availableModels.map((model) => ({
     label: model,
-    value: model
+    value: model,
   }));
 
   // Filter models based on search input
-  const filteredOptions = allOptions.filter(option =>
-    option.label.toLowerCase().includes(search.toLowerCase())
+  const filteredOptions = allOptions.filter((option) =>
+    option.label.toLowerCase().includes(search.toLowerCase()),
   );
 
   // Handle check/uncheck of individual model
   const handleCheckboxChange = (value) => {
     if (localSelectedModels.includes(value)) {
-      setLocalSelectedModels(localSelectedModels.filter(model => model !== value));
+      setLocalSelectedModels(
+        localSelectedModels.filter((model) => model !== value),
+      );
     } else {
       setLocalSelectedModels([...localSelectedModels, value]);
     }
@@ -68,7 +80,7 @@ const ModelSelector = ({ channelId, type, apiKey, baseUrl, isEdit, selectedModel
 
   // Select all visible models
   const handleSelectAll = () => {
-    const allValues = filteredOptions.map(option => option.value);
+    const allValues = filteredOptions.map((option) => option.value);
     // Merge with existing selection
     const newSelection = [...new Set([...localSelectedModels, ...allValues])];
     setLocalSelectedModels(newSelection);
@@ -76,11 +88,13 @@ const ModelSelector = ({ channelId, type, apiKey, baseUrl, isEdit, selectedModel
 
   // Invert selection for all visible models
   const handleDeselectAll = () => {
-    const visibleValues = new Set(filteredOptions.map(option => option.value));
+    const visibleValues = new Set(
+      filteredOptions.map((option) => option.value),
+    );
     const newSelection = [...localSelectedModels];
 
     // For each visible option, toggle its selection state
-    filteredOptions.forEach(option => {
+    filteredOptions.forEach((option) => {
       const value = option.value;
       const index = newSelection.indexOf(value);
       if (index === -1) {
@@ -176,11 +190,22 @@ const ModelSelector = ({ channelId, type, apiKey, baseUrl, isEdit, selectedModel
           loading={loading}
           style={{ marginLeft: 8 }}
         />
-        <Button onClick={handleSelectAll} style={{ marginLeft: 8 }}>{t('全选')}</Button>
-        <Button onClick={handleDeselectAll} style={{ marginLeft: 8 }}>{t('反选')}</Button>
+        <Button onClick={handleSelectAll} style={{ marginLeft: 8 }}>
+          {t('全选')}
+        </Button>
+        <Button onClick={handleDeselectAll} style={{ marginLeft: 8 }}>
+          {t('反选')}
+        </Button>
       </div>
 
-      <div style={{ maxHeight: '350px', overflowY: 'auto', border: '1px solid var(--semi-color-border)', padding: 8 }}>
+      <div
+        style={{
+          maxHeight: '350px',
+          overflowY: 'auto',
+          border: '1px solid var(--semi-color-border)',
+          padding: 8,
+        }}
+      >
         <Row>
           {filteredOptions.map((option) => (
             <Col span={6} key={option.value} style={{ marginBottom: 8 }}>
@@ -195,7 +220,7 @@ const ModelSelector = ({ channelId, type, apiKey, baseUrl, isEdit, selectedModel
                     maxWidth: '100%',
                     wordBreak: 'break-word',
                     whiteSpace: 'normal',
-                    lineHeight: '1.2'
+                    lineHeight: '1.2',
                   }}
                 >
                   {option.label}
@@ -206,9 +231,20 @@ const ModelSelector = ({ channelId, type, apiKey, baseUrl, isEdit, selectedModel
         </Row>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16, marginBottom: 8 }}>
-        <Button type='primary' onClick={applySelection}>{t('确定')}</Button>
-        <Button style={{ marginLeft: 8 }} onClick={() => Modal.destroyAll()}>{t('取消')}</Button>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          marginTop: 16,
+          marginBottom: 8,
+        }}
+      >
+        <Button type='primary' onClick={applySelection}>
+          {t('确定')}
+        </Button>
+        <Button style={{ marginLeft: 8 }} onClick={() => Modal.destroyAll()}>
+          {t('取消')}
+        </Button>
       </div>
     </div>
   );
@@ -286,7 +322,6 @@ const EditChannel = (props) => {
     priority: 0,
     weight: 0,
     tag: '',
-    model_prefix: '', // Added model_prefix
     setting: '', // Added setting
     param_override: '', // Added param_override
   };
@@ -304,26 +339,30 @@ const EditChannel = (props) => {
   // 处理密钥列表的变化
   const updateKeyListToInput = (newKeyList) => {
     // Filter out empty strings before joining
-    const filteredKeyList = newKeyList.filter(key => key.trim().length > 0);
+    const filteredKeyList = newKeyList.filter((key) => key.trim().length > 0);
     setKeyList(filteredKeyList);
     const combinedKey = filteredKeyList.join(',');
 
     // If only one valid key remains and not explicitly disabled multi-key view, switch back to single input mode
-    if (filteredKeyList.length <= 1 && supportsMultiKeyView(inputs.type) && !disableMultiKeyView) {
-        setUseKeyListMode(false);
-        // When switching back, ensure the single input shows the remaining key
-        setInputs(inputs => ({ ...inputs, key: combinedKey }));
-        // Optionally reset showKey based on preference for single input
-        // setShowKey(false); // Or keep the last showKey state
+    if (
+      filteredKeyList.length <= 1 &&
+      supportsMultiKeyView(inputs.type) &&
+      !disableMultiKeyView
+    ) {
+      setUseKeyListMode(false);
+      // When switching back, ensure the single input shows the remaining key
+      setInputs((inputs) => ({ ...inputs, key: combinedKey }));
+      // Optionally reset showKey based on preference for single input
+      // setShowKey(false); // Or keep the last showKey state
     } else {
-        // Otherwise, update the main inputs.key based on the list
-        setInputs(inputs => ({ ...inputs, key: combinedKey }));
+      // Otherwise, update the main inputs.key based on the list
+      setInputs((inputs) => ({ ...inputs, key: combinedKey }));
     }
   };
 
   // Add a new key input box
   const addKeyInput = (initialValue = '') => {
-     const newKeyList = [...keyList, initialValue];
+    const newKeyList = [...keyList, initialValue];
     setKeyList(newKeyList);
     // Focus on the new input after it's rendered
     setTimeout(() => {
@@ -364,7 +403,13 @@ const EditChannel = (props) => {
     }
 
     // Special handling for key input when not in key list mode and not type 41, and multi-key view is not disabled
-    if (name === 'key' && !useKeyListMode && inputs.type !== 41 && supportsMultiKeyView(inputs.type) && !disableMultiKeyView) {
+    if (
+      name === 'key' &&
+      !useKeyListMode &&
+      inputs.type !== 41 &&
+      supportsMultiKeyView(inputs.type) &&
+      !disableMultiKeyView
+    ) {
       // Check if the new value contains comma or newline
       if (value.includes(',') || value.includes('\n')) {
         // Switch to list mode
@@ -374,25 +419,24 @@ const EditChannel = (props) => {
         // Process the input value to create the initial key list
         const keys = value
           .split(/[,\n]/)
-          .map(k => k.trim())
-          .filter(k => k.length > 0);
+          .map((k) => k.trim())
+          .filter((k) => k.length > 0);
 
-         // If there are keys, set the list and focus the first input
-         if (keys.length > 0) {
-            setKeyList(keys);
-             // Focus the first input after switching to list mode
-             setTimeout(() => {
-               const inputs = document.querySelectorAll('.key-input-item input');
-               if (inputs.length > 0) {
-                 inputs[0].focus();
-               }
-            }, 0);
-         } else {
-             // If splitting resulted in no keys, stay in single mode but update input value
-             setInputs((inputs) => ({ ...inputs, [name]: value }));
-             setUseKeyListMode(false); // Ensure we don't switch to list mode with empty list
-         }
-
+        // If there are keys, set the list and focus the first input
+        if (keys.length > 0) {
+          setKeyList(keys);
+          // Focus the first input after switching to list mode
+          setTimeout(() => {
+            const inputs = document.querySelectorAll('.key-input-item input');
+            if (inputs.length > 0) {
+              inputs[0].focus();
+            }
+          }, 0);
+        } else {
+          // If splitting resulted in no keys, stay in single mode but update input value
+          setInputs((inputs) => ({ ...inputs, [name]: value }));
+          setUseKeyListMode(false); // Ensure we don't switch to list mode with empty list
+        }
 
         // The main inputs.key will be updated by updateKeyListToInput based on the list state
         return; // Prevent updating inputs.key directly here
@@ -406,34 +450,47 @@ const EditChannel = (props) => {
       if (value === 41 || !supportsMultiKeyView(value) || disableMultiKeyView) {
         setUseKeyListMode(false); // Type 41 uses a single textarea or multi-key view disabled
         setKeyList([]); // Clear keyList if switching to single input mode
-      } else if (inputs.type === 41 && value !== 41 && supportsMultiKeyView(value) && !disableMultiKeyView) {
-         // If switching from type 41 to another type that supports multi-key, check if the key contains commas/newlines
-         if (inputs.key && (inputs.key.includes(',') || inputs.key.includes('\n'))) {
-            setUseKeyListMode(true);
-            setShowKey(true);
-            const keys = inputs.key
-              .split(/[,\n]/)
-              .map(k => k.trim())
-              .filter(k => k.length > 0);
-            setKeyList(keys);
-         } else {
-            setUseKeyListMode(false);
-            setKeyList([]); // Clear keyList if switching from type 41 to single mode
-         }
-      } else if (value !== 41 && inputs.key && (inputs.key.includes(',') || inputs.key.includes('\n')) && supportsMultiKeyView(value) && !disableMultiKeyView) {
-           // If changing type between non-41 types that support multi-key, and key already contains multi-keys
-           setUseKeyListMode(true);
-           setShowKey(true);
-            const keys = inputs.key
-              .split(/[,\n]/)
-              .map(k => k.trim())
-              .filter(k => k.length > 0);
-            setKeyList(keys);
+      } else if (
+        inputs.type === 41 &&
+        value !== 41 &&
+        supportsMultiKeyView(value) &&
+        !disableMultiKeyView
+      ) {
+        // If switching from type 41 to another type that supports multi-key, check if the key contains commas/newlines
+        if (
+          inputs.key &&
+          (inputs.key.includes(',') || inputs.key.includes('\n'))
+        ) {
+          setUseKeyListMode(true);
+          setShowKey(true);
+          const keys = inputs.key
+            .split(/[,\n]/)
+            .map((k) => k.trim())
+            .filter((k) => k.length > 0);
+          setKeyList(keys);
+        } else {
+          setUseKeyListMode(false);
+          setKeyList([]); // Clear keyList if switching from type 41 to single mode
+        }
+      } else if (
+        value !== 41 &&
+        inputs.key &&
+        (inputs.key.includes(',') || inputs.key.includes('\n')) &&
+        supportsMultiKeyView(value) &&
+        !disableMultiKeyView
+      ) {
+        // If changing type between non-41 types that support multi-key, and key already contains multi-keys
+        setUseKeyListMode(true);
+        setShowKey(true);
+        const keys = inputs.key
+          .split(/[,\n]/)
+          .map((k) => k.trim())
+          .filter((k) => k.length > 0);
+        setKeyList(keys);
       } else {
-         setUseKeyListMode(false);
-         setKeyList([]); // Clear keyList if switching to single mode
+        setUseKeyListMode(false);
+        setKeyList([]); // Clear keyList if switching to single mode
       }
-
 
       let localModels = [];
       switch (value) {
@@ -475,7 +532,8 @@ const EditChannel = (props) => {
           localModels = getChannelModels(value);
           break;
       }
-      if (inputs.models.length === 0 || inputs.type !== value) { // Only update models if type changes or models are empty
+      if (inputs.models.length === 0 || inputs.type !== value) {
+        // Only update models if type changes or models are empty
         setInputs((inputs) => ({ ...inputs, models: localModels }));
       }
       setBasicModels(localModels);
@@ -508,53 +566,58 @@ const EditChannel = (props) => {
           2,
         );
       }
-      if (data.setting !== '' && data.setting !== null) { // Handle null setting
-        try { // Add try-catch in case it's not valid JSON
-           data.setting = JSON.stringify(
-             JSON.parse(data.setting),
-             null,
-             2,
-           );
+      if (data.setting !== '' && data.setting !== null) {
+        // Handle null setting
+        try {
+          // Add try-catch in case it's not valid JSON
+          data.setting = JSON.stringify(JSON.parse(data.setting), null, 2);
         } catch (e) {
-           console.error("Failed to parse channel setting:", data.setting, e);
-           data.setting = data.setting; // Keep as is if invalid JSON
+          console.error('Failed to parse channel setting:', data.setting, e);
+          data.setting = data.setting; // Keep as is if invalid JSON
         }
       } else {
-          data.setting = ''; // Ensure it's an empty string if null
+        data.setting = ''; // Ensure it's an empty string if null
       }
-       if (data.param_override !== '' && data.param_override !== null) { // Handle null param_override
-         try { // Add try-catch in case it's not valid JSON
-            data.param_override = JSON.stringify(
-              JSON.parse(data.param_override),
-              null,
-              2,
-            );
-         } catch (e) {
-            console.error("Failed to parse channel param_override:", data.param_override, e);
-            data.param_override = data.param_override; // Keep as is if invalid JSON
-         }
+      if (data.param_override !== '' && data.param_override !== null) {
+        // Handle null param_override
+        try {
+          // Add try-catch in case it's not valid JSON
+          data.param_override = JSON.stringify(
+            JSON.parse(data.param_override),
+            null,
+            2,
+          );
+        } catch (e) {
+          console.error(
+            'Failed to parse channel param_override:',
+            data.param_override,
+            e,
+          );
+          data.param_override = data.param_override; // Keep as is if invalid JSON
+        }
       } else {
-          data.param_override = ''; // Ensure it's an empty string if null
+        data.param_override = ''; // Ensure it's an empty string if null
       }
-
 
       // 处理密钥
       if (data.key && supportsMultiKeyView(data.type)) {
-         const keys = data.key.split(',').map(k => k.trim()).filter(k => k.length > 0);
-         if (keys.length > 1) {
-           setUseKeyListMode(true);
-           setShowKey(true); // Ensure showKey is true for list mode
-           setKeyList(keys);
-         } else {
-           setUseKeyListMode(false);
-           setKeyList([]); // Clear keyList if not in list mode
-         }
+        const keys = data.key
+          .split(',')
+          .map((k) => k.trim())
+          .filter((k) => k.length > 0);
+        if (keys.length > 1) {
+          setUseKeyListMode(true);
+          setShowKey(true); // Ensure showKey is true for list mode
+          setKeyList(keys);
+        } else {
+          setUseKeyListMode(false);
+          setKeyList([]); // Clear keyList if not in list mode
+        }
       } else {
         setUseKeyListMode(false);
         setKeyList([]);
       }
-       setInitialKey(data.key); // Store initial key for single input mode placeholder
-
+      setInitialKey(data.key); // Store initial key for single input mode placeholder
 
       setInputs(data);
       if (data.auto_ban === 0) {
@@ -583,7 +646,9 @@ const EditChannel = (props) => {
       // 如果是编辑模式，使用已有的channel id获取模型列表
       const res = await API.get('/api/channel/fetch_models/' + channelId);
       if (res.data && res.data?.success) {
-        fetchedModels = Array.isArray(res.data.data) ? res.data.data : (res.data.data?.data || []);
+        fetchedModels = Array.isArray(res.data.data)
+          ? res.data.data
+          : res.data.data?.data || [];
       } else {
         err = true;
       }
@@ -601,7 +666,9 @@ const EditChannel = (props) => {
           });
 
           if (res.data && res.data.success) {
-             fetchedModels = Array.isArray(res.data.data) ? res.data.data : (res.data.data?.data || []);
+            fetchedModels = Array.isArray(res.data.data)
+              ? res.data.data
+              : res.data.data?.data || [];
           } else {
             err = true;
           }
@@ -613,7 +680,7 @@ const EditChannel = (props) => {
     }
 
     if (!err) {
-       const combinedModels = Array.from(new Set([...models, ...fetchedModels]));
+      const combinedModels = Array.from(new Set([...models, ...fetchedModels]));
       handleInputChange(name, combinedModels);
       showSuccess(t('获取模型列表成功'));
     } else {
@@ -634,7 +701,11 @@ const EditChannel = (props) => {
       setBasicModels(
         res.data.data
           .filter((model) => {
-            return model.id.startsWith('gpt-') || model.id.startsWith('text-') || model.id.startsWith('claude-'); // Added claude for basic
+            return (
+              model.id.startsWith('gpt-') ||
+              model.id.startsWith('text-') ||
+              model.id.startsWith('claude-')
+            ); // Added claude for basic
           })
           .map((model) => model.id),
       );
@@ -677,7 +748,7 @@ const EditChannel = (props) => {
     fetchModels().then();
     fetchGroups().then();
     if (isEdit) {
-      loadChannel().then(() => { });
+      loadChannel().then(() => {});
     } else {
       setInputs(originInputs);
       let localModels = getChannelModels(originInputs.type); // Use originInputs.type for initial state
@@ -686,19 +757,18 @@ const EditChannel = (props) => {
     }
   }, [props.editingChannel.id]);
 
-   useEffect(() => {
-       // When switching back from list mode to single mode, ensure the single input is focused
-       if (!useKeyListMode && singleKeyInputRef.current) {
-           singleKeyInputRef.current.focus();
-       }
-   }, [useKeyListMode]);
-
+  useEffect(() => {
+    // When switching back from list mode to single mode, ensure the single input is focused
+    if (!useKeyListMode && singleKeyInputRef.current) {
+      singleKeyInputRef.current.focus();
+    }
+  }, [useKeyListMode]);
 
   const submit = async () => {
-     // Update inputs.key from keyList before submitting if in list mode
-     if (useKeyListMode) {
-       updateKeyListToInput(keyList);
-     }
+    // Update inputs.key from keyList before submitting if in list mode
+    if (useKeyListMode) {
+      updateKeyListToInput(keyList);
+    }
 
     if (!isEdit && (inputs.name === '' || inputs.key === '')) {
       showInfo(t('请填写渠道名称和渠道密钥！'));
@@ -712,22 +782,21 @@ const EditChannel = (props) => {
       showInfo(t('模型映射必须是合法的 JSON格式！'));
       return;
     }
-     if (inputs.setting !== '' && !verifyJSON(inputs.setting)) {
+    if (inputs.setting !== '' && !verifyJSON(inputs.setting)) {
       showInfo(t('渠道额外设置必须是合法的 JSON 格式！'));
       return;
     }
-     if (inputs.param_override !== '' && !verifyJSON(inputs.param_override)) {
+    if (inputs.param_override !== '' && !verifyJSON(inputs.param_override)) {
       showInfo(t('参数覆盖必须是合法的 JSON 格式！'));
       return;
     }
-     if (inputs.other !== '' && inputs.type === 41) {
-        // For type 41, check if it's JSON only if it starts with {
-        if (inputs.other.trim().startsWith('{') && !verifyJSON(inputs.other)) {
-             showInfo(t('部署地区必须是合法的 JSON 格式或纯文本！'));
-             return;
-        }
-     }
-
+    if (inputs.other !== '' && inputs.type === 41) {
+      // For type 41, check if it's JSON only if it starts with {
+      if (inputs.other.trim().startsWith('{') && !verifyJSON(inputs.other)) {
+        showInfo(t('部署地区必须是合法的 JSON 格式或纯文本！'));
+        return;
+      }
+    }
 
     let localInputs = { ...inputs };
     if (localInputs.base_url && localInputs.base_url.endsWith('/')) {
@@ -750,18 +819,17 @@ const EditChannel = (props) => {
     localInputs.group = localInputs.groups.join(',');
 
     // Ensure other is string for type 41 if it was JSON
-     if (localInputs.type === 41 && typeof localInputs.other !== 'string') {
-        localInputs.other = JSON.stringify(localInputs.other);
-     }
+    if (localInputs.type === 41 && typeof localInputs.other !== 'string') {
+      localInputs.other = JSON.stringify(localInputs.other);
+    }
 
-     // Ensure setting and param_override are strings if they are objects (parsed from JSON)
-     if (typeof localInputs.setting !== 'string') {
-        localInputs.setting = JSON.stringify(localInputs.setting);
-     }
-     if (typeof localInputs.param_override !== 'string') {
-        localInputs.param_override = JSON.stringify(localInputs.param_override);
-     }
-
+    // Ensure setting and param_override are strings if they are objects (parsed from JSON)
+    if (typeof localInputs.setting !== 'string') {
+      localInputs.setting = JSON.stringify(localInputs.setting);
+    }
+    if (typeof localInputs.param_override !== 'string') {
+      localInputs.param_override = JSON.stringify(localInputs.param_override);
+    }
 
     if (isEdit) {
       res = await API.put(`/api/channel/`, {
@@ -793,8 +861,10 @@ const EditChannel = (props) => {
   const addCustomModels = () => {
     if (customModel.trim() === '') return;
     // Split by comma, newline, or space
-    const modelArray = customModel.split(/[\s,]+/).map((model) => model.trim()).filter(model => model.length > 0);
-
+    const modelArray = customModel
+      .split(/[\s,]+/)
+      .map((model) => model.trim())
+      .filter((model) => model.length > 0);
 
     let localModels = [...inputs.models];
     let localModelOptions = [...modelOptions];
@@ -819,114 +889,124 @@ const EditChannel = (props) => {
     }
 
     if (addedCount > 0) {
-       setModelOptions(localModelOptions);
-       handleInputChange('models', localModels);
-       setCustomModel(''); // Clear input only if something was added
+      setModelOptions(localModelOptions);
+      handleInputChange('models', localModels);
+      setCustomModel(''); // Clear input only if something was added
     }
   };
 
-   // Handle key down event for key list input
-   const handleKeyInputKeyDown = (e, index) => {
-     if (e.key === 'Enter' || e.key === ',') {
-       e.preventDefault(); // Prevent default newline or comma
-       const currentValue = keyList[index].trim();
-       if (currentValue.length > 0) {
-         // If the current input has content, ensure it's in the list (handled by updateKeyAtIndex)
-         // Then add a new empty input below
-         addKeyInput();
-       } else if (e.key === 'Enter') {
-          // If Enter is pressed on an empty input, just add a new empty one
-           addKeyInput();
-       }
-       // If it's a comma on an empty input, do nothing (just prevent default)
-     } else if (e.key === 'Backspace' && keyList[index] === '' && keyList.length > 1 && index > 0) {
-        // If backspace is pressed on an empty input and there are other inputs before it
-         e.preventDefault(); // Prevent default backspace
-         const prevInput = document.querySelectorAll('.key-input-item input')[index - 1];
-         removeKeyInput(index);
-         // Focus on the previous input
-         if (prevInput) {
-             prevInput.focus();
-         }
-     }
-   };
-
-   // Handle paste event for key list input
-   const handleKeyInputPaste = (e, index) => {
-      const clipboardData = e.clipboardData || window.clipboardData;
-      const pastedData = clipboardData.getData('Text');
-
-      // Check if pasted data contains newline or comma
-      if (pastedData.includes('\n') || pastedData.includes(',')) {
-         e.preventDefault(); // Prevent default paste behavior
-
-         // Get current value in the input where pasting
-         const currentValue = keyList[index];
-
-         // Process the pasted data and the current value
-         const combinedValue = currentValue + pastedData;
-         const newKeys = combinedValue
-           .split(/[,\n]/) // Split by comma or newline
-           .map(k => k.trim())
-           .filter(k => k.length > 0); // Filter out empty strings
-
-         // Update the key list state
-         const newKeyList = [...keyList];
-         // Remove the original key at the current index
-         newKeyList.splice(index, 1);
-         // Insert the new keys at the current index
-         newKeyList.splice(index, 0, ...newKeys);
-
-         updateKeyListToInput(newKeyList); // Update state and sync with inputs.key
-
-          // Focus on the last inserted input if new ones were added
-         if (newKeys.length > 0) {
-             setTimeout(() => {
-                const inputs = document.querySelectorAll('.key-input-item input');
-                 if (inputs.length >= index + newKeys.length) {
-                    inputs[index + newKeys.length - 1].focus();
-                 }
-             }, 0);
-         } else {
-             // If pasted content resulted in no valid keys, focus on the previous input or the first if at index 0
-             setTimeout(() => {
-                 const inputs = document.querySelectorAll('.key-input-item input');
-                 if (inputs.length > 0) {
-                     const targetIndex = index > 0 ? index - 1 : 0;
-                     if (inputs[targetIndex]) {
-                         inputs[targetIndex].focus();
-                     }
-                 }
-             }, 0);
-         }
+  // Handle key down event for key list input
+  const handleKeyInputKeyDown = (e, index) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault(); // Prevent default newline or comma
+      const currentValue = keyList[index].trim();
+      if (currentValue.length > 0) {
+        // If the current input has content, ensure it's in the list (handled by updateKeyAtIndex)
+        // Then add a new empty input below
+        addKeyInput();
+      } else if (e.key === 'Enter') {
+        // If Enter is pressed on an empty input, just add a new empty one
+        addKeyInput();
       }
-      // If no newline or comma, allow default paste
-   };
+      // If it's a comma on an empty input, do nothing (just prevent default)
+    } else if (
+      e.key === 'Backspace' &&
+      keyList[index] === '' &&
+      keyList.length > 1 &&
+      index > 0
+    ) {
+      // If backspace is pressed on an empty input and there are other inputs before it
+      e.preventDefault(); // Prevent default backspace
+      const prevInput = document.querySelectorAll('.key-input-item input')[
+        index - 1
+      ];
+      removeKeyInput(index);
+      // Focus on the previous input
+      if (prevInput) {
+        prevInput.focus();
+      }
+    }
+  };
 
-    // Toggle multi-key view disable state
-    const toggleDisableMultiKeyView = () => {
-        setDisableMultiKeyView(prev => !prev);
-        // When disabling multi-key view, force single input mode
-        if (!disableMultiKeyView) {
-            setUseKeyListMode(false);
-            // When switching to single mode, combine existing keys back into one string
-            const combinedKey = keyList.join(',');
-            setInputs(inputs => ({ ...inputs, key: combinedKey }));
-            setKeyList([]); // Clear key list state
-        } else {
-            // When enabling multi-key view (if applicable and key has multiple entries)
-            if (supportsMultiKeyView(inputs.type) && inputs.key && (inputs.key.includes(',') || inputs.key.includes('\n'))) {
-                 setUseKeyListMode(true);
-                 setShowKey(true);
-                 const keys = inputs.key
-                   .split(/[,\n]/)
-                   .map(k => k.trim())
-                   .filter(k => k.length > 0);
-                 setKeyList(keys);
+  // Handle paste event for key list input
+  const handleKeyInputPaste = (e, index) => {
+    const clipboardData = e.clipboardData || window.clipboardData;
+    const pastedData = clipboardData.getData('Text');
+
+    // Check if pasted data contains newline or comma
+    if (pastedData.includes('\n') || pastedData.includes(',')) {
+      e.preventDefault(); // Prevent default paste behavior
+
+      // Get current value in the input where pasting
+      const currentValue = keyList[index];
+
+      // Process the pasted data and the current value
+      const combinedValue = currentValue + pastedData;
+      const newKeys = combinedValue
+        .split(/[,\n]/) // Split by comma or newline
+        .map((k) => k.trim())
+        .filter((k) => k.length > 0); // Filter out empty strings
+
+      // Update the key list state
+      const newKeyList = [...keyList];
+      // Remove the original key at the current index
+      newKeyList.splice(index, 1);
+      // Insert the new keys at the current index
+      newKeyList.splice(index, 0, ...newKeys);
+
+      updateKeyListToInput(newKeyList); // Update state and sync with inputs.key
+
+      // Focus on the last inserted input if new ones were added
+      if (newKeys.length > 0) {
+        setTimeout(() => {
+          const inputs = document.querySelectorAll('.key-input-item input');
+          if (inputs.length >= index + newKeys.length) {
+            inputs[index + newKeys.length - 1].focus();
+          }
+        }, 0);
+      } else {
+        // If pasted content resulted in no valid keys, focus on the previous input or the first if at index 0
+        setTimeout(() => {
+          const inputs = document.querySelectorAll('.key-input-item input');
+          if (inputs.length > 0) {
+            const targetIndex = index > 0 ? index - 1 : 0;
+            if (inputs[targetIndex]) {
+              inputs[targetIndex].focus();
             }
-        }
-    };
+          }
+        }, 0);
+      }
+    }
+    // If no newline or comma, allow default paste
+  };
 
+  // Toggle multi-key view disable state
+  const toggleDisableMultiKeyView = () => {
+    setDisableMultiKeyView((prev) => !prev);
+    // When disabling multi-key view, force single input mode
+    if (!disableMultiKeyView) {
+      setUseKeyListMode(false);
+      // When switching to single mode, combine existing keys back into one string
+      const combinedKey = keyList.join(',');
+      setInputs((inputs) => ({ ...inputs, key: combinedKey }));
+      setKeyList([]); // Clear key list state
+    } else {
+      // When enabling multi-key view (if applicable and key has multiple entries)
+      if (
+        supportsMultiKeyView(inputs.type) &&
+        inputs.key &&
+        (inputs.key.includes(',') || inputs.key.includes('\n'))
+      ) {
+        setUseKeyListMode(true);
+        setShowKey(true);
+        const keys = inputs.key
+          .split(/[,\n]/)
+          .map((k) => k.trim())
+          .filter((k) => k.length > 0);
+        setKeyList(keys);
+      }
+    }
+  };
 
   // 渲染密钥输入组件
   const renderKeyInput = () => {
@@ -949,38 +1029,46 @@ const EditChannel = (props) => {
     }
 
     // 使用列表模式显示多个密钥 (if supported and not disabled)
-    if (useKeyListMode && supportsMultiKeyView(inputs.type) && !disableMultiKeyView) {
+    if (
+      useKeyListMode &&
+      supportsMultiKeyView(inputs.type) &&
+      !disableMultiKeyView
+    ) {
       return (
         <div>
           <div style={{ marginTop: 8, marginBottom: '8px' }}>
-                <Checkbox
-                    checked={disableMultiKeyView}
-                    onChange={toggleDisableMultiKeyView}
-                >
-                    {t('禁用多密钥视图')}
-                </Checkbox>
-            </div>
+            <Checkbox
+              checked={disableMultiKeyView}
+              onChange={toggleDisableMultiKeyView}
+            >
+              {t('禁用多密钥视图')}
+            </Checkbox>
+          </div>
           <div style={{ maxHeight: '50vh', overflowY: 'auto' }}>
-          {keyList.map((key, index) => (
-            <div key={index} style={{ display: 'flex', marginBottom: '8px' }} className="key-input-item">
-              <Input
-                style={{ flex: 1 }}
-                value={key}
-                onChange={(value) => updateKeyAtIndex(index, value)}
-                onKeyDown={(e) => handleKeyInputKeyDown(e, index)}
-                 onPaste={(e) => handleKeyInputPaste(e, index)}
-                placeholder={t('请输入密钥')}
-              />
-              <Button
-                icon={<IconMinusCircle />}
-                type="danger"
-                theme="borderless"
-                onClick={() => removeKeyInput(index)}
-                style={{ marginLeft: '8px' }}
-                 disabled={keyList.length <= 1} // Disable remove if only one key left
-              />
-            </div>
-          ))}
+            {keyList.map((key, index) => (
+              <div
+                key={index}
+                style={{ display: 'flex', marginBottom: '8px' }}
+                className='key-input-item'
+              >
+                <Input
+                  style={{ flex: 1 }}
+                  value={key}
+                  onChange={(value) => updateKeyAtIndex(index, value)}
+                  onKeyDown={(e) => handleKeyInputKeyDown(e, index)}
+                  onPaste={(e) => handleKeyInputPaste(e, index)}
+                  placeholder={t('请输入密钥')}
+                />
+                <Button
+                  icon={<IconMinusCircle />}
+                  type='danger'
+                  theme='borderless'
+                  onClick={() => removeKeyInput(index)}
+                  style={{ marginLeft: '8px' }}
+                  disabled={keyList.length <= 1} // Disable remove if only one key left
+                />
+              </div>
+            ))}
           </div>
           <Button
             icon={<IconPlusCircle />}
@@ -989,10 +1077,9 @@ const EditChannel = (props) => {
           >
             {t('添加密钥')}
           </Button>
-           <Typography.Text type="secondary" style={{ marginLeft: 16 }}>
+          <Typography.Text type='secondary' style={{ marginLeft: 16 }}>
             {t('在输入框中输入逗号或回车可自动换行添加')}
-           </Typography.Text>
-            
+          </Typography.Text>
         </div>
       );
     }
@@ -1000,29 +1087,29 @@ const EditChannel = (props) => {
     // 默认单行密钥输入 (or if multi-key view is disabled or not supported)
     return (
       <>
-      {supportsMultiKeyView(inputs.type) && ( // Only show checkbox if multi-key view is supported
-        <Checkbox
-          checked={disableMultiKeyView}
-          onChange={toggleDisableMultiKeyView}
-          style={{ marginRight: 8, marginBottom: 8, marginTop: 8 }} // Add some spacing
-        >
-           {t('禁用多密钥视图')}
-        </Checkbox>
-      )}
+        {supportsMultiKeyView(inputs.type) && ( // Only show checkbox if multi-key view is supported
+          <Checkbox
+            checked={disableMultiKeyView}
+            onChange={toggleDisableMultiKeyView}
+            style={{ marginRight: 8, marginBottom: 8, marginTop: 8 }} // Add some spacing
+          >
+            {t('禁用多密钥视图')}
+          </Checkbox>
+        )}
 
-      <Input
-         ref={singleKeyInputRef} // Attach ref here
-        label={t('密钥')}
-        name='key'
-        required
-        type={showKey ? 'text' : 'password'}
-        placeholder={isEdit ? initialKey : t(type2secretPrompt(inputs.type))}
-        onChange={(value) => {
-          handleInputChange('key', value);
-        }}
-        onPaste={(e) => {
-          // Handle paste for single input mode to switch to list mode, if supported and not disabled
-          if (supportsMultiKeyView(inputs.type) && !disableMultiKeyView) {
+        <Input
+          ref={singleKeyInputRef} // Attach ref here
+          label={t('密钥')}
+          name='key'
+          required
+          type={showKey ? 'text' : 'password'}
+          placeholder={isEdit ? initialKey : t(type2secretPrompt(inputs.type))}
+          onChange={(value) => {
+            handleInputChange('key', value);
+          }}
+          onPaste={(e) => {
+            // Handle paste for single input mode to switch to list mode, if supported and not disabled
+            if (supportsMultiKeyView(inputs.type) && !disableMultiKeyView) {
               const clipboardData = e.clipboardData || window.clipboardData;
               const pastedData = clipboardData.getData('Text');
 
@@ -1030,72 +1117,72 @@ const EditChannel = (props) => {
               if (pastedData.includes('\n') || pastedData.includes(',')) {
                 e.preventDefault(); // Prevent default paste
 
-                 // Prepend existing key if any
-                 const combinedData = (inputs.key || '') + pastedData;
+                // Prepend existing key if any
+                const combinedData = (inputs.key || '') + pastedData;
 
-                 // Process the pasted data to switch to list mode
+                // Process the pasted data to switch to list mode
                 const keys = combinedData
                   .split(/[,\n]/)
-                  .map(k => k.trim())
-                  .filter(k => k.length > 0);
+                  .map((k) => k.trim())
+                  .filter((k) => k.length > 0);
 
                 if (keys.length > 0) {
-                    setUseKeyListMode(true);
-                    setShowKey(true);
-                    setKeyList(keys);
-                     // Update the main inputs.key state based on the new list
-                    handleInputChange('key', keys.join(','));
+                  setUseKeyListMode(true);
+                  setShowKey(true);
+                  setKeyList(keys);
+                  // Update the main inputs.key state based on the new list
+                  handleInputChange('key', keys.join(','));
 
-                     // Focus the first input after switching to list mode
-                     setTimeout(() => {
-                       const inputs = document.querySelectorAll('.key-input-item input');
-                       if (inputs.length > 0) {
-                         inputs[0].focus();
-                       }
-                    }, 0);
-
+                  // Focus the first input after switching to list mode
+                  setTimeout(() => {
+                    const inputs = document.querySelectorAll(
+                      '.key-input-item input',
+                    );
+                    if (inputs.length > 0) {
+                      inputs[0].focus();
+                    }
+                  }, 0);
                 } else {
-                    // If splitting resulted in no valid keys, just update the input value (which is empty after split)
-                     handleInputChange('key', '');
+                  // If splitting resulted in no valid keys, just update the input value (which is empty after split)
+                  handleInputChange('key', '');
                 }
               }
               // If no newline or comma, allow default paste (handled by onChange)
-          }
-           // If multi-key view not supported or disabled, allow default paste (handled by onChange)
-        }}
-        value={inputs.key || (isEdit ? initialKey : '')}
-        autoComplete='new-password'
-        addonAfter={
-          <Space>
-            
-            <Button
-              theme="borderless"
-              icon={showKey ? <IconEyeClosedSolid /> : <IconEyeOpened />}
-              onClick={() => setShowKey(!showKey)}
-              style={{ padding: '0 4px' }}
-            />
-          </Space>
-        }
-      />
-      {supportsMultiKeyView(inputs.type) && disableMultiKeyView && (
-        <Button
-          type='danger'
-          theme='borderless'
-          onClick={() => {
-            Modal.confirm({
-              title: t('确认清空密钥'),
-              content: t('您确定要清空密钥输入框的内容吗？'),
-              onOk: () => {
-                handleInputChange('key', '');
-                showSuccess(t('密钥已清空'));
-              },
-            });
+            }
+            // If multi-key view not supported or disabled, allow default paste (handled by onChange)
           }}
-          style={{ marginTop: 8 }}
-        >
-          {t('清空')}
-        </Button>
-      )}
+          value={inputs.key || (isEdit ? initialKey : '')}
+          autoComplete='new-password'
+          addonAfter={
+            <Space>
+              <Button
+                theme='borderless'
+                icon={showKey ? <IconEyeClosedSolid /> : <IconEyeOpened />}
+                onClick={() => setShowKey(!showKey)}
+                style={{ padding: '0 4px' }}
+              />
+            </Space>
+          }
+        />
+        {supportsMultiKeyView(inputs.type) && disableMultiKeyView && (
+          <Button
+            type='danger'
+            theme='borderless'
+            onClick={() => {
+              Modal.confirm({
+                title: t('确认清空密钥'),
+                content: t('您确定要清空密钥输入框的内容吗？'),
+                onOk: () => {
+                  handleInputChange('key', '');
+                  showSuccess(t('密钥已清空'));
+                },
+              });
+            }}
+            style={{ marginTop: 8 }}
+          >
+            {t('清空')}
+          </Button>
+        )}
       </>
     );
   };
@@ -1116,7 +1203,12 @@ const EditChannel = (props) => {
         footer={
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Space>
-              <Button theme='solid' size={'large'} onClick={submit} loading={loading}>
+              <Button
+                theme='solid'
+                size={'large'}
+                onClick={submit}
+                loading={loading}
+              >
                 {t('提交')}
               </Button>
               <Button
@@ -1179,7 +1271,9 @@ const EditChannel = (props) => {
                   type={'warning'}
                   description={
                     <>
-                      {t('2025年5月10日后添加的渠道，不需要再在部署的时候移除模型名称中的"."')}
+                      {t(
+                        '2025年5月10日后添加的渠道，不需要再在部署的时候移除模型名称中的"."',
+                      )}
                       {/*<br />*/}
                       {/*<Typography.Text*/}
                       {/*  style={{*/}
@@ -1286,25 +1380,35 @@ const EditChannel = (props) => {
             value={inputs.name}
             autoComplete='new-password'
           />
-          {inputs.type !== 3 && inputs.type !== 8 && inputs.type !== 22 && inputs.type !== 36 && inputs.type !== 45 && (
-            <>
-              <div style={{ marginTop: 10 }}>
-                <Typography.Text strong>{t('API地址')}：</Typography.Text>
-              </div>
-              <Tooltip content={t('对于官方渠道，Veloera已经内置地址，除非是第三方代理站点或者Azure的特殊接入地址，否则不需要填写')}>
-                <Input
-                  label={t('API地址')}
-                  name="base_url"
-                  placeholder={t('此项可选，用于通过自定义API地址来进行 API 调用，末尾不要带/v1和/')}
-                  onChange={(value) => {
-                    handleInputChange('base_url', value);
-                  }}
-                  value={inputs.base_url}
-                  autoComplete="new-password"
-                />
-              </Tooltip>
-            </>
-          )}
+          {inputs.type !== 3 &&
+            inputs.type !== 8 &&
+            inputs.type !== 22 &&
+            inputs.type !== 36 &&
+            inputs.type !== 45 && (
+              <>
+                <div style={{ marginTop: 10 }}>
+                  <Typography.Text strong>{t('API地址')}：</Typography.Text>
+                </div>
+                <Tooltip
+                  content={t(
+                    '对于官方渠道，Veloera已经内置地址，除非是第三方代理站点或者Azure的特殊接入地址，否则不需要填写',
+                  )}
+                >
+                  <Input
+                    label={t('API地址')}
+                    name='base_url'
+                    placeholder={t(
+                      '此项可选，用于通过自定义API地址来进行 API 调用，末尾不要带/v1和/',
+                    )}
+                    onChange={(value) => {
+                      handleInputChange('base_url', value);
+                    }}
+                    value={inputs.base_url}
+                    autoComplete='new-password'
+                  />
+                </Tooltip>
+              </>
+            )}
           <div style={{ marginTop: 10 }}>
             <Typography.Text strong>{t('密钥')}：</Typography.Text>
           </div>
@@ -1394,10 +1498,10 @@ const EditChannel = (props) => {
                 name='other'
                 placeholder={t(
                   '请输入部署地区，例如：us-central1\n支持使用模型映射格式\n' +
-                  '{\n' +
-                  '    "default": "us-central1",\n' +
-                  '    "claude-3-5-sonnet-20240620": "europe-west1"\n' +
-                  '}',
+                    '{\n' +
+                    '    "default": "us-central1",\n' +
+                    '    "claude-3-5-sonnet-20240620": "europe-west1"\n' +
+                    '}',
                 )}
                 autosize={{ minRows: 2 }}
                 onChange={(value) => {
@@ -1644,21 +1748,6 @@ const EditChannel = (props) => {
             value={inputs.weight}
             autoComplete='new-password'
           />
-          <div style={{ marginTop: 10 }}>
-            <Typography.Text strong>{t('渠道前缀')}</Typography.Text>
-          </div>
-          <Tooltip content={t('可选项，设置后此渠道的所有模型向客户显示时都会自动添加此前缀，同时可以根据前缀将请求路由到该渠道')}>
-            <Input
-              label={t('渠道前缀')}
-              name='model_prefix'
-              placeholder={t('例如: cursor-')}
-              onChange={(value) => {
-                handleInputChange('model_prefix', value);
-              }}
-              value={inputs.model_prefix}
-              autoComplete='new-password'
-            />
-          </Tooltip>
           <>
             <div style={{ marginTop: 10 }}>
               <Typography.Text strong>{t('渠道额外设置')}：</Typography.Text>
