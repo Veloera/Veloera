@@ -83,14 +83,25 @@ export default function SettingsRebate(props) {
 
   useEffect(() => {
     const currentInputs = {};
-    for (let key in props.options) {
-      if (Object.prototype.hasOwnProperty.call(props.options, key) && Object.keys(inputs).includes(key)) {
-        currentInputs[key] = props.options[key];
-      }
-    }
+    const validKeys = Object.keys(inputs);
+    
+    // 使用 Object.entries 和过滤来避免原型污染
+    const safeOptions = Object.entries(props.options || {})
+      .filter(([key]) => validKeys.includes(key))
+      .reduce((acc, [key, value]) => {
+        if (value !== null && value !== undefined) {
+          acc[key] = value;
+        }
+        return acc;
+      }, {});
+    
+    Object.assign(currentInputs, safeOptions);
+    
     setInputs(currentInputs);
     setInputsRow(structuredClone(currentInputs));
-    refForm.current.setValues(currentInputs);
+    if (refForm.current) {
+      refForm.current.setValues(currentInputs);
+    }
   }, [props.options]);
 
   return (
