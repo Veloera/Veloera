@@ -90,10 +90,16 @@ export default function SettingsRebate(props) {
       .filter(([key]) => validKeys.includes(key))
       .reduce((acc, [key, value]) => {
         if (value !== null && value !== undefined) {
-          acc[key] = value;
+          // 使用 Object.defineProperty 来安全地设置属性
+          Object.defineProperty(acc, key, {
+            value: value,
+            writable: true,
+            enumerable: true,
+            configurable: true
+          });
         }
         return acc;
-      }, {});
+      }, Object.create(null));
     
     Object.assign(currentInputs, safeOptions);
     
