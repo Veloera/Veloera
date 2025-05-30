@@ -9,6 +9,7 @@ import (
 	"strings"
 	"veloera/common"
 	"veloera/dto"
+	"veloera/setting/model_setting"
 )
 
 func MidjourneyErrorWrapper(code int, desc string) *dto.MidjourneyResponse {
@@ -74,6 +75,7 @@ func ClaudeErrorWrapperLocal(err error, code string, statusCode int) *dto.Claude
 }
 
 func RelayErrorHandler(resp *http.Response, showBodyWhenFail bool) (errWithStatusCode *dto.OpenAIErrorWithStatusCode) {
+	hideUpstream := model_setting.GetGlobalSettings().HideUpstreamErrorEnabled
 	errWithStatusCode = &dto.OpenAIErrorWithStatusCode{
 		StatusCode: resp.StatusCode,
 		Error: dto.OpenAIError{
@@ -98,6 +100,9 @@ func RelayErrorHandler(resp *http.Response, showBodyWhenFail bool) (errWithStatu
 		} else {
 			errWithStatusCode.Error.Message = fmt.Sprintf("bad response status code %d", resp.StatusCode)
 		}
+		if hideUpstream && resp.StatusCode != http.StatusTooManyRequests {
+			errWithStatusCode.Error.Message = fmt.Sprintf("Upstream error with status code %d", resp.StatusCode)
+		}
 		return
 	}
 	if errResponse.Error.Message != "" {
@@ -108,6 +113,9 @@ func RelayErrorHandler(resp *http.Response, showBodyWhenFail bool) (errWithStatu
 	}
 	if errWithStatusCode.Error.Message == "" {
 		errWithStatusCode.Error.Message = fmt.Sprintf("bad response status code %d", resp.StatusCode)
+	}
+	if hideUpstream && resp.StatusCode != http.StatusTooManyRequests {
+		errWithStatusCode.Error.Message = fmt.Sprintf("Upstream error with status code %d", resp.StatusCode)
 	}
 	return
 }

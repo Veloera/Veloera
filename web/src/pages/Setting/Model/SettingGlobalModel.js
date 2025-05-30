@@ -90,6 +90,19 @@ export default function SettingGlobalModel(props) {
                   }
                 />
               </Col>
+              <Col xs={24} sm={12} md={8} lg={8} xl={8}>
+                <Form.Switch
+                  label={t('隐藏上游报错信息')}
+                  field={'global.hide_upstream_error_enabled'}
+                  onChange={(value) =>
+                    setInputs({
+                      ...inputs,
+                      'global.hide_upstream_error_enabled': value,
+                    })
+                  }
+                  extraText={'开启后，只返回统一的上游错误信息'}
+                />
+              </Col>
             </Row>
             
             <Form.Section text={t('连接保活设置')}>
