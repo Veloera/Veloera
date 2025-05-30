@@ -34,11 +34,14 @@ export default function SettingsRebate(props) {
     // 验证返佣百分比
     if (inputs.RebateEnabled && (inputs.RebatePercentage < 0 || inputs.RebatePercentage > 100)) {
       showError(t('返佣百分比必须在0到100之间'));
-      return;
+      return false;
     }
 
     const updateArray = compareObjects(inputs, inputsRow);
-    if (!updateArray.length) return showWarning(t('你似乎并没有修改什么'));
+    if (!updateArray.length) {
+      showWarning(t('你似乎并没有修改什么'));
+      return false;
+    }
     
     const requestQueue = updateArray.map((item) => {
       let value = '';
@@ -57,13 +60,18 @@ export default function SettingsRebate(props) {
     Promise.all(requestQueue)
       .then((res) => {
         if (requestQueue.length === 1) {
-          if (res.includes(undefined)) return;
+          if (res.includes(undefined)) {
+            return false;
+          }
         } else if (requestQueue.length > 1) {
-          if (res.includes(undefined))
-            return showError(t('部分保存失败，请重试'));
+          if (res.includes(undefined)) {
+            showError(t('部分保存失败，请重试'));
+            return false;
+          }
         }
         showSuccess(t('保存成功'));
         props.refresh();
+        return true;
       })
       .catch(() => {
         showError(t('保存失败，请重试'));
@@ -76,7 +84,7 @@ export default function SettingsRebate(props) {
   useEffect(() => {
     const currentInputs = {};
     for (let key in props.options) {
-      if (Object.keys(inputs).includes(key)) {
+      if (Object.prototype.hasOwnProperty.call(props.options, key) && Object.keys(inputs).includes(key)) {
         currentInputs[key] = props.options[key];
       }
     }
