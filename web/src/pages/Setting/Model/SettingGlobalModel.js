@@ -16,6 +16,7 @@ export default function SettingGlobalModel(props) {
   const [loading, setLoading] = useState(false);
   const [inputs, setInputs] = useState({
     'global.pass_through_request_enabled': false,
+    'global.hide_upstream_error_enabled': false,
     'general_setting.ping_interval_enabled': false,
     'general_setting.ping_interval_seconds': 60,
   });
