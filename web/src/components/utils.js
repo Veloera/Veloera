@@ -30,20 +30,26 @@ export async function onOIDCClicked(auth_url, client_id, openInNewTab = false) {
   }
 }
 
-export async function onGitHubOAuthClicked(github_client_id) {
+export async function onGitHubOAuthClicked(github_client_id, openInNewTab = false) {
   const state = await getOAuthState();
   if (!state) return;
-  window.open(
-    `https://github.com/login/oauth/authorize?client_id=${github_client_id}&state=${state}&scope=user:email`,
-  );
+  const url = `https://github.com/login/oauth/authorize?client_id=${github_client_id}&state=${state}&scope=user:email`;
+  if (openInNewTab) {
+    window.open(url);
+  } else {
+    window.location.href = url;
+  }
 }
 
-export async function onLinuxDOOAuthClicked(linuxdo_client_id) {
+export async function onLinuxDOOAuthClicked(linuxdo_client_id, openInNewTab = false) {
   const state = await getOAuthState();
   if (!state) return;
-  window.open(
-    `https://connect.linux.do/oauth2/authorize?response_type=code&client_id=${linuxdo_client_id}&state=${state}`,
-  );
+  const url = `https://connect.linux.do/oauth2/authorize?response_type=code&client_id=${linuxdo_client_id}&state=${state}`;
+  if (openInNewTab) {
+    window.open(url);
+  } else {
+    window.location.href = url;
+  }
 }
 
 let channelModels = undefined;
