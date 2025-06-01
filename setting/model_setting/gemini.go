@@ -11,7 +11,7 @@ type GeminiSettings struct {
 	SupportedImagineModels                []string          `json:"supported_imagine_models"`
 	ThinkingAdapterEnabled                bool              `json:"thinking_adapter_enabled"`
 	ThinkingAdapterBudgetTokensPercentage float64           `json:"thinking_adapter_budget_tokens_percentage"`
-	ModelsSupportedThinkingBudget         []string          `json:"models_supported_thinking_budget,omitempty"`
+	ModelsSupportedThinkingBudget         []string          `json:"models_supported_thinking_budget"`
 }
 
 // 默认配置
