@@ -14,7 +14,6 @@ import (
 	"veloera/relay/helper"
 	"veloera/service"
 	"veloera/setting/model_setting"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -28,10 +27,14 @@ func CovertGemini2OpenAI(textRequest dto.GeneralOpenAIRequest, info *relaycommon
 			TopP:            textRequest.TopP,
 			MaxOutputTokens: textRequest.MaxTokens,
 			Seed:            int64(textRequest.Seed),
-			ThinkingConfig: &GeminiThinkingConfig{
-				IncludeThoughts: true,
-			},
 		},
+	}
+
+	// Check if the current model supports thinking budget
+	if isModelSupportedThinkingBudget(info.OriginModelName, model_setting.GetGeminiSettings().ModelsSupportedThinkingBudget) {
+		geminiRequest.GenerationConfig.ThinkingConfig = &GeminiThinkingConfig{
+			IncludeThoughts: true,
+		}
 	}
 
 	if model_setting.IsGeminiModelSupportImagine(info.UpstreamModelName) {
@@ -42,14 +45,16 @@ func CovertGemini2OpenAI(textRequest dto.GeneralOpenAIRequest, info *relaycommon
 	}
 
 	if strings.HasPrefix(info.UpstreamModelName, "gemini-2.5-") && model_setting.GetGeminiSettings().ThinkingAdapterEnabled {
-		if strings.HasSuffix(info.OriginModelName, "-thinking") {
-			budgetTokens := model_setting.GetGeminiSettings().ThinkingAdapterBudgetTokensPercentage * float64(geminiRequest.GenerationConfig.MaxOutputTokens)
-			if budgetTokens == 0 || budgetTokens > 24576 {
-				budgetTokens = 24576
+		if geminiRequest.GenerationConfig.ThinkingConfig != nil { // Only apply if ThinkingConfig was instantiated
+			if strings.HasSuffix(info.OriginModelName, "-thinking") {
+				budgetTokens := model_setting.GetGeminiSettings().ThinkingAdapterBudgetTokensPercentage * float64(geminiRequest.GenerationConfig.MaxOutputTokens)
+				if budgetTokens == 0 || budgetTokens > 24576 {
+					budgetTokens = 24576
+				}
+				geminiRequest.GenerationConfig.ThinkingConfig.SetThinkingBudget(int(budgetTokens))
+			} else if strings.HasSuffix(info.OriginModelName, "-nothinking") {
+				geminiRequest.GenerationConfig.ThinkingConfig.SetThinkingBudget(0)
 			}
-			geminiRequest.GenerationConfig.ThinkingConfig.SetThinkingBudget(int(budgetTokens))
-		} else if strings.HasSuffix(info.OriginModelName, "-nothinking") {
-			geminiRequest.GenerationConfig.ThinkingConfig.SetThinkingBudget(0)
 		}
 	}
 
@@ -280,6 +285,16 @@ func CovertGemini2OpenAI(textRequest dto.GeneralOpenAIRequest, info *relaycommon
 	}
 
 	return &geminiRequest, nil
+}
+
+// isModelSupportedThinkingBudget checks if a given model is in the list of models supporting thinking budget.
+func isModelSupportedThinkingBudget(model string, supportedModels []string) bool {
+	for _, supportedModel := range supportedModels {
+		if supportedModel == model {
+			return true
+		}
+	}
+	return false
 }
 
 // cleanFunctionParameters recursively removes unsupported fields from Gemini function parameters.

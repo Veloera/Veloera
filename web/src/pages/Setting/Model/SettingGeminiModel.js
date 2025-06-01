@@ -30,6 +30,7 @@ export default function SettingGeminiModel(props) {
     'gemini.supported_imagine_models': [],
     'gemini.thinking_adapter_enabled': false,
     'gemini.thinking_adapter_budget_tokens_percentage': 0.6,
+    'gemini.models_supported_thinking_budget': [],
   });
   const refForm = useRef();
   const [inputsRow, setInputsRow] = useState(inputs);
@@ -207,6 +208,16 @@ export default function SettingGeminiModel(props) {
                       'gemini.thinking_adapter_budget_tokens_percentage': value,
                     })
                   }
+                />
+              </Col>
+            </Row>
+            <Row>
+              <Col xs={24} sm={12} md={8} lg={8} xl={8}>
+                <Form.TextArea
+                  field={'gemini.models_supported_thinking_budget'}
+                  label={t('支持设置思考预算的模型')}
+                  placeholder={t('例如：') + '\n' + JSON.stringify(['gemini-2.5-flash-preview-05-20', 'gemini-2.5-flash-preview-04-17'], null, 2)}
+                  onChange={(value) => setInputs({ ...inputs, 'gemini.models_supported_thinking_budget': value })}
                 />
               </Col>
             </Row>
