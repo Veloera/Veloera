@@ -35,7 +35,7 @@ var defaultGeminiSettings = GeminiSettings{
 	ThinkingAdapterBudgetTokensPercentage: 0.6,
 	ModelsSupportedThinkingBudget:         []string{
 		"gemini-2.5-flash-preview-05-20",
-		"gemini-2.5-flash-preview-04-17"
+		"gemini-2.5-flash-preview-04-17",
 	},
 }
 
