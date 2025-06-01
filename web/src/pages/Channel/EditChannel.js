@@ -937,11 +937,11 @@ const EditChannel = (props) => {
           label={t('密钥')}
           name='key'
           required
-          placeholder={isEdit ? initialKey : t(type2secretPrompt(inputs.type))}
+          placeholder={t(type2secretPrompt(inputs.type))}
           onChange={(value) => {
             handleInputChange('key', value);
           }}
-          value={inputs.key || (isEdit ? initialKey : '')}
+          value={inputs.key}
           autoComplete='new-password'
           autosize={{ minRows: 2 }}
         />
@@ -1016,7 +1016,7 @@ const EditChannel = (props) => {
         name='key'
         required
         type={showKey ? 'text' : 'password'}
-        placeholder={isEdit ? initialKey : t(type2secretPrompt(inputs.type))}
+        placeholder={t(type2secretPrompt(inputs.type))}
         onChange={(value) => {
           handleInputChange('key', value);
         }}
@@ -1063,7 +1063,7 @@ const EditChannel = (props) => {
           }
            // If multi-key view not supported or disabled, allow default paste (handled by onChange)
         }}
-        value={inputs.key || (isEdit ? initialKey : '')}
+        value={inputs.key}
         autoComplete='new-password'
         addonAfter={
           <Space>
