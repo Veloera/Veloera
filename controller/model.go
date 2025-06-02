@@ -141,7 +141,7 @@ func init() {
 func ListModels(c *gin.Context) {
 	userOpenAiModels := make([]dto.OpenAIModels, 0)
 	permission := getPermission()
-	modelPrefixMap := make(map[string]string) // Map to store prefix for each model
+	modelPrefixMap := make(map[string][]string) // Map to store all prefixed versions for each model
 
 	// Get the user group to look up available channels
 	userId := c.GetInt("id")
@@ -169,7 +169,21 @@ func ListModels(c *gin.Context) {
 		// For each channel with a prefix, add its models to the prefix map
 		for _, channel := range channels {
 			for _, modelName := range channel.GetModels() {
-				modelPrefixMap[modelName] = prefix + modelName
+				if modelPrefixMap[modelName] == nil {
+					modelPrefixMap[modelName] = make([]string, 0)
+				}
+				prefixedModel := prefix + modelName
+				// Check if this prefixed model already exists to avoid duplicates
+				exists := false
+				for _, existing := range modelPrefixMap[modelName] {
+					if existing == prefixedModel {
+						exists = true
+						break
+					}
+				}
+				if !exists {
+					modelPrefixMap[modelName] = append(modelPrefixMap[modelName], prefixedModel)
+				}
 			}
 		}
 	}
@@ -185,30 +199,44 @@ func ListModels(c *gin.Context) {
 		}
 
 		for allowModel := range tokenModelLimit {
-			// Check if this model has a prefix mapping
-			prefixedModel := allowModel
-			for baseModel, prefixedName := range modelPrefixMap {
-				if baseModel == allowModel {
-					prefixedModel = prefixedName
-					break
-				}
-			}
-
+			// Check if this model has prefix mappings
+			prefixedModels := modelPrefixMap[allowModel]
+			
+			// Add base model first
 			if _, ok := openAIModelsMap[allowModel]; ok {
 				modelInfo := openAIModelsMap[allowModel]
-				// Replace ID with prefixed model if available
-				modelInfo.Id = prefixedModel
 				userOpenAiModels = append(userOpenAiModels, modelInfo)
 			} else {
 				userOpenAiModels = append(userOpenAiModels, dto.OpenAIModels{
-					Id:         prefixedModel, // Use the prefixed model ID
+					Id:         allowModel,
 					Object:     "model",
 					Created:    1626777600,
 					OwnedBy:    "custom",
 					Permission: permission,
-					Root:       allowModel, // Keep the original model name as root
+					Root:       allowModel,
 					Parent:     nil,
 				})
+			}
+
+			// Add all prefixed versions
+			for _, prefixedModel := range prefixedModels {
+				if _, ok := openAIModelsMap[allowModel]; ok {
+					modelInfo := openAIModelsMap[allowModel]
+					// Create a copy and replace ID with prefixed model
+					prefixedModelInfo := modelInfo
+					prefixedModelInfo.Id = prefixedModel
+					userOpenAiModels = append(userOpenAiModels, prefixedModelInfo)
+				} else {
+					userOpenAiModels = append(userOpenAiModels, dto.OpenAIModels{
+						Id:         prefixedModel,
+						Object:     "model",
+						Created:    1626777600,
+						OwnedBy:    "custom",
+						Permission: permission,
+						Root:       allowModel, // Keep the original model name as root
+						Parent:     nil,
+					})
+				}
 			}
 		}
 	} else {
@@ -216,7 +244,7 @@ func ListModels(c *gin.Context) {
 		addedModels := make(map[string]bool)
 
 		// First add all models with prefixes
-		for baseModel, prefixedModel := range modelPrefixMap {
+		for baseModel, prefixedModels := range modelPrefixMap {
 			// Check if the base model is in the allowed models for this group
 			isAllowed := false
 			for _, groupModel := range models {
@@ -227,20 +255,25 @@ func ListModels(c *gin.Context) {
 			}
 
 			if isAllowed {
-				if _, ok := openAIModelsMap[baseModel]; ok {
-					modelInfo := openAIModelsMap[baseModel]
-					modelInfo.Id = prefixedModel
-					userOpenAiModels = append(userOpenAiModels, modelInfo)
-				} else {
-					userOpenAiModels = append(userOpenAiModels, dto.OpenAIModels{
-						Id:         prefixedModel,
-						Object:     "model",
-						Created:    1626777600,
-						OwnedBy:    "custom",
-						Permission: permission,
-						Root:       baseModel,
-						Parent:     nil,
-					})
+				// Add all prefixed versions of this model
+				for _, prefixedModel := range prefixedModels {
+					if _, ok := openAIModelsMap[baseModel]; ok {
+						modelInfo := openAIModelsMap[baseModel]
+						// Create a copy and replace ID with prefixed model
+						prefixedModelInfo := modelInfo
+						prefixedModelInfo.Id = prefixedModel
+						userOpenAiModels = append(userOpenAiModels, prefixedModelInfo)
+					} else {
+						userOpenAiModels = append(userOpenAiModels, dto.OpenAIModels{
+							Id:         prefixedModel,
+							Object:     "model",
+							Created:    1626777600,
+							OwnedBy:    "custom",
+							Permission: permission,
+							Root:       baseModel,
+							Parent:     nil,
+						})
+					}
 				}
 				addedModels[baseModel] = true
 			}

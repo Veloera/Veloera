@@ -504,7 +504,7 @@ func GetUserModels(c *gin.Context) {
 
 	// Get prefix channels for the user's group
 	prefixChannels := middleware.GetPrefixChannels(user.Group)
-	modelPrefixMap := make(map[string]string) // Map base model to prefixed model
+	modelPrefixMap := make(map[string][]string) // Map base model to all prefixed versions
 
 	for prefix, channels := range prefixChannels {
 		if prefix == "" {
@@ -512,7 +512,18 @@ func GetUserModels(c *gin.Context) {
 		}
 		for _, channel := range channels {
 			for _, modelName := range channel.GetModels() {
-				modelPrefixMap[modelName] = prefix + modelName
+				prefixedModel := prefix + modelName
+				// Check if this prefixed model already exists to avoid duplicates
+				exists := false
+				for _, existing := range modelPrefixMap[modelName] {
+					if existing == prefixedModel {
+						exists = true
+						break
+					}
+				}
+				if !exists {
+					modelPrefixMap[modelName] = append(modelPrefixMap[modelName], prefixedModel)
+				}
 			}
 		}
 	}
@@ -521,10 +532,12 @@ func GetUserModels(c *gin.Context) {
 	for group := range groups {
 		groupModels := model.GetGroupModels(group)
 		for _, baseModel := range groupModels {
-			if prefixedModel, ok := modelPrefixMap[baseModel]; ok {
-				if !addedModels[prefixedModel] {
-					models = append(models, prefixedModel)
-					addedModels[prefixedModel] = true
+			if prefixedModels, ok := modelPrefixMap[baseModel]; ok {
+				for _, prefixedModel := range prefixedModels {
+					if !addedModels[prefixedModel] {
+						models = append(models, prefixedModel)
+						addedModels[prefixedModel] = true
+					}
 				}
 			}
 		}
@@ -536,10 +549,12 @@ func GetUserModels(c *gin.Context) {
 		for _, baseModel := range groupModels {
 			// Check if this base model was already added with a prefix
 			isPrefixed := false
-			for _, prefixedName := range modelPrefixMap {
-				if prefixedName == baseModel {
-					isPrefixed = true
-					break
+			if prefixedModels, ok := modelPrefixMap[baseModel]; ok {
+				for _, prefixedName := range prefixedModels {
+					if addedModels[prefixedName] {
+						isPrefixed = true
+						break
+					}
 				}
 			}
 			if !isPrefixed && !addedModels[baseModel] {

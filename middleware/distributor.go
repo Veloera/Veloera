@@ -63,6 +63,11 @@ func GetPrefixChannels(group string) map[string][]*model.Channel {
 	return getPrefixChannels(group)
 }
 
+// SelectChannelByPrefix is the exported version of selectChannelByPrefix for use by other packages
+func SelectChannelByPrefix(group, prefix, originalModel string) (*model.Channel, error) {
+	return selectChannelByPrefix(group, prefix, originalModel)
+}
+
 // ResetChannelKeyIndex resets the round-robin key index for a specific channel
 // This can be called when a channel's keys are updated
 func ResetChannelKeyIndex(channelId int) {
