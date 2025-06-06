@@ -60,6 +60,7 @@ type GeminiPart struct {
 	FileData            *GeminiFileData                `json:"fileData,omitempty"`
 	ExecutableCode      *GeminiPartExecutableCode      `json:"executableCode,omitempty"`
 	CodeExecutionResult *GeminiPartCodeExecutionResult `json:"codeExecutionResult,omitempty"`
+	Thought             bool                           `json:"thought,omitempty"` // Added for thought processing
 }
 
 type GeminiChatContent struct {

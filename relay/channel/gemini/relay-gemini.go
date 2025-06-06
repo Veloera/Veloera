@@ -18,7 +18,6 @@ import (
 	"veloera/service"
 	"veloera/setting/model_setting"
 )
-
 // Setting safety to the lowest possible values since Gemini is already powerless enough
 func CovertGemini2OpenAI(textRequest dto.GeneralOpenAIRequest, info *relaycommon.RelayInfo) (*GeminiChatRequest, error) {
 
@@ -570,6 +569,8 @@ func responseGeminiChat2OpenAI(response *GeminiChatResponse) *dto.OpenAITextResp
 					if call := getResponseToolCall(&part); call != nil {
 						toolCalls = append(toolCalls, *call)
 					}
+				} else if part.Thought {
+					choice.Message.ReasoningContent = part.Text
 				} else {
 					if part.ExecutableCode != nil {
 						texts = append(texts, "```"+part.ExecutableCode.Language+"\n"+part.ExecutableCode.Code+"\n```")
@@ -627,6 +628,7 @@ func streamResponseGeminiChat2OpenAI(geminiResponse *GeminiChatResponse) (*dto.C
 		}
 		var texts []string
 		isTools := false
+		isThought := false
 		if candidate.FinishReason != nil {
 			// p := GeminiConvertFinishReason(*candidate.FinishReason)
 			switch *candidate.FinishReason {
@@ -651,6 +653,9 @@ func streamResponseGeminiChat2OpenAI(geminiResponse *GeminiChatResponse) (*dto.C
 					call.SetIndex(len(choice.Delta.ToolCalls))
 					choice.Delta.ToolCalls = append(choice.Delta.ToolCalls, *call)
 				}
+			} else if part.Thought {
+				isThought = true
+				texts = append(texts, part.Text)
 			} else {
 				if part.ExecutableCode != nil {
 					texts = append(texts, "```"+part.ExecutableCode.Language+"\n"+part.ExecutableCode.Code+"\n```\n")
@@ -663,7 +668,11 @@ func streamResponseGeminiChat2OpenAI(geminiResponse *GeminiChatResponse) (*dto.C
 				}
 			}
 		}
-		choice.Delta.SetContentString(strings.Join(texts, "\n"))
+		if isThought {
+			choice.Delta.SetReasoningContent(strings.Join(texts, "\n"))
+		} else {
+			choice.Delta.SetContentString(strings.Join(texts, "\n"))
+		}
 		if isTools {
 			choice.FinishReason = &constant.FinishReasonToolCalls
 		}
