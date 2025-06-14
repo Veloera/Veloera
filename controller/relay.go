@@ -19,6 +19,7 @@ import (
 	relayconstant "veloera/relay/constant"
 	"veloera/relay/helper"
 	"veloera/service"
+	"veloera/setting/model_setting"
 )
 
 func relayHandler(c *gin.Context, relayMode int) *dto.OpenAIErrorWithStatusCode {
@@ -50,6 +51,16 @@ func Relay(c *gin.Context) {
 	group := c.GetString("group")
 	originalModel := c.GetString("original_model")
 	var openaiErr *dto.OpenAIErrorWithStatusCode
+
+	if model_setting.GetGlobalSettings().BlockBrowserExtensionEnabled &&
+		relayMode == relayconstant.RelayModeChatCompletions {
+		origin := c.Request.Header.Get("Origin")
+		if strings.Contains(origin, "extension") && strings.Contains(origin, "://") {
+			openaiErr = service.OpenAIErrorWrapperLocal(fmt.Errorf("browser extension blocked"), "browser_extension_blocked", http.StatusForbidden)
+			c.JSON(openaiErr.StatusCode, gin.H{"error": openaiErr.Error})
+			return
+		}
+	}
 
 	for i := 0; i <= common.RetryTimes; i++ {
 		channel, err := getChannel(c, group, originalModel, i)
