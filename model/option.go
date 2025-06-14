@@ -43,6 +43,7 @@ func InitOptionMap() {
 	common.OptionMap["AutomaticDisableChannelEnabled"] = strconv.FormatBool(common.AutomaticDisableChannelEnabled)
 	common.OptionMap["AutomaticEnableChannelEnabled"] = strconv.FormatBool(common.AutomaticEnableChannelEnabled)
 	common.OptionMap["LogConsumeEnabled"] = strconv.FormatBool(common.LogConsumeEnabled)
+	common.OptionMap["LogChatContentEnabled"] = strconv.FormatBool(common.LogChatContentEnabled)
 	common.OptionMap["CheckInEnabled"] = strconv.FormatBool(common.CheckInEnabled)
 	common.OptionMap["CheckInQuota"] = strconv.Itoa(common.CheckInQuota)
 	common.OptionMap["CheckInMaxQuota"] = strconv.Itoa(common.CheckInMaxQuota)
@@ -225,6 +226,8 @@ func updateOptionMap(key string, value string) (err error) {
 			common.AutomaticEnableChannelEnabled = boolValue
 		case "LogConsumeEnabled":
 			common.LogConsumeEnabled = boolValue
+		case "LogChatContentEnabled":
+			common.LogChatContentEnabled = boolValue
 		case "CheckInEnabled":
 			common.CheckInEnabled = boolValue
 		case "CheckInQuota":

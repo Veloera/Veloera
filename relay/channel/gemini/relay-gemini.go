@@ -3,11 +3,12 @@ package gemini
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/gin-gonic/gin"
 
 	"veloera/common"
 	"veloera/constant"
@@ -17,6 +18,7 @@ import (
 	"veloera/service"
 	"veloera/setting/model_setting"
 )
+
 // Setting safety to the lowest possible values since Gemini is already powerless enough
 func CovertGemini2OpenAI(textRequest dto.GeneralOpenAIRequest, info *relaycommon.RelayInfo) (*GeminiChatRequest, error) {
 
@@ -44,7 +46,7 @@ func CovertGemini2OpenAI(textRequest dto.GeneralOpenAIRequest, info *relaycommon
 		}
 	}
 
-	if strings.HasPrefix(info.UpstreamModelName, "gemini-2.5-") && model_setting.GetGeminiSettings().ThinkingAdapterEnabled {
+	if model_setting.GetGeminiSettings().ThinkingAdapterEnabled {
 		if geminiRequest.GenerationConfig.ThinkingConfig != nil { // Only apply if ThinkingConfig was instantiated
 			if strings.HasSuffix(info.OriginModelName, "-thinking") {
 				budgetTokens := model_setting.GetGeminiSettings().ThinkingAdapterBudgetTokensPercentage * float64(geminiRequest.GenerationConfig.MaxOutputTokens)
@@ -778,8 +780,7 @@ func GeminiChatHandler(c *gin.Context, resp *http.Response, info *relaycommon.Re
 		CompletionTokens: geminiResponse.UsageMetadata.CandidatesTokenCount,
 		TotalTokens:      geminiResponse.UsageMetadata.TotalTokenCount,
 	}
-	// Only process ReasoningTokens for gemini-2.5- models
-	if strings.HasPrefix(info.UpstreamModelName, "gemini-2.5-") {
+	if geminiResponse.UsageMetadata.ThoughtsTokenCount > 0 {
 		usage.CompletionTokenDetails.ReasoningTokens = geminiResponse.UsageMetadata.ThoughtsTokenCount
 	}
 	fullTextResponse.Usage = *usage
