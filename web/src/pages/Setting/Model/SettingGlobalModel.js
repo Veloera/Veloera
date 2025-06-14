@@ -17,6 +17,7 @@ export default function SettingGlobalModel(props) {
   const [inputs, setInputs] = useState({
     'global.pass_through_request_enabled': false,
     'global.hide_upstream_error_enabled': false,
+    'global.block_browser_extension_enabled': false,
     'general_setting.ping_interval_enabled': false,
     'general_setting.ping_interval_seconds': 60,
   });
@@ -102,6 +103,19 @@ export default function SettingGlobalModel(props) {
                     })
                   }
                   extraText={'开启后，只返回统一的上游错误信息'}
+                />
+              </Col>
+              <Col xs={24} sm={12} md={8} lg={8} xl={8}>
+                <Form.Switch
+                  label={t('是否允许沉浸式翻译类插件')}
+                  field={'global.block_browser_extension_enabled'}
+                  onChange={(value) =>
+                    setInputs({
+                      ...inputs,
+                      'global.block_browser_extension_enabled': value,
+                    })
+                  }
+                  extraText={'是否允许浏览器插件请求, 请注意此判断逻辑不可靠, 并可能误杀!'}
                 />
               </Col>
             </Row>
