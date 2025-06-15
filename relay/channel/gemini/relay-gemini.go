@@ -858,7 +858,7 @@ func GeminiChatPseudoStreamHandler(c *gin.Context, resp *http.Response, info *re
 	helper.SetEventStreamHeaders(c)
 	info.SetFirstResponseTime()
 
-	streamResp := openaichannel.BuildStreamChunkFromTextResponse(&fullTextResponse)
+	streamResp := openaichannel.BuildStreamChunkFromTextResponse(fullTextResponse)
 	_ = helper.ObjectData(c, streamResp)
 	if info.ShouldIncludeUsage {
 		final := helper.GenerateFinalUsageResponse(helper.GetResponseID(c), common.GetTimestamp(), info.UpstreamModelName, *usage)
