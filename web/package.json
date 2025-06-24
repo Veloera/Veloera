@@ -8,7 +8,7 @@
     "@douyinfe/semi-ui": "^2.69.1",
     "@visactor/react-vchart": "~1.8.8",
     "@visactor/vchart": "~1.8.8",
-    "@visactor/vchart-semi-theme": "~1.8.8",
+    "@visactor/vchart-semi-theme": "~1.12.2",
     "axios": "^0.27.2",
     "dayjs": "^1.11.11",
     "history": "^5.3.0",
