@@ -43,3 +43,20 @@ func UnmarshalBodyReusable(c *gin.Context, v any) error {
 	c.Request.Body = io.NopCloser(bytes.NewBuffer(requestBody))
 	return nil
 }
+
+// ResponseWriter is a wrapper for gin.ResponseWriter to capture the status code.
+type ResponseWriter struct {
+	gin.ResponseWriter
+	status int
+}
+
+// WriteHeader captures the status code before calling the original WriteHeader.
+func (w *ResponseWriter) WriteHeader(code int) {
+	w.status = code
+	w.ResponseWriter.WriteHeader(code)
+}
+
+// Status returns the captured status code.
+func (w *ResponseWriter) Status() int {
+	return w.status
+}

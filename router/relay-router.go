@@ -68,12 +68,14 @@ func SetRelayRouter(router *gin.Engine) {
 	// 设置 /v1 路由组
 	relayV1Router := router.Group("/v1")
 	relayV1Router.Use(middleware.TokenAuth())
+	relayV1Router.Use(middleware.TokenRateLimit())
 	relayV1Router.Use(middleware.ModelRequestRateLimit())
 	setupV1Router(relayV1Router)
 
 	// 设置 /hf/v1 路由组
 	relayHfV1Router := router.Group("/hf/v1")
 	relayHfV1Router.Use(middleware.TokenAuth())
+	relayHfV1Router.Use(middleware.TokenRateLimit())
 	relayHfV1Router.Use(middleware.ModelRequestRateLimit())
 	setupV1Router(relayHfV1Router)
 

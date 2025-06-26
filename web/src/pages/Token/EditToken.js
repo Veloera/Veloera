@@ -38,6 +38,10 @@ const EditToken = (props) => {
     model_limits: [],
     allow_ips: '',
     group: '',
+    rate_limit_enabled: false,
+    frequency: 60,
+    limit: 1000,
+    successful_limit: 10,
   };
   const [inputs, setInputs] = useState(originInputs);
   const {
@@ -49,6 +53,10 @@ const EditToken = (props) => {
     model_limits,
     allow_ips,
     group,
+    rate_limit_enabled,
+    frequency,
+    limit,
+    successful_limit,
   } = inputs;
   // const [visible, setVisible] = useState(false);
   const [models, setModels] = useState([]);
@@ -413,6 +421,53 @@ const EditToken = (props) => {
             value={inputs.allow_ips}
             style={{ fontFamily: 'JetBrains Mono, Consolas' }}
           />
+          <div style={{ marginTop: 10, display: 'flex' }}>
+            <Space>
+              <Checkbox
+                name='rate_limit_enabled'
+                checked={rate_limit_enabled}
+                onChange={(e) =>
+                  handleInputChange('rate_limit_enabled', e.target.checked)
+                }
+              >
+                {t('令牌速率限制')}
+              </Checkbox>
+            </Space>
+          </div>
+          {rate_limit_enabled && (
+            <>
+              <Input
+                style={{ marginTop: 8 }}
+                label={t('速率限制周期(秒)')}
+                name='frequency'
+                placeholder={t('请输入速率限制周期(秒)')}
+                onChange={(value) => handleInputChange('frequency', value)}
+                value={frequency}
+                autoComplete='new-password'
+                type='number'
+              />
+              <Input
+                style={{ marginTop: 8 }}
+                label={t('周期内请求限制')}
+                name='limit'
+                placeholder={t('请输入周期内请求限制')}
+                onChange={(value) => handleInputChange('limit', value)}
+                value={limit}
+                autoComplete='new-password'
+                type='number'
+              />
+              <Input
+                style={{ marginTop: 8 }}
+                label={t('周期内请求成功限制')}
+                name='successful_limit'
+                placeholder={t('请输入周期内请求成功限制')}
+                onChange={(value) => handleInputChange('successful_limit', value)}
+                value={successful_limit}
+                autoComplete='new-password'
+                type='number'
+              />
+            </>
+          )}
           <div style={{ marginTop: 10, display: 'flex' }}>
             <Space>
               <Checkbox
