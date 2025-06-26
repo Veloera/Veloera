@@ -42,8 +42,8 @@ func TokenRateLimit() gin.HandlerFunc {
 
 		// Check if the key exists in Redis. If not, set it with expiration.
 		if common.RedisExists(key + ":requests").Val() == 0 {
-			common.RedisSet(key+":requests", 0, time.Duration(token.Frequency)*time.Second)
-			common.RedisSet(key+":successful_requests", 0, time.Duration(token.Frequency)*time.Second)
+			common.RedisSet(key+":requests", "0", time.Duration(token.Frequency)*time.Second)
+			common.RedisSet(key+":successful_requests", "0", time.Duration(token.Frequency)*time.Second)
 		}
 
 		// Increment request count
