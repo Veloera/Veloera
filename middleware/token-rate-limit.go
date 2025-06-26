@@ -37,8 +37,10 @@ func TokenRateLimit() gin.HandlerFunc {
 		key := fmt.Sprintf("token_rate_limit:%d", tokenId)
 
 		// Get current counts from Redis
-		currentRequests, _ := common.RedisGet(key + ":requests").Int64()
-		currentSuccessfulRequests, _ := common.RedisGet(key + ":successful_requests").Int64()
+		currentRequestsStr, _ := common.RedisGet(key + ":requests")
+		currentRequests, _ := strconv.ParseInt(currentRequestsStr, 10, 64)
+		currentSuccessfulRequestsStr, _ := common.RedisGet(key + ":successful_requests")
+		currentSuccessfulRequests, _ := strconv.ParseInt(currentSuccessfulRequestsStr, 10, 64)
 
 		// Check if the key exists in Redis. If not, set it with expiration.
 		if common.RedisExists(key + ":requests").Val() == 0 {
