@@ -10,8 +10,7 @@ import (
 	"veloera/model"
 )
 
-func TokenRateLimit()
-gin.HandlerFunc {
+func TokenRateLimit() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenId := c.GetInt("token_id")
 		if tokenId == 0 {
