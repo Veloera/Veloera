@@ -17,6 +17,7 @@ export default function SettingsLog(props) {
   const [inputs, setInputs] = useState({
     LogConsumeEnabled: false,
     LogChatContentEnabled: false,
+    LogErrorEnabled: false,
     historyTimestamp: dayjs().subtract(1, 'month').toDate(),
   });
   const refForm = useRef();
@@ -124,6 +125,19 @@ export default function SettingsLog(props) {
                     setInputs({
                       ...inputs,
                       LogChatContentEnabled: value,
+                    });
+                  }}
+                />
+              </Col>
+              <Col xs={24} sm={12} md={8} lg={8} xl={8}>
+                <Form.Switch
+                  field={'LogErrorEnabled'}
+                  label={t('启用错误日志记录')}
+                  size='default'
+                  onChange={(value) => {
+                    setInputs({
+                      ...inputs,
+                      LogErrorEnabled: value,
                     });
                   }}
                 />

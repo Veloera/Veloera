@@ -41,6 +41,8 @@ const OperationSetting = () => {
     AutomaticEnableChannelEnabled: false,
     ChannelDisableThreshold: 0,
     LogConsumeEnabled: false,
+    LogChatContentEnabled: false,
+    LogErrorEnabled: false,
     DisplayInCurrencyEnabled: false,
     DisplayTokenStatEnabled: false,
     CheckSensitiveEnabled: false,

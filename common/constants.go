@@ -68,6 +68,7 @@ var MemoryCacheEnabled bool
 
 var LogConsumeEnabled = true
 var LogChatContentEnabled = false
+var LogErrorEnabled = false
 
 var SMTPServer = ""
 var SMTPPort = 587
