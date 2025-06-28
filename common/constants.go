@@ -301,5 +301,5 @@ var ChannelBaseURLs = []string{
 	"https://qianfan.baidubce.com",              //46
 	"",                                          //47
 	"https://api.x.ai",                          //48
-	"https://models.github.ai/inference"         //49
+	"https://models.github.ai/inference",        //49
 }
