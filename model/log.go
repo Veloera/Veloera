@@ -1,7 +1,6 @@
 package model
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -345,25 +344,7 @@ func SumUsedToken(logType int, startTimestamp int64, endTimestamp int64, modelNa
 	return token
 }
 
-func DeleteOldLog(ctx context.Context, targetTimestamp int64, limit int) (int64, error) {
-	var total int64 = 0
-
-	for {
-		if nil != ctx.Err() {
-			return total, ctx.Err()
-		}
-
-		result := LOG_DB.Where("created_at < ?", targetTimestamp).Limit(limit).Delete(&Log{})
-		if nil != result.Error {
-			return total, result.Error
-		}
-
-		total += result.RowsAffected
-
-		if result.RowsAffected < int64(limit) {
-			break
-		}
-	}
-
-	return total, nil
+func DeleteOldLog(targetTimestamp int64) (int64, error) {
+	result := LOG_DB.Where("created_at < ?", targetTimestamp).Delete(&Log{})
+	return result.RowsAffected, result.Error
 }
