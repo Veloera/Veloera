@@ -1025,6 +1025,52 @@ const LogsTable = () => {
           });
         }
       }
+      
+      // 添加错误详细信息
+      if (logs[i].type === 6) { // 错误类型
+        if (other?.error_type) {
+          expandDataLocal.push({
+            key: t('错误类型'),
+            value: other.error_type,
+          });
+        }
+        if (other?.error_code) {
+          expandDataLocal.push({
+            key: t('错误代码'),
+            value: other.error_code,
+          });
+        }
+        if (other?.status_code) {
+          expandDataLocal.push({
+            key: t('状态码'),
+            value: other.status_code,
+          });
+        }
+        if (other?.channel_name) {
+          expandDataLocal.push({
+            key: t('错误渠道'),
+            value: `${other.channel_id} - ${other.channel_name}`,
+          });
+        }
+        expandDataLocal.push({
+          key: t('错误详情'),
+          value: (
+            <Paragraph
+              ellipsis={{
+                rows: 6,
+                expandable: true,
+                collapsible: true,
+                collapseText: t('收起'),
+                expandText: t('展开'),
+              }}
+              style={{ maxWidth: '100%', whiteSpace: 'pre-wrap' }}
+            >
+              {logs[i].content}
+            </Paragraph>
+          ),
+        });
+      }
+      
       // 添加上下文、输入和输出内容
       if (logs[i].type === 2) { // 消费类型
         let other = getLogOther(logs[i].other);
