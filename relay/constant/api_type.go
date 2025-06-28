@@ -33,6 +33,7 @@ const (
 	APITypeOpenRouter
 	APITypeXinference
 	APITypeXai
+	APITypeGitHub
 	APITypeDummy // this one is only for count, do not add any channel after this
 )
 
@@ -93,6 +94,8 @@ func ChannelType2APIType(channelType int) (int, bool) {
 		apiType = APITypeOpenRouter
 	case common.ChannelTypeXinference:
 		apiType = APITypeXinference
+	case common.ChannelTypeGitHub:
+		apiType = APITypeGitHub
 	case common.ChannelTypeXai:
 		apiType = APITypeXai
 	}

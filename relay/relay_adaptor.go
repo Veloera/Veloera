@@ -86,6 +86,8 @@ func GetAdaptor(apiType int) channel.Adaptor {
 		return &openai.Adaptor{}
 	case constant.APITypeXinference:
 		return &openai.Adaptor{}
+	case constant.APITypeGitHub:
+		return &openai.Adaptor{}
 	case constant.APITypeXai:
 		return &xai.Adaptor{}
 	}

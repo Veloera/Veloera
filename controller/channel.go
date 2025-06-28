@@ -108,13 +108,6 @@ func FetchUpstreamModels(c *gin.Context) {
 		return
 	}
 
-	//if channel.Type != common.ChannelTypeOpenAI {
-	//	c.JSON(http.StatusOK, gin.H{
-	//		"success": false,
-	//		"message": "仅支持 OpenAI 类型渠道",
-	//	})
-	//	return
-	//}
 	baseURL := common.ChannelBaseURLs[channel.Type]
 	if channel.GetBaseURL() != "" {
 		baseURL = channel.GetBaseURL()
@@ -128,6 +121,9 @@ func FetchUpstreamModels(c *gin.Context) {
 	if channel.Type == common.ChannelTypeGemini {
 		url = fmt.Sprintf("%s/v1beta/openai/models", baseURL)
 	}
+	if channel.Type == common.ChannelTypeGitHub {
+		url = strings.Replace(baseURL, "/inference", "/catalog/models", 1)
+	}
 	key := strings.Split(channel.Key, ",")[0]
 	body, err := GetResponseBody("GET", url, channel, GetAuthHeader(key))
 	if err != nil {
@@ -138,22 +134,36 @@ func FetchUpstreamModels(c *gin.Context) {
 		return
 	}
 
-	var result OpenAIModelsResponse
-	if err = json.Unmarshal(body, &result); err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"success": false,
-			"message": fmt.Sprintf("解析响应失败: %s", err.Error()),
-		})
-		return
-	}
-
 	var ids []string
-	for _, model := range result.Data {
-		id := model.ID
-		if channel.Type == common.ChannelTypeGemini {
-			id = strings.TrimPrefix(id, "models/")
+	// GitHub 返回的是裸数组，先单独处理
+	if channel.Type == common.ChannelTypeGitHub {
+		var arr []struct { ID string `json:"id"` }
+		if err = json.Unmarshal(body, &arr); err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": fmt.Sprintf("解析 GitHub 响应失败: %s", err.Error()),
+			})
+			return
 		}
-		ids = append(ids, id)
+		for _, m := range arr {
+			ids = append(ids, m.ID)
+		}
+	} else {
+		var result OpenAIModelsResponse
+		if err = json.Unmarshal(body, &result); err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": fmt.Sprintf("解析响应失败: %s", err.Error()),
+			})
+			return
+		}
+		for _, model := range result.Data {
+			id := model.ID
+			if channel.Type == common.ChannelTypeGemini {
+				id = strings.TrimPrefix(id, "models/")
+			}
+			ids = append(ids, id)
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{

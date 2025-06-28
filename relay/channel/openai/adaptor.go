@@ -18,6 +18,7 @@ import (
 	"veloera/relay/channel/minimax"
 	"veloera/relay/channel/moonshot"
 	"veloera/relay/channel/openrouter"
+	"veloera/relay/channel/github"
 	"veloera/relay/channel/xinference"
 	relaycommon "veloera/relay/common"
 	"veloera/relay/common_handler"
@@ -322,6 +323,8 @@ func (a *Adaptor) GetModelList() []string {
 		return xinference.ModelList
 	case common.ChannelTypeOpenRouter:
 		return openrouter.ModelList
+	case common.ChannelTypeGitHub:
+		return github.ModelList
 	default:
 		return ModelList
 	}
@@ -341,6 +344,8 @@ func (a *Adaptor) GetChannelName() string {
 		return xinference.ChannelName
 	case common.ChannelTypeOpenRouter:
 		return openrouter.ChannelName
+	case common.ChannelTypeGitHub:
+		return github.ChannelName
 	default:
 		return ChannelName
 	}
