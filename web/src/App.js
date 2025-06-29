@@ -27,6 +27,9 @@ import OAuth2Callback from './components/OAuth2Callback.js';
 import PersonalSetting from './components/PersonalSetting.js';
 import Setup from './pages/Setup/index.js';
 import SetupCheck from './components/SetupCheck';
+import UsageReport from './pages/UsageReport';
+import NewReport from './pages/UsageReport/New';
+import ViewReport from './pages/UsageReport/View';
 
 const Home = lazy(() => import('./pages/Home'));
 const Detail = lazy(() => import('./pages/Detail'));
@@ -247,6 +250,30 @@ function App() {
               <Suspense fallback={<Loading></Loading>} key={location.pathname}>
                 <Task />
               </Suspense>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path='/usage-report'
+          element={
+            <PrivateRoute>
+              <UsageReport />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path='/usage-report/new'
+          element={
+            <PrivateRoute>
+              <NewReport />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path='/usage-report/:id'
+          element={
+            <PrivateRoute>
+              <ViewReport />
             </PrivateRoute>
           }
         />
