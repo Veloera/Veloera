@@ -164,5 +164,13 @@ func SetApiRouter(router *gin.Engine) {
 			taskRoute.GET("/self", middleware.UserAuth(), controller.GetUserTask)
 			taskRoute.GET("/", middleware.AdminAuth(), controller.GetAllTask)
 		}
+
+		reportRoute := apiRouter.Group("/usage-report")
+		reportRoute.Use(middleware.AdminAuth())
+		{
+			reportRoute.GET("/", controller.GetUsageReports)
+			reportRoute.GET("/:id", controller.GetUsageReport)
+			reportRoute.POST("/", controller.CreateUsageReport)
+		}
 	}
 }

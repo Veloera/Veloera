@@ -253,6 +253,7 @@ func migrateDB() error {
 		&TopUp{},
 		&QuotaData{},
 		&Task{},
+		&UsageReport{},
 		&Setup{},
 	}
 
