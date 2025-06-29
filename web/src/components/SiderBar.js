@@ -90,6 +90,7 @@ const routerMap = {
   pricing: '/pricing',
   task: '/task',
   playground: '/playground',
+  usage_report: '/usage-report',
   personal: '/personal',
 };
 
@@ -241,6 +242,12 @@ const SiderBar = () => {
         itemKey: 'setting',
         to: '/setting',
         icon: <IconSetting />,
+      },
+      {
+        text: t('使用报表'),
+        itemKey: 'usage_report',
+        to: '/usage-report',
+        icon: <IconHistogram />,
       },
     ],
     [isAdmin(), t],
