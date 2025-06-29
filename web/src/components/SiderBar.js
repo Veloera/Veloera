@@ -242,6 +242,12 @@ const SiderBar = () => {
         to: '/setting',
         icon: <IconSetting />,
       },
+      {
+        text: t('使用报告'),
+        itemKey: 'usage-report',
+        to: '/usage-report',
+        icon: <IconHistogram />,
+      },
     ],
     [isAdmin(), t],
   );

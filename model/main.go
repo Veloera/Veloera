@@ -252,6 +252,7 @@ func migrateDB() error {
 		&Midjourney{},
 		&TopUp{},
 		&QuotaData{},
+		&UsageReport{},
 		&Task{},
 		&Setup{},
 	}
