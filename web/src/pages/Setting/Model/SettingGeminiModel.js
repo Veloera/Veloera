@@ -10,7 +10,6 @@ import {
   verifyJSON,
 } from '../../../helpers';
 import { useTranslation } from 'react-i18next';
-import Text from '@douyinfe/semi-ui/lib/es/typography/text.js';
 
 const GEMINI_SETTING_EXAMPLE = {
   default: 'OFF',

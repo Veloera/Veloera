@@ -148,7 +148,7 @@ func doRequest(c *gin.Context, req *http.Request, info *common.RelayInfo) (*http
 						err2 := helper.PingData(c)
 						pingMutex.Unlock()
 						if err2 != nil {
-							common2.LogError(c, "SSE ping error: "+err.Error())
+							common2.LogError(c, "SSE ping error: "+err2.Error())
 							return
 						}
 						if common2.DebugEnabled {
