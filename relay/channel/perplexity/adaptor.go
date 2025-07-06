@@ -3,13 +3,14 @@ package perplexity
 import (
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
 	"veloera/dto"
 	"veloera/relay/channel"
 	"veloera/relay/channel/openai"
 	relaycommon "veloera/relay/common"
+
+	"github.com/gin-gonic/gin"
 )
 
 type Adaptor struct {

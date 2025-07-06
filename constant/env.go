@@ -16,6 +16,7 @@ var GeminiVisionMaxImageNum int
 var NotifyLimitCount int
 var NotificationLimitDurationMinute int
 var GenerateDefaultToken bool
+var ErrorLogEnabled bool
 
 //var GeminiModelMap = map[string]string{
 //	"gemini-1.0-pro": "v1",
@@ -30,12 +31,14 @@ func InitEnv() {
 	GetMediaToken = common.GetEnvOrDefaultBool("GET_MEDIA_TOKEN", true)
 	GetMediaTokenNotStream = common.GetEnvOrDefaultBool("GET_MEDIA_TOKEN_NOT_STREAM", true)
 	UpdateTask = common.GetEnvOrDefaultBool("UPDATE_TASK", true)
-	AzureDefaultAPIVersion = common.GetEnvOrDefaultString("AZURE_DEFAULT_API_VERSION", "2024-12-01-preview")
+	AzureDefaultAPIVersion = common.GetEnvOrDefaultString("AZURE_DEFAULT_API_VERSION", "2025-04-01-preview")
 	GeminiVisionMaxImageNum = common.GetEnvOrDefault("GEMINI_VISION_MAX_IMAGE_NUM", 16)
 	NotifyLimitCount = common.GetEnvOrDefault("NOTIFY_LIMIT_COUNT", 2)
 	NotificationLimitDurationMinute = common.GetEnvOrDefault("NOTIFICATION_LIMIT_DURATION_MINUTE", 10)
 	// GenerateDefaultToken 是否生成初始令牌，默认关闭。
 	GenerateDefaultToken = common.GetEnvOrDefaultBool("GENERATE_DEFAULT_TOKEN", false)
+	// 是否启用错误日志
+	ErrorLogEnabled = common.GetEnvOrDefaultBool("ERROR_LOG_ENABLED", false)
 
 	//modelVersionMapStr := strings.TrimSpace(os.Getenv("GEMINI_MODEL_MAP"))
 	//if modelVersionMapStr == "" {

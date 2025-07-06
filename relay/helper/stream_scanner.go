@@ -3,7 +3,6 @@ package helper
 import (
 	"bufio"
 	"context"
-	"github.com/bytedance/gopkg/util/gopool"
 	"io"
 	"net/http"
 	"strings"
@@ -13,6 +12,8 @@ import (
 	"veloera/constant"
 	relaycommon "veloera/relay/common"
 	"veloera/setting/operation_setting"
+
+	"github.com/bytedance/gopkg/util/gopool"
 
 	"github.com/gin-gonic/gin"
 )
@@ -32,7 +33,7 @@ func StreamScannerHandler(c *gin.Context, resp *http.Response, info *relaycommon
 	defer resp.Body.Close()
 
 	streamingTimeout := time.Duration(constant.StreamingTimeout) * time.Second
-	if strings.HasPrefix(info.UpstreamModelName, "o1") || strings.HasPrefix(info.UpstreamModelName, "o3") {
+	if strings.HasPrefix(info.UpstreamModelName, "o") {
 		// twice timeout for thinking model
 		streamingTimeout *= 2
 	}
@@ -115,7 +116,7 @@ func StreamScannerHandler(c *gin.Context, resp *http.Response, info *relaycommon
 			}
 			data = data[5:]
 			data = strings.TrimLeft(data, " ")
-			data = strings.TrimSuffix(data, "\"")
+			data = strings.TrimSuffix(data, "\r")
 			if !strings.HasPrefix(data, "[DONE]") {
 				info.SetFirstResponseTime()
 				writeMutex.Lock() // Lock before writing

@@ -365,9 +365,34 @@ func OpenaiHandler(c *gin.Context, resp *http.Response, info *relaycommon.RelayI
 	}
 	info.Other["output_content"] = outputContent // 保存输出内容
 
+	forceFormat := false
+	if forceFmt, ok := info.ChannelSetting[constant.ForceFormat].(bool); ok {
+		forceFormat = forceFmt
+	}
+
+	if simpleResponse.Usage.TotalTokens == 0 || (simpleResponse.Usage.PromptTokens == 0 && simpleResponse.Usage.CompletionTokens == 0) {
+		completionTokens := 0
+		for _, choice := range simpleResponse.Choices {
+			ctkm, _ := service.CountTextToken(choice.Message.StringContent()+choice.Message.ReasoningContent+choice.Message.Reasoning, info.UpstreamModelName)
+			completionTokens += ctkm
+		}
+		simpleResponse.Usage = dto.Usage{
+			PromptTokens:     info.PromptTokens,
+			CompletionTokens: completionTokens,
+			TotalTokens:      info.PromptTokens + completionTokens,
+		}
+	}
+
 	switch info.RelayFormat {
 	case relaycommon.RelayFormatOpenAI:
-		break
+		if forceFormat {
+			responseBody, err = json.Marshal(simpleResponse)
+			if err != nil {
+				return service.OpenAIErrorWrapper(err, "marshal_response_body_failed", http.StatusInternalServerError), nil
+			}
+		} else {
+			break
+		}
 	case relaycommon.RelayFormatClaude:
 		claudeResp := service.ResponseOpenAI2Claude(&simpleResponse, info)
 		claudeRespStr, err := json.Marshal(claudeResp)
@@ -413,18 +438,6 @@ func OpenaiHandler(c *gin.Context, resp *http.Response, info *relaycommon.RelayI
 		return nil, zeroUsage
 	}
 
-	if simpleResponse.Usage.TotalTokens == 0 || (simpleResponse.Usage.PromptTokens == 0 && simpleResponse.Usage.CompletionTokens == 0) {
-		completionTokens := 0
-		for _, choice := range simpleResponse.Choices {
-			ctkm, _ := service.CountTextToken(choice.Message.StringContent()+choice.Message.ReasoningContent+choice.Message.Reasoning, info.UpstreamModelName)
-			completionTokens += ctkm
-		}
-		simpleResponse.Usage = dto.Usage{
-			PromptTokens:     info.PromptTokens,
-			CompletionTokens: completionTokens,
-			TotalTokens:      info.PromptTokens + completionTokens,
-		}
-	}
 	return nil, &simpleResponse.Usage
 }
 
@@ -547,57 +560,6 @@ func OpenaiResponsesHandler(c *gin.Context, resp *http.Response, info *relaycomm
 	usage.CompletionTokens = responsesResponse.Usage.OutputTokens
 	usage.TotalTokens = responsesResponse.Usage.TotalTokens
 	return nil, &usage
-}
-
-func OaiResponsesStreamHandler(c *gin.Context, resp *http.Response, info *relaycommon.RelayInfo) (*dto.OpenAIErrorWithStatusCode, *dto.Usage) {
-	if resp == nil || resp.Body == nil {
-		common.LogError(c, "invalid response or response body")
-		return service.OpenAIErrorWrapper(fmt.Errorf("invalid response"), "invalid_response", http.StatusInternalServerError), nil
-	}
-
-	var usage = &dto.Usage{}
-	var responseTextBuilder strings.Builder
-
-	helper.StreamScannerHandler(c, resp, info, func(data string) bool {
-
-		// 检查当前数据是否包含 completed 状态和 usage 信息
-		var streamResponse dto.ResponsesStreamResponse
-		if err := common.DecodeJsonStr(data, &streamResponse); err == nil {
-			sendResponsesStreamData(c, streamResponse, data)
-			switch streamResponse.Type {
-			case "response.completed":
-				usage.PromptTokens = streamResponse.Response.Usage.InputTokens
-				usage.CompletionTokens = streamResponse.Response.Usage.OutputTokens
-				usage.TotalTokens = streamResponse.Response.Usage.TotalTokens
-			case "response.output_text.delta":
-				// 处理输出文本
-				responseTextBuilder.WriteString(streamResponse.Delta)
-
-			}
-		}
-		return true
-	})
-
-	helper.Done(c)
-
-	if usage.CompletionTokens == 0 {
-		// 计算输出文本的 token 数量
-		tempStr := responseTextBuilder.String()
-		if len(tempStr) > 0 {
-			// 非正常结束，使用输出文本的 token 数量
-			completionTokens, _ := service.CountTextToken(tempStr, info.UpstreamModelName)
-			usage.CompletionTokens = completionTokens
-		}
-	}
-
-	return nil, usage
-}
-
-func sendResponsesStreamData(c *gin.Context, streamResponse dto.ResponsesStreamResponse, data string) {
-	if data == "" {
-		return
-	}
-	helper.ResponseChunkData(c, streamResponse, data)
 }
 
 func countAudioTokens(c *gin.Context) (int, error) {
@@ -938,4 +900,53 @@ func BuildStreamChunkFromTextResponse(simpleResponse *dto.OpenAITextResponse) dt
 		streamResp.Choices[i] = choice
 	}
 	return streamResp
+}
+
+func OpenaiHandlerWithUsage(c *gin.Context, resp *http.Response, info *relaycommon.RelayInfo) (*dto.OpenAIErrorWithStatusCode, *dto.Usage) {
+	responseBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return service.OpenAIErrorWrapper(err, "read_response_body_failed", http.StatusInternalServerError), nil
+	}
+	err = resp.Body.Close()
+	if err != nil {
+		return service.OpenAIErrorWrapper(err, "close_response_body_failed", http.StatusInternalServerError), nil
+	}
+	// Reset response body
+	resp.Body = io.NopCloser(bytes.NewBuffer(responseBody))
+	// We shouldn't set the header before we parse the response body, because the parse part may fail.
+	// And then we will have to send an error response, but in this case, the header has already been set.
+	// So the httpClient will be confused by the response.
+	// For example, Postman will report error, and we cannot check the response at all.
+	for k, v := range resp.Header {
+		c.Writer.Header().Set(k, v[0])
+	}
+	// reset content length
+	c.Writer.Header().Set("Content-Length", fmt.Sprintf("%d", len(responseBody)))
+	c.Writer.WriteHeader(resp.StatusCode)
+	_, err = io.Copy(c.Writer, resp.Body)
+	if err != nil {
+		return service.OpenAIErrorWrapper(err, "copy_response_body_failed", http.StatusInternalServerError), nil
+	}
+	err = resp.Body.Close()
+	if err != nil {
+		return service.OpenAIErrorWrapper(err, "close_response_body_failed", http.StatusInternalServerError), nil
+	}
+
+	var usageResp dto.SimpleResponse
+	err = json.Unmarshal(responseBody, &usageResp)
+	if err != nil {
+		return service.OpenAIErrorWrapper(err, "parse_response_body_failed", http.StatusInternalServerError), nil
+	}
+	// format
+	if usageResp.InputTokens > 0 {
+		usageResp.PromptTokens += usageResp.InputTokens
+	}
+	if usageResp.OutputTokens > 0 {
+		usageResp.CompletionTokens += usageResp.OutputTokens
+	}
+	if usageResp.InputTokensDetails != nil {
+		usageResp.PromptTokensDetails.ImageTokens += usageResp.InputTokensDetails.ImageTokens
+		usageResp.PromptTokensDetails.TextTokens += usageResp.InputTokensDetails.TextTokens
+	}
+	return nil, &usageResp.Usage
 }

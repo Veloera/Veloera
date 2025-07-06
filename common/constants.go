@@ -62,6 +62,10 @@ var EmailDomainWhitelist = []string{
 	"yahoo.com",
 	"foxmail.com",
 }
+var EmailLoginAuthServerList = []string{
+	"smtp.sendcloud.net",
+	"smtp.azurecomm.net",
+}
 
 var DebugEnabled bool
 var MemoryCacheEnabled bool
@@ -247,6 +251,7 @@ const (
 	ChannelTypeXinference     = 47
 	ChannelTypeXai            = 48
 	ChannelTypeGitHub         = 49
+	ChannelTypeCoze           = 50
 	ChannelTypeDummy          // this one is only for count, do not add any channel after this
 
 )
@@ -302,4 +307,5 @@ var ChannelBaseURLs = []string{
 	"",                                          //47
 	"https://api.x.ai",                          //48
 	"https://models.github.ai/inference",        //49
+	"https://api.coze.cn",                       //50
 }

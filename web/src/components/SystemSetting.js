@@ -19,6 +19,7 @@ import {
   verifyJSON,
 } from '../helpers/utils';
 import { API } from '../helpers/api';
+import axios from 'axios';
 
 const SystemSetting = () => {
   let [inputs, setInputs] = useState({
@@ -44,6 +45,7 @@ const SystemSetting = () => {
     ServerAddress: '',
     WorkerUrl: '',
     WorkerValidKey: '',
+    WorkerAllowHttpImageRequestEnabled: '',
     EpayId: '',
     EpayKey: '',
     Price: 7.3,
@@ -110,6 +112,7 @@ const SystemSetting = () => {
           case 'SMTPSSLEnabled':
           case 'LinuxDOOAuthEnabled':
           case 'oidc.enabled':
+          case 'WorkerAllowHttpImageRequestEnabled':
             item.value = item.value === 'true';
             break;
           case 'Price':
@@ -203,10 +206,17 @@ const SystemSetting = () => {
 
   const submitWorker = async () => {
     let WorkerUrl = removeTrailingSlash(inputs.WorkerUrl);
-    await updateOptions([
+    const options = [
       { key: 'WorkerUrl', value: WorkerUrl },
-      { key: 'WorkerValidKey', value: inputs.WorkerValidKey },
-    ]);
+      {
+        key: 'WorkerAllowHttpImageRequestEnabled',
+        value: inputs.WorkerAllowHttpImageRequestEnabled ? 'true' : 'false',
+      },
+    ];
+    if (inputs.WorkerValidKey !== '' || WorkerUrl === '') {
+      options.push({ key: 'WorkerValidKey', value: inputs.WorkerValidKey });
+    }
+    await updateOptions(options);
   };
 
   const submitPayAddress = async () => {
@@ -298,7 +308,8 @@ const SystemSetting = () => {
       const domain = emailToAdd.trim();
 
       // 验证域名格式
-      const domainRegex = /^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
+      const domainRegex =
+        /^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
       if (!domainRegex.test(domain)) {
         showError('邮箱域名格式不正确，请输入有效的域名，如 gmail.com');
         return;
@@ -371,7 +382,7 @@ const SystemSetting = () => {
   };
 
   const submitOIDCSettings = async () => {
-    if (inputs['oidc.well_known'] !== '') {
+    if (inputs['oidc.well_known'] && inputs['oidc.well_known'] !== '') {
       if (
         !inputs['oidc.well_known'].startsWith('http://') &&
         !inputs['oidc.well_known'].startsWith('https://')
@@ -380,7 +391,7 @@ const SystemSetting = () => {
         return;
       }
       try {
-        const res = await API.get(inputs['oidc.well_known']);
+        const res = await axios.create().get(inputs['oidc.well_known']);
         inputs['oidc.authorization_endpoint'] =
           res.data['authorization_endpoint'];
         inputs['oidc.token_endpoint'] = res.data['token_endpoint'];
@@ -573,6 +584,12 @@ const SystemSetting = () => {
                       />
                     </Col>
                   </Row>
+                  <Form.Checkbox
+                    field='WorkerAllowHttpImageRequestEnabled'
+                    noLabel
+                  >
+                    允许 HTTP 协议图片请求（适用于自部署代理）
+                  </Form.Checkbox>
                   <Button onClick={submitWorker}>更新Worker设置</Button>
                 </Form.Section>
               </Card>
@@ -795,7 +812,13 @@ const SystemSetting = () => {
                     onChange={(value) => setEmailToAdd(value)}
                     style={{ marginTop: 16 }}
                     suffix={
-                      <Button theme="solid" type="primary" onClick={handleAddEmail}>添加</Button>
+                      <Button
+                        theme='solid'
+                        type='primary'
+                        onClick={handleAddEmail}
+                      >
+                        添加
+                      </Button>
                     }
                     onEnterPress={handleAddEmail}
                   />

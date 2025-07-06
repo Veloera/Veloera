@@ -3,7 +3,6 @@ package tencent
 import (
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
 	"strconv"
@@ -13,6 +12,8 @@ import (
 	"veloera/relay/channel"
 	relaycommon "veloera/relay/common"
 	"veloera/service"
+
+	"github.com/gin-gonic/gin"
 )
 
 type Adaptor struct {

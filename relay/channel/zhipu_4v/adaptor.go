@@ -3,7 +3,6 @@ package zhipu_4v
 import (
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
 	"veloera/dto"
@@ -11,6 +10,8 @@ import (
 	"veloera/relay/channel/openai"
 	relaycommon "veloera/relay/common"
 	relayconstant "veloera/relay/constant"
+
+	"github.com/gin-gonic/gin"
 )
 
 type Adaptor struct {

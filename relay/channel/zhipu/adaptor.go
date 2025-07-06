@@ -3,12 +3,13 @@ package zhipu
 import (
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
 	"veloera/dto"
 	"veloera/relay/channel"
 	relaycommon "veloera/relay/common"
+
+	"github.com/gin-gonic/gin"
 )
 
 type Adaptor struct {

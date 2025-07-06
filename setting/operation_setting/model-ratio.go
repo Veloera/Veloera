@@ -51,26 +51,27 @@ var defaultModelRatio = map[string]float64{
 	"gpt-4o-realtime-preview-2024-12-17":      2.5,
 	"gpt-4o-mini-realtime-preview":            0.3,
 	"gpt-4o-mini-realtime-preview-2024-12-17": 0.3,
-	"o1":                         7.5,
-	"o1-2024-12-17":              7.5,
-	"o1-preview":                 7.5,
-	"o1-preview-2024-09-12":      7.5,
-	"o1-mini":                    0.55,
-	"o1-mini-2024-09-12":         0.55,
-	"o3-mini":                    0.55,
-	"o3-mini-2025-01-31":         0.55,
-	"o3-mini-high":               0.55,
-	"o3-mini-2025-01-31-high":    0.55,
-	"o3-mini-low":                0.55,
-	"o3-mini-2025-01-31-low":     0.55,
-	"o3-mini-medium":             0.55,
-	"o3-mini-2025-01-31-medium":  0.55,
-	"gpt-4o-mini":                0.075,
-	"gpt-4o-mini-2024-07-18":     0.075,
-	"gpt-4-turbo":                5, // $0.01 / 1K tokens
-	"gpt-4-turbo-2024-04-09":     5, // $0.01 / 1K tokens
-	"gpt-4.5-preview":            37.5,
-	"gpt-4.5-preview-2025-02-27": 37.5,
+	"gpt-image-1":                             2.5,
+	"o1":                                      7.5,
+	"o1-2024-12-17":                           7.5,
+	"o1-preview":                              7.5,
+	"o1-preview-2024-09-12":                   7.5,
+	"o1-mini":                                 0.55,
+	"o1-mini-2024-09-12":                      0.55,
+	"o3-mini":                                 0.55,
+	"o3-mini-2025-01-31":                      0.55,
+	"o3-mini-high":                            0.55,
+	"o3-mini-2025-01-31-high":                 0.55,
+	"o3-mini-low":                             0.55,
+	"o3-mini-2025-01-31-low":                  0.55,
+	"o3-mini-medium":                          0.55,
+	"o3-mini-2025-01-31-medium":               0.55,
+	"gpt-4o-mini":                             0.075,
+	"gpt-4o-mini-2024-07-18":                  0.075,
+	"gpt-4-turbo":                             5, // $0.01 / 1K tokens
+	"gpt-4-turbo-2024-04-09":                  5, // $0.01 / 1K tokens
+	"gpt-4.5-preview":                         37.5,
+	"gpt-4.5-preview-2025-02-27":              37.5,
 	//"gpt-3.5-turbo-0301":           0.75, //deprecated
 	"gpt-3.5-turbo":          0.25,
 	"gpt-3.5-turbo-0613":     0.75,
@@ -113,9 +114,7 @@ var defaultModelRatio = map[string]float64{
 	"claude-3-5-sonnet-20241022":                1.5,
 	"claude-3-7-sonnet-20250219":                1.5,
 	"claude-3-7-sonnet-20250219-thinking":       1.5,
-	"claude-sonnet-4-20250514":                  1.5,
 	"claude-3-opus-20240229":                    7.5, // $15 / 1M tokens
-	"claude-opus-4-20250514":                    7.5,
 	"ERNIE-4.0-8K":                              0.120 * RMB,
 	"ERNIE-3.5-8K":                              0.012 * RMB,
 	"ERNIE-3.5-8K-0205":                         0.024 * RMB,
@@ -257,10 +256,11 @@ var defaultCompletionRatio = map[string]float64{
 	"gpt-4-gizmo-*":  2,
 	"gpt-4o-gizmo-*": 3,
 	"gpt-4-all":      2,
+	"gpt-image-1":    8,
 }
 
-// InitModelSettings initializes all model related settings maps
-func InitModelSettings() {
+// InitRatioSettings initializes all model related settings maps
+func InitRatioSettings() {
 	// Initialize modelPriceMap
 	modelPriceMapMutex.Lock()
 	modelPriceMap = defaultModelPrice
@@ -280,6 +280,12 @@ func InitModelSettings() {
 	cacheRatioMapMutex.Lock()
 	cacheRatioMap = defaultCacheRatio
 	cacheRatioMapMutex.Unlock()
+
+	// initialize imageRatioMap
+	imageRatioMapMutex.Lock()
+	imageRatioMap = defaultImageRatio
+	imageRatioMapMutex.Unlock()
+
 }
 
 func GetModelPriceMap() map[string]float64 {
@@ -511,18 +517,18 @@ func getHardcodedCompletionModelRatio(name string) (float64, bool) {
 
 func GetAudioRatio(name string) float64 {
 	if strings.Contains(name, "-realtime") {
-		if strings.HasSuffix(name, "gpt-4o-realtime-preview-2024-12-17") {
+		if strings.HasSuffix(name, "gpt-4o-realtime-preview") {
 			return 8
-		} else if strings.Contains(name, "mini") {
+		} else if strings.Contains(name, "gpt-4o-mini-realtime-preview") {
 			return 10 / 0.6
 		} else {
 			return 20
 		}
 	}
 	if strings.Contains(name, "-audio") {
-		if strings.HasSuffix(name, "gpt-4o-audio-preview-2024-12-17") {
-			return 16
-		} else if strings.Contains(name, "mini") {
+		if strings.HasPrefix(name, "gpt-4o-audio-preview") {
+			return 40 / 2.5
+		} else if strings.HasPrefix(name, "gpt-4o-mini-audio-preview") {
 			return 10 / 0.15
 		} else {
 			return 40
@@ -549,4 +555,37 @@ func ModelRatio2JSONString() string {
 		common.SysError("error marshalling model ratio: " + err.Error())
 	}
 	return string(jsonBytes)
+}
+
+var defaultImageRatio = map[string]float64{
+	"gpt-image-1": 2,
+}
+var imageRatioMap map[string]float64
+var imageRatioMapMutex sync.RWMutex
+
+func ImageRatio2JSONString() string {
+	imageRatioMapMutex.RLock()
+	defer imageRatioMapMutex.RUnlock()
+	jsonBytes, err := json.Marshal(imageRatioMap)
+	if err != nil {
+		common.SysError("error marshalling cache ratio: " + err.Error())
+	}
+	return string(jsonBytes)
+}
+
+func UpdateImageRatioByJSONString(jsonStr string) error {
+	imageRatioMapMutex.Lock()
+	defer imageRatioMapMutex.Unlock()
+	imageRatioMap = make(map[string]float64)
+	return json.Unmarshal([]byte(jsonStr), &imageRatioMap)
+}
+
+func GetImageRatio(name string) (float64, bool) {
+	imageRatioMapMutex.RLock()
+	defer imageRatioMapMutex.RUnlock()
+	ratio, ok := imageRatioMap[name]
+	if !ok {
+		return 1, false // Default to 1 if not found
+	}
+	return ratio, true
 }

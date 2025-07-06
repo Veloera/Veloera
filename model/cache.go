@@ -84,9 +84,11 @@ func CacheGetRandomSatisfiedChannel(group string, model string, retry int) (*Cha
 	if !common.MemoryCacheEnabled {
 		return GetRandomSatisfiedChannel(group, model, retry)
 	}
+	
 	channelSyncLock.RLock()
-	defer channelSyncLock.RUnlock()
 	channels := group2model2channels[group][model]
+	channelSyncLock.RUnlock()
+	
 	if len(channels) == 0 {
 		return nil, errors.New("channel not found")
 	}

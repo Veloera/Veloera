@@ -1,10 +1,13 @@
+<p align="right">
+   <a href="./README.md">中文</a> | <strong>English</strong>
+</p>
 <div align="center">
 
 ![new-api](/web/public/logo.png)
 
 # New API
 
-🍥 Next Generation LLM Gateway and AI Asset Management System
+🍥 Next-Generation Large Model Gateway and AI Asset Management System
 
 <a href="https://trendshift.io/repositories/8227" target="_blank"><img src="https://trendshift.io/api/badge/repositories/8227" alt="Calcium-Ion%2Fnew-api | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 
@@ -33,8 +36,13 @@
 > This is an open-source project developed based on [One API](https://github.com/songquanpeng/veloera)
 
 > [!IMPORTANT]  
-> - Users must comply with OpenAI's [Terms of Use](https://openai.com/policies/terms-of-use) and relevant laws and regulations. Not to be used for illegal purposes.
-> - This project is for personal learning only. Stability is not guaranteed, and no technical support is provided.
+> - This project is for personal learning purposes only, with no guarantee of stability or technical support.
+> - Users must comply with OpenAI's [Terms of Use](https://openai.com/policies/terms-of-use) and **applicable laws and regulations**, and must not use it for illegal purposes.
+> - According to the [《Interim Measures for the Management of Generative Artificial Intelligence Services》](http://www.cac.gov.cn/2023-07/13/c_1690898327029107.htm), please do not provide any unregistered generative AI services to the public in China.
+
+## 📚 Documentation
+
+For detailed documentation, please visit our official Wiki: [https://docs.newapi.pro/](https://docs.newapi.pro/)
 
 ## ✨ Key Features
 
@@ -70,133 +78,114 @@
     2. Set `Prompt Cache Ratio` in channel settings, range 0-1 (e.g., 0.5 means 50% charge on cache hits)
     3. Supported channels:
         - [x] OpenAI
-        - [x] Azure 
+        - [x] Azure
         - [x] DeepSeek
-        - [ ] Claude
+        - [x] Claude
 
 ## Model Support
-This version additionally supports:
-1. Third-party model **gpts** (gpt-4-gizmo-*)
-2. [Midjourney-Proxy(Plus)](https://github.com/novicezk/midjourney-proxy) interface, [Integration Guide](Midjourney.md)
-3. Custom channels with full API URL support
-4. [Suno API](https://github.com/Suno-API/Suno-API) interface, [Integration Guide](Suno.md)
-5. Rerank models, supporting [Cohere](https://cohere.ai/) and [Jina](https://jina.ai/), [Integration Guide](Rerank.md)
-6. Dify
 
-You can add custom models gpt-4-gizmo-* in channels. These are third-party models and cannot be called with official OpenAI keys.
+This version supports multiple models, please refer to [API Documentation-Relay Interface](https://docs.newapi.pro/api) for details:
 
-## Additional Configurations Beyond One API
-- `GENERATE_DEFAULT_TOKEN`: Generate initial token for new users, default `false`
-- `STREAMING_TIMEOUT`: Set streaming response timeout, default 60 seconds
-- `DIFY_DEBUG`: Output workflow and node info to client for Dify channel, default `true`
-- `FORCE_STREAM_OPTION`: Override client stream_options parameter, default `true`
-- `GET_MEDIA_TOKEN`: Calculate image tokens, default `true`
-- `GET_MEDIA_TOKEN_NOT_STREAM`: Calculate image tokens in non-stream mode, default `true`
-- `UPDATE_TASK`: Update async tasks (Midjourney, Suno), default `true`
-- `GEMINI_MODEL_MAP`: Specify Gemini model versions (v1/v1beta), format: "model:version", comma-separated
-- `COHERE_SAFETY_SETTING`: Cohere model [safety settings](https://docs.cohere.com/docs/safety-modes#overview), options: `NONE`, `CONTEXTUAL`, `STRICT`, default `NONE`
-- `GEMINI_VISION_MAX_IMAGE_NUM`: Gemini model maximum image number, default `16`, set to `-1` to disable
-- `MAX_FILE_DOWNLOAD_MB`: Maximum file download size in MB, default `20`
-- `CRYPTO_SECRET`: Encryption key for encrypting database content
-- `AZURE_DEFAULT_API_VERSION`: Azure channel default API version, if not specified in channel settings, use this version, default `2024-12-01-preview`
-- `NOTIFICATION_LIMIT_DURATION_MINUTE`: Duration of notification limit in minutes, default `10`
-- `NOTIFY_LIMIT_COUNT`: Maximum number of user notifications in the specified duration, default `2`
+1. Third-party models **gpts** (gpt-4-gizmo-*)
+2. Third-party channel [Midjourney-Proxy(Plus)](https://github.com/novicezk/midjourney-proxy) interface, [API Documentation](https://docs.newapi.pro/api/midjourney-proxy-image)
+3. Third-party channel [Suno API](https://github.com/Suno-API/Suno-API) interface, [API Documentation](https://docs.newapi.pro/api/suno-music)
+4. Custom channels, supporting full call address input
+5. Rerank models ([Cohere](https://cohere.ai/) and [Jina](https://jina.ai/)), [API Documentation](https://docs.newapi.pro/api/jinaai-rerank)
+6. Claude Messages format, [API Documentation](https://docs.newapi.pro/api/anthropic-chat)
+7. Dify, currently only supports chatflow
+
+## Environment Variable Configuration
+
+For detailed configuration instructions, please refer to [Installation Guide-Environment Variables Configuration](https://docs.newapi.pro/installation/environment-variables):
+
+- `GENERATE_DEFAULT_TOKEN`: Whether to generate initial tokens for newly registered users, default is `false`
+- `STREAMING_TIMEOUT`: Streaming response timeout, default is 60 seconds
+- `DIFY_DEBUG`: Whether to output workflow and node information for Dify channels, default is `true`
+- `FORCE_STREAM_OPTION`: Whether to override client stream_options parameter, default is `true`
+- `GET_MEDIA_TOKEN`: Whether to count image tokens, default is `true`
+- `GET_MEDIA_TOKEN_NOT_STREAM`: Whether to count image tokens in non-streaming cases, default is `true`
+- `UPDATE_TASK`: Whether to update asynchronous tasks (Midjourney, Suno), default is `true`
+- `COHERE_SAFETY_SETTING`: Cohere model safety settings, options are `NONE`, `CONTEXTUAL`, `STRICT`, default is `NONE`
+- `GEMINI_VISION_MAX_IMAGE_NUM`: Maximum number of images for Gemini models, default is `16`
+- `MAX_FILE_DOWNLOAD_MB`: Maximum file download size in MB, default is `20`
+- `CRYPTO_SECRET`: Encryption key used for encrypting database content
+- `AZURE_DEFAULT_API_VERSION`: Azure channel default API version, default is `2025-04-01-preview`
+- `NOTIFICATION_LIMIT_DURATION_MINUTE`: Notification limit duration, default is `10` minutes
+- `NOTIFY_LIMIT_COUNT`: Maximum number of user notifications within the specified duration, default is `2`
 
 ## Deployment
 
+For detailed deployment guides, please refer to [Installation Guide-Deployment Methods](https://docs.newapi.pro/installation):
+
 > [!TIP]
-> Latest Docker image: `calciumion/new-api:latest`  
-> Default account: root, password: 123456
+> Latest Docker image: `calciumion/new-api:latest`
 
-### Multi-Server Deployment
-- Must set `SESSION_SECRET` environment variable, otherwise login state will not be consistent across multiple servers.
-- If using a public Redis, must set `CRYPTO_SECRET` environment variable, otherwise Redis content will not be able to be obtained in multi-server deployment.
+### Multi-machine Deployment Considerations
+- Environment variable `SESSION_SECRET` must be set, otherwise login status will be inconsistent across multiple machines
+- If sharing Redis, `CRYPTO_SECRET` must be set, otherwise Redis content cannot be accessed across multiple machines
 
-### Requirements
-- Local database (default): SQLite (Docker deployment must mount `/data` directory)
-- Remote database: MySQL >= 5.7.8, PgSQL >= 9.6
+### Deployment Requirements
+- Local database (default): SQLite (Docker deployment must mount the `/data` directory)
+- Remote database: MySQL version >= 5.7.8, PgSQL version >= 9.6
 
-### Deployment with BT Panel
-Install BT Panel (**version 9.2.0** or above) from [BT Panel Official Website](https://www.bt.cn/new/download.html), choose the stable version script to download and install.  
-After installation, log in to BT Panel and click Docker in the menu bar. First-time access will prompt to install Docker service. Click Install Now and follow the prompts to complete installation.  
-After installation, find **New-API** in the app store, click install, configure basic options to complete installation.  
-[Pictorial Guide](BT.md)
+### Deployment Methods
 
-### Docker Deployment
+#### Using BaoTa Panel Docker Feature
+Install BaoTa Panel (version **9.2.0** or above), find **New-API** in the application store and install it.
+[Tutorial with images](./docs/BT.md)
 
-### Using Docker Compose (Recommended)
+#### Using Docker Compose (Recommended)
 ```shell
-# Clone project
+# Download the project
 git clone https://github.com/Calcium-Ion/new-api.git
 cd new-api
 # Edit docker-compose.yml as needed
-# nano docker-compose.yml
-# vim docker-compose.yml
 # Start
 docker-compose up -d
 ```
 
-#### Update Version
+#### Using Docker Image Directly
 ```shell
-docker-compose pull
-docker-compose up -d
-```
-
-### Direct Docker Image Usage
-```shell
-# SQLite deployment:
+# Using SQLite
 docker run --name new-api -d --restart always -p 3000:3000 -e TZ=Asia/Shanghai -v /home/ubuntu/data/new-api:/data calciumion/new-api:latest
 
-# MySQL deployment (add -e SQL_DSN="root:123456@tcp(localhost:3306)/oneapi"), modify database connection parameters as needed
-# Example:
+# Using MySQL
 docker run --name new-api -d --restart always -p 3000:3000 -e SQL_DSN="root:123456@tcp(localhost:3306)/oneapi" -e TZ=Asia/Shanghai -v /home/ubuntu/data/new-api:/data calciumion/new-api:latest
 ```
 
-#### Update Version
-```shell
-# Pull the latest image
-docker pull calciumion/new-api:latest
-# Stop and remove the old container
-docker stop new-api
-docker rm new-api
-# Run the new container with the same parameters as before
-docker run --name new-api -d --restart always -p 3000:3000 -e TZ=Asia/Shanghai -v /home/ubuntu/data/new-api:/data calciumion/new-api:latest
-```
+## Channel Retry and Cache
+Channel retry functionality has been implemented, you can set the number of retries in `Settings->Operation Settings->General Settings`. It is **recommended to enable caching**.
 
-Alternatively, you can use Watchtower for automatic updates (not recommended, may cause database incompatibility):
-```shell
-docker run --rm -v /var/run/docker.sock:/var/run/docker.sock containrrr/watchtower -cR
-```
+### Cache Configuration Method
+1. `REDIS_CONN_STRING`: Set Redis as cache
+2. `MEMORY_CACHE_ENABLED`: Enable memory cache (no need to set manually if Redis is set)
 
-## Channel Retry
-Channel retry is implemented, configurable in `Settings->Operation Settings->General Settings`. **Cache recommended**.  
-If retry is enabled, the system will automatically use the next priority channel for the same request after a failed request.
+## API Documentation
 
-### Cache Configuration
-1. `REDIS_CONN_STRING`: Use Redis as cache
-    + Example: `REDIS_CONN_STRING=redis://default:redispw@localhost:49153`
-2. `MEMORY_CACHE_ENABLED`: Enable memory cache, default `false`
-    + Example: `MEMORY_CACHE_ENABLED=true`
+For detailed API documentation, please refer to [API Documentation](https://docs.newapi.pro/api):
 
-### Why Some Errors Don't Retry
-Error codes 400, 504, 524 won't retry
-### To Enable Retry for 400
-In `Channel->Edit`, set `Status Code Override` to:
-```json
-{
-  "400": "500"
-}
-```
-
-## Integration Guides
-- [Midjourney Integration](Midjourney.md)
-- [Suno Integration](Suno.md)
+- [Chat API](https://docs.newapi.pro/api/openai-chat)
+- [Image API](https://docs.newapi.pro/api/openai-image)
+- [Rerank API](https://docs.newapi.pro/api/jinaai-rerank)
+- [Realtime API](https://docs.newapi.pro/api/openai-realtime)
+- [Claude Chat API (messages)](https://docs.newapi.pro/api/anthropic-chat)
 
 ## Related Projects
 - [One API](https://github.com/songquanpeng/veloera): Original project
 - [Midjourney-Proxy](https://github.com/novicezk/midjourney-proxy): Midjourney interface support
-- [chatnio](https://github.com/Deeptrain-Community/chatnio): Next-gen AI B/C solution
-- [neko-api-key-tool](https://github.com/Calcium-Ion/neko-api-key-tool): Query usage quota by key
+- [chatnio](https://github.com/Deeptrain-Community/chatnio): Next-generation AI one-stop B/C-end solution
+- [neko-api-key-tool](https://github.com/Calcium-Ion/neko-api-key-tool): Query usage quota with key
+
+Other projects based on New API:
+- [new-api-horizon](https://github.com/Calcium-Ion/new-api-horizon): High-performance optimized version of New API
+- [VoAPI](https://github.com/VoAPI/VoAPI): Frontend beautified version based on New API
+
+## Help and Support
+
+If you have any questions, please refer to [Help and Support](https://docs.newapi.pro/support):
+- [Community Interaction](https://docs.newapi.pro/support/community-interaction)
+- [Issue Feedback](https://docs.newapi.pro/support/feedback-issues)
+- [FAQ](https://docs.newapi.pro/support/faq)
 
 ## 🌟 Star History
 

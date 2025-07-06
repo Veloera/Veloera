@@ -26,7 +26,7 @@ import (
 func relayHandler(c *gin.Context, relayMode int) *dto.OpenAIErrorWithStatusCode {
 	var err *dto.OpenAIErrorWithStatusCode
 	switch relayMode {
-	case relayconstant.RelayModeImagesGenerations:
+	case relayconstant.RelayModeImagesGenerations, relayconstant.RelayModeImagesEdits:
 		err = relay.ImageHelper(c)
 	case relayconstant.RelayModeAudioSpeech:
 		fallthrough

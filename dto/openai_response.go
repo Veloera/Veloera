@@ -1,6 +1,8 @@
 package dto
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 type SimpleResponse struct {
 	Usage `json:"usage"`
@@ -168,39 +170,55 @@ type CompletionsStreamResponse struct {
 }
 
 type Usage struct {
-	PromptTokens           int                `json:"prompt_tokens"`
-	CompletionTokens       int                `json:"completion_tokens"`
-	TotalTokens            int                `json:"total_tokens"`
-	PromptCacheHitTokens   int                `json:"prompt_cache_hit_tokens,omitempty"`
+	PromptTokens         int `json:"prompt_tokens"`
+	CompletionTokens     int `json:"completion_tokens"`
+	TotalTokens          int `json:"total_tokens"`
+	PromptCacheHitTokens int `json:"prompt_cache_hit_tokens,omitempty"`
+
 	PromptTokensDetails    InputTokenDetails  `json:"prompt_tokens_details"`
 	CompletionTokenDetails OutputTokenDetails `json:"completion_tokens_details"`
-	InputTokens            int                `json:"input_tokens,omitempty"`
-	OutputTokens           int                `json:"output_tokens,omitempty"`
+	InputTokens            int                `json:"input_tokens"`
+	OutputTokens           int                `json:"output_tokens"`
+	InputTokensDetails     *InputTokenDetails `json:"input_tokens_details"`
+}
+
+type InputTokenDetails struct {
+	CachedTokens         int `json:"cached_tokens"`
+	CachedCreationTokens int `json:"-"`
+	TextTokens           int `json:"text_tokens"`
+	AudioTokens          int `json:"audio_tokens"`
+	ImageTokens          int `json:"image_tokens"`
+}
+
+type OutputTokenDetails struct {
+	TextTokens      int `json:"text_tokens"`
+	AudioTokens     int `json:"audio_tokens"`
+	ReasoningTokens int `json:"reasoning_tokens"`
 }
 
 type OpenAIResponsesResponse struct {
-	ID                 string             `json:"id"`
-	Object             string             `json:"object"`
-	CreatedAt          int                `json:"created_at"`
-	Status             string             `json:"status"`
-	Error              *OpenAIError       `json:"error,omitempty"`
-	IncompleteDetails  *IncompleteDetails `json:"incomplete_details,omitempty"`
-	Instructions       string             `json:"instructions"`
-	MaxOutputTokens    int                `json:"max_output_tokens"`
-	Model              string             `json:"model"`
-	Output             []ResponsesOutput  `json:"output"`
-	ParallelToolCalls  bool               `json:"parallel_tool_calls"`
-	PreviousResponseID string             `json:"previous_response_id"`
-	Reasoning          *Reasoning         `json:"reasoning"`
-	Store              bool               `json:"store"`
-	Temperature        float64            `json:"temperature"`
-	ToolChoice         string             `json:"tool_choice"`
-	Tools              []interface{}      `json:"tools"`
-	TopP               float64            `json:"top_p"`
-	Truncation         string             `json:"truncation"`
-	Usage              *Usage             `json:"usage"`
-	User               json.RawMessage    `json:"user"`
-	Metadata           json.RawMessage    `json:"metadata"`
+	ID                 string               `json:"id"`
+	Object             string               `json:"object"`
+	CreatedAt          int                  `json:"created_at"`
+	Status             string               `json:"status"`
+	Error              *OpenAIError         `json:"error,omitempty"`
+	IncompleteDetails  *IncompleteDetails   `json:"incomplete_details,omitempty"`
+	Instructions       string               `json:"instructions"`
+	MaxOutputTokens    int                  `json:"max_output_tokens"`
+	Model              string               `json:"model"`
+	Output             []ResponsesOutput    `json:"output"`
+	ParallelToolCalls  bool                 `json:"parallel_tool_calls"`
+	PreviousResponseID string               `json:"previous_response_id"`
+	Reasoning          *Reasoning           `json:"reasoning"`
+	Store              bool                 `json:"store"`
+	Temperature        float64              `json:"temperature"`
+	ToolChoice         string               `json:"tool_choice"`
+	Tools              []ResponsesToolsCall `json:"tools"`
+	TopP               float64              `json:"top_p"`
+	Truncation         string               `json:"truncation"`
+	Usage              *Usage               `json:"usage"`
+	User               json.RawMessage      `json:"user"`
+	Metadata           json.RawMessage      `json:"metadata"`
 }
 
 type IncompleteDetails struct {
@@ -222,8 +240,12 @@ type ResponsesOutputContent struct {
 }
 
 const (
-	BuildInTools_WebSearch  = "web_search_preview"
-	BuildInTools_FileSearch = "file_search"
+	BuildInToolWebSearchPreview = "web_search_preview"
+	BuildInToolFileSearch       = "file_search"
+)
+
+const (
+	BuildInCallWebSearchCall = "web_search_call"
 )
 
 const (
@@ -234,20 +256,7 @@ const (
 // ResponsesStreamResponse 用于处理 /v1/responses 流式响应
 type ResponsesStreamResponse struct {
 	Type     string                   `json:"type"`
-	Response *OpenAIResponsesResponse `json:"response"`
+	Response *OpenAIResponsesResponse `json:"response,omitempty"`
 	Delta    string                   `json:"delta,omitempty"`
-}
-
-type InputTokenDetails struct {
-	CachedTokens         int `json:"cached_tokens"`
-	CachedCreationTokens int `json:"-"`
-	TextTokens           int `json:"text_tokens"`
-	AudioTokens          int `json:"audio_tokens"`
-	ImageTokens          int `json:"image_tokens"`
-}
-
-type OutputTokenDetails struct {
-	TextTokens      int `json:"text_tokens"`
-	AudioTokens     int `json:"audio_tokens"`
-	ReasoningTokens int `json:"reasoning_tokens"`
+	Item     *ResponsesOutput         `json:"item,omitempty"`
 }

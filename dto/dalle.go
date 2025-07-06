@@ -1,6 +1,8 @@
 package dto
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 type ImageRequest struct {
 	Model          string          `json:"model"`
@@ -12,6 +14,9 @@ type ImageRequest struct {
 	Style          string          `json:"style,omitempty"`
 	User           string          `json:"user,omitempty"`
 	ExtraFields    json.RawMessage `json:"extra_fields,omitempty"`
+	Background     string          `json:"background,omitempty"`
+	Moderation     string          `json:"moderation,omitempty"`
+	OutputFormat   string          `json:"output_format,omitempty"`
 }
 
 type ImageResponse struct {

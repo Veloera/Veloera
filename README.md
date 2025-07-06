@@ -263,7 +263,7 @@ New API提供了丰富的功能，详细特性请参考[特性说明](https://do
 - `GEMINI_VISION_MAX_IMAGE_NUM`：Gemini模型最大图片数量，默认 `16`
 - `MAX_FILE_DOWNLOAD_MB`: 最大文件下载大小，单位MB，默认 `20`
 - `CRYPTO_SECRET`：加密密钥，用于加密数据库内容
-- `AZURE_DEFAULT_API_VERSION`：Azure渠道默认API版本，默认 `2024-12-01-preview`
+- `AZURE_DEFAULT_API_VERSION`：Azure渠道默认API版本，默认 `2025-04-01-preview`
 - `NOTIFICATION_LIMIT_DURATION_MINUTE`：通知限制持续时间，默认 `10`分钟
 - `NOTIFY_LIMIT_COUNT`：用户通知在指定持续时间内的最大数量，默认 `2`
 
@@ -286,7 +286,7 @@ New API提供了丰富的功能，详细特性请参考[特性说明](https://do
 
 #### 使用宝塔面板Docker功能部署
 安装宝塔面板（**9.2.0版本**及以上），在应用商店中找到**New-API**安装即可。
-[图文教程](BT.md)
+[图文教程](./docs/BT.md)
 
 #### 使用Docker Compose部署（推荐）
 ```shell

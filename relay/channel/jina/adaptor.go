@@ -3,7 +3,6 @@ package jina
 import (
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
 	"veloera/dto"
@@ -12,6 +11,8 @@ import (
 	relaycommon "veloera/relay/common"
 	"veloera/relay/common_handler"
 	"veloera/relay/constant"
+
+	"github.com/gin-gonic/gin"
 )
 
 type Adaptor struct {

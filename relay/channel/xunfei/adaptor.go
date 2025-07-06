@@ -2,7 +2,6 @@ package xunfei
 
 import (
 	"errors"
-	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
 	"strings"
@@ -10,6 +9,8 @@ import (
 	"veloera/relay/channel"
 	relaycommon "veloera/relay/common"
 	"veloera/service"
+
+	"github.com/gin-gonic/gin"
 )
 
 type Adaptor struct {

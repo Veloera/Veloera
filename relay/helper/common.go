@@ -15,11 +15,19 @@ import (
 )
 
 func SetEventStreamHeaders(c *gin.Context) {
+	// 检查是否已经设置过头部
+	if _, exists := c.Get("event_stream_headers_set"); exists {
+		return
+	}
+
 	c.Writer.Header().Set("Content-Type", "text/event-stream")
 	c.Writer.Header().Set("Cache-Control", "no-cache")
 	c.Writer.Header().Set("Connection", "keep-alive")
 	c.Writer.Header().Set("Transfer-Encoding", "chunked")
 	c.Writer.Header().Set("X-Accel-Buffering", "no")
+
+	// 设置标志，表示头部已经设置过
+	c.Set("event_stream_headers_set", true)
 }
 
 func ClaudeData(c *gin.Context, resp dto.ClaudeResponse) error {
@@ -48,7 +56,7 @@ func ClaudeChunkData(c *gin.Context, resp dto.ClaudeResponse, data string) {
 
 func ResponseChunkData(c *gin.Context, resp dto.ResponsesStreamResponse, data string) {
 	c.Render(-1, common.CustomEvent{Data: fmt.Sprintf("event: %s\n", resp.Type)})
-	c.Render(-1, common.CustomEvent{Data: fmt.Sprintf("data: %s\n", data)})
+	c.Render(-1, common.CustomEvent{Data: fmt.Sprintf("data: %s", data)})
 	if flusher, ok := c.Writer.(http.Flusher); ok {
 		flusher.Flush()
 	}

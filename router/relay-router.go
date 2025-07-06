@@ -1,10 +1,11 @@
 package router
 
 import (
-	"github.com/gin-gonic/gin"
 	"veloera/controller"
 	"veloera/middleware"
 	"veloera/relay"
+
+	"github.com/gin-gonic/gin"
 )
 
 func SetRelayRouter(router *gin.Engine) {
@@ -32,7 +33,7 @@ func SetRelayRouter(router *gin.Engine) {
 		httpRouter.POST("/chat/completions", controller.Relay)
 		httpRouter.POST("/edits", controller.Relay)
 		httpRouter.POST("/images/generations", controller.Relay)
-		httpRouter.POST("/images/edits", controller.RelayNotImplemented)
+		httpRouter.POST("/images/edits", controller.Relay)
 		httpRouter.POST("/images/variations", controller.RelayNotImplemented)
 		httpRouter.POST("/embeddings", controller.Relay)
 		httpRouter.POST("/engines/:model/embeddings", controller.Relay)

@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"time"
 	"veloera/common"
+	"veloera/common/limiter"
+	"veloera/constant"
 	"veloera/setting"
 
 	"github.com/gin-gonic/gin"
@@ -78,21 +80,9 @@ func redisRateLimitHandler(duration int64, totalMaxCount, successMaxCount int) g
 		ctx := context.Background()
 		rdb := common.RDB
 
-		// 1. 检查总请求数限制（当totalMaxCount为0时会自动跳过）
-		totalKey := fmt.Sprintf("rateLimit:%s:%s", ModelRequestRateLimitCountMark, userId)
-		allowed, err := checkRedisRateLimit(ctx, rdb, totalKey, totalMaxCount, duration)
-		if err != nil {
-			fmt.Println("检查总请求数限制失败:", err.Error())
-			abortWithOpenAiMessage(c, http.StatusInternalServerError, "rate_limit_check_failed")
-			return
-		}
-		if !allowed {
-			abortWithOpenAiMessage(c, http.StatusTooManyRequests, fmt.Sprintf("您已达到总请求数限制：%d分钟内最多请求%d次，包括失败次数，请检查您的请求是否正确", setting.ModelRequestRateLimitDurationMinutes, totalMaxCount))
-		}
-
-		// 2. 检查成功请求数限制
+		// 1. 检查成功请求数限制
 		successKey := fmt.Sprintf("rateLimit:%s:%s", ModelRequestRateLimitSuccessCountMark, userId)
-		allowed, err = checkRedisRateLimit(ctx, rdb, successKey, successMaxCount, duration)
+		allowed, err := checkRedisRateLimit(ctx, rdb, successKey, successMaxCount, duration)
 		if err != nil {
 			fmt.Println("检查成功请求数限制失败:", err.Error())
 			abortWithOpenAiMessage(c, http.StatusInternalServerError, "rate_limit_check_failed")
@@ -103,8 +93,29 @@ func redisRateLimitHandler(duration int64, totalMaxCount, successMaxCount int) g
 			return
 		}
 
-		// 3. 记录总请求（当totalMaxCount为0时会自动跳过）
-		recordRedisRequest(ctx, rdb, totalKey, totalMaxCount)
+		//2.检查总请求数限制并记录总请求（当totalMaxCount为0时会自动跳过，使用令牌桶限流器
+		if totalMaxCount > 0 {
+			totalKey := fmt.Sprintf("rateLimit:%s", userId)
+			// 初始化
+			tb := limiter.New(ctx, rdb)
+			allowed, err = tb.Allow(
+				ctx,
+				totalKey,
+				limiter.WithCapacity(int64(totalMaxCount)*duration),
+				limiter.WithRate(int64(totalMaxCount)),
+				limiter.WithRequested(duration),
+			)
+
+			if err != nil {
+				fmt.Println("检查总请求数限制失败:", err.Error())
+				abortWithOpenAiMessage(c, http.StatusInternalServerError, "rate_limit_check_failed")
+				return
+			}
+
+			if !allowed {
+				abortWithOpenAiMessage(c, http.StatusTooManyRequests, fmt.Sprintf("您已达到总请求数限制：%d分钟内最多请求%d次，包括失败次数，请检查您的请求是否正确", setting.ModelRequestRateLimitDurationMinutes, totalMaxCount))
+			}
+		}
 
 		// 4. 处理请求
 		c.Next()
@@ -164,6 +175,19 @@ func ModelRequestRateLimit() func(c *gin.Context) {
 		duration := int64(setting.ModelRequestRateLimitDurationMinutes * 60)
 		totalMaxCount := setting.ModelRequestRateLimitCount
 		successMaxCount := setting.ModelRequestRateLimitSuccessCount
+
+		// 获取分组
+		group := c.GetString("token_group")
+		if group == "" {
+			group = c.GetString(constant.ContextKeyUserGroup)
+		}
+
+		//获取分组的限流配置
+		groupTotalCount, groupSuccessCount, found := setting.GetGroupRateLimit(group)
+		if found {
+			totalMaxCount = groupTotalCount
+			successMaxCount = groupSuccessCount
+		}
 
 		// 根据存储类型选择并执行限流处理器
 		if common.RedisEnabled {

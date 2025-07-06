@@ -12,6 +12,7 @@ const (
 	RelayModeEmbeddings
 	RelayModeModerations
 	RelayModeImagesGenerations
+	RelayModeImagesEdits
 	RelayModeEdits
 
 	RelayModeMidjourneyImagine
@@ -58,6 +59,8 @@ func Path2RelayMode(path string) int {
 		relayMode = RelayModeModerations
 	} else if strings.HasPrefix(path, "/v1/images/generations") {
 		relayMode = RelayModeImagesGenerations
+	} else if strings.HasPrefix(path, "/v1/images/edits") {
+		relayMode = RelayModeImagesEdits
 	} else if strings.HasPrefix(path, "/v1/edits") {
 		relayMode = RelayModeEdits
 	} else if strings.HasPrefix(path, "/v1/responses") {

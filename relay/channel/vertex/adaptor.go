@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
 	"strings"
@@ -14,6 +13,9 @@ import (
 	"veloera/relay/channel/gemini"
 	"veloera/relay/channel/openai"
 	relaycommon "veloera/relay/common"
+	"veloera/setting/model_setting"
+
+	"github.com/gin-gonic/gin"
 )
 
 const (
@@ -79,6 +81,15 @@ func (a *Adaptor) GetRequestURL(info *relaycommon.RelayInfo) (string, error) {
 	a.AccountCredentials = *adc
 	suffix := ""
 	if a.RequestMode == RequestModeGemini {
+		if model_setting.GetGeminiSettings().ThinkingAdapterEnabled {
+			// suffix -thinking and -nothinking
+			if strings.HasSuffix(info.OriginModelName, "-thinking") {
+				info.UpstreamModelName = strings.TrimSuffix(info.UpstreamModelName, "-thinking")
+			} else if strings.HasSuffix(info.OriginModelName, "-nothinking") {
+				info.UpstreamModelName = strings.TrimSuffix(info.UpstreamModelName, "-nothinking")
+			}
+		}
+
 		if info.IsStream {
 			suffix = "streamGenerateContent?alt=sse"
 		} else {

@@ -3,7 +3,6 @@ package siliconflow
 import (
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
 	"veloera/dto"
@@ -11,6 +10,8 @@ import (
 	"veloera/relay/channel/openai"
 	relaycommon "veloera/relay/common"
 	"veloera/relay/constant"
+
+	"github.com/gin-gonic/gin"
 )
 
 type Adaptor struct {
@@ -79,13 +80,9 @@ func (a *Adaptor) DoResponse(c *gin.Context, resp *http.Response, info *relaycom
 	switch info.RelayMode {
 	case constant.RelayModeRerank:
 		err, usage = siliconflowRerankHandler(c, resp)
-	case constant.RelayModeChatCompletions:
-		if info.IsStream {
-			err, usage = openai.OaiStreamHandler(c, resp, info)
-		} else {
-			err, usage = openai.OpenaiHandler(c, resp, info)
-		}
 	case constant.RelayModeCompletions:
+		fallthrough
+	case constant.RelayModeChatCompletions:
 		if info.IsStream {
 			err, usage = openai.OaiStreamHandler(c, resp, info)
 		} else {

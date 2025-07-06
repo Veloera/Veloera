@@ -3,7 +3,6 @@ package mokaai
 import (
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
 	"strings"
@@ -11,6 +10,8 @@ import (
 	"veloera/relay/channel"
 	relaycommon "veloera/relay/common"
 	"veloera/relay/constant"
+
+	"github.com/gin-gonic/gin"
 )
 
 type Adaptor struct {

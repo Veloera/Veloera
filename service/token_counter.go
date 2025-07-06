@@ -43,7 +43,7 @@ func InitTokenEncoders() {
 			} else {
 				tokenEncoderMap[model] = defaultTokenEncoder
 			}
-		} else if strings.HasPrefix(model, "o1") {
+		} else if strings.HasPrefix(model, "o") {
 			tokenEncoderMap[model] = o200kTokenEncoder
 		} else {
 			tokenEncoderMap[model] = defaultTokenEncoder
@@ -120,11 +120,12 @@ func getImageToken(info *relaycommon.RelayInfo, imageUrl *dto.MessageImageUrl, m
 	var config image.Config
 	var err error
 	var format string
+	var b64str string
 	if strings.HasPrefix(imageUrl.Url, "http") {
 		config, format, err = DecodeUrlImageData(imageUrl.Url)
 	} else {
 		common.SysLog(fmt.Sprintf("decoding image"))
-		config, format, _, err = DecodeBase64ImageData(imageUrl.Url)
+		config, format, b64str, err = DecodeBase64ImageData(imageUrl.Url)
 	}
 	if err != nil {
 		return 0, err
@@ -132,7 +133,12 @@ func getImageToken(info *relaycommon.RelayInfo, imageUrl *dto.MessageImageUrl, m
 	imageUrl.MimeType = format
 
 	if config.Width == 0 || config.Height == 0 {
-		return 0, errors.New(fmt.Sprintf("fail to decode image config: %s", imageUrl.Url))
+		// not an image
+		if format != "" && b64str != "" {
+			// file type
+			return 3 * baseTokens, nil
+		}
+		return 0, errors.New(fmt.Sprintf("fail to decode base64 config: %s", imageUrl.Url))
 	}
 
 	shortSide := config.Width
@@ -399,6 +405,8 @@ func CountTokenMessages(info *relaycommon.RelayInfo, messages []dto.Message, mod
 					// TODO: 音频token数量计算
 					tokenNum += 100
 				} else if m.Type == dto.ContentTypeFile {
+					tokenNum += 5000
+				} else if m.Type == dto.ContentTypeVideoUrl {
 					tokenNum += 5000
 				} else {
 					tokenNum += getTokenNum(tokenEncoder, m.Text)

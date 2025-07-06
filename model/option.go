@@ -74,6 +74,7 @@ func InitOptionMap() {
 	common.OptionMap["ServerAddress"] = ""
 	common.OptionMap["WorkerUrl"] = setting.WorkerUrl
 	common.OptionMap["WorkerValidKey"] = setting.WorkerValidKey
+	common.OptionMap["WorkerAllowHttpImageRequestEnabled"] = strconv.FormatBool(setting.WorkerAllowHttpImageRequestEnabled)
 	common.OptionMap["PayAddress"] = ""
 	common.OptionMap["CustomCallbackAddress"] = ""
 	common.OptionMap["EpayId"] = ""
@@ -99,6 +100,7 @@ func InitOptionMap() {
 	common.OptionMap["ModelRequestRateLimitCount"] = strconv.Itoa(setting.ModelRequestRateLimitCount)
 	common.OptionMap["ModelRequestRateLimitDurationMinutes"] = strconv.Itoa(setting.ModelRequestRateLimitDurationMinutes)
 	common.OptionMap["ModelRequestRateLimitSuccessCount"] = strconv.Itoa(setting.ModelRequestRateLimitSuccessCount)
+	common.OptionMap["ModelRequestRateLimitGroup"] = setting.ModelRequestRateLimitGroup2JSONString()
 	common.OptionMap["ModelRatio"] = operation_setting.ModelRatio2JSONString()
 	common.OptionMap["ModelPrice"] = operation_setting.ModelPrice2JSONString()
 	common.OptionMap["CacheRatio"] = operation_setting.CacheRatio2JSONString()
@@ -279,6 +281,8 @@ func updateOptionMap(key string, value string) (err error) {
 			setting.SafeCheckExemptEnabled = boolValue
 		case "SMTPSSLEnabled":
 			common.SMTPSSLEnabled = boolValue
+		case "WorkerAllowHttpImageRequestEnabled":
+			setting.WorkerAllowHttpImageRequestEnabled = boolValue
 		}
 	}
 	switch key {
@@ -361,6 +365,8 @@ func updateOptionMap(key string, value string) (err error) {
 		setting.ModelRequestRateLimitDurationMinutes, _ = strconv.Atoi(value)
 	case "ModelRequestRateLimitSuccessCount":
 		setting.ModelRequestRateLimitSuccessCount, _ = strconv.Atoi(value)
+	case "ModelRequestRateLimitGroup":
+		err = setting.UpdateModelRequestRateLimitGroupByJSONString(value)
 	case "RetryTimes":
 		common.RetryTimes, _ = strconv.Atoi(value)
 	case "DataExportInterval":

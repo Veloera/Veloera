@@ -103,7 +103,10 @@ func testChannel(channel *model.Channel, testModel string) (err error, openAIErr
 	}
 
 	request := buildTestRequest(testModel)
-	common.SysLog(fmt.Sprintf("testing channel %d with model %s , info %v ", channel.Id, testModel, info))
+	// 创建一个用于日志的 info 副本，移除 ApiKey
+	logInfo := *info
+	logInfo.ApiKey = ""
+	common.SysLog(fmt.Sprintf("testing channel %d with model %s , info %+v ", channel.Id, testModel, logInfo))
 
 	priceData, err := helper.ModelPriceHelper(c, info, 0, int(request.MaxTokens))
 	if err != nil {
@@ -186,7 +189,7 @@ func buildTestRequest(model string) *dto.GeneralOpenAIRequest {
 		return testRequest
 	}
 	// 并非Embedding 模型
-	if strings.HasPrefix(model, "o1") || strings.HasPrefix(model, "o3") {
+	if strings.HasPrefix(model, "o") {
 		testRequest.MaxCompletionTokens = 10
 	} else if strings.Contains(model, "thinking") {
 		if !strings.Contains(model, "claude") {

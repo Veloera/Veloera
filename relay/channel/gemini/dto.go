@@ -2,10 +2,10 @@ package gemini
 
 type GeminiChatRequest struct {
 	Contents           []GeminiChatContent        `json:"contents"`
-	SafetySettings     []GeminiChatSafetySettings `json:"safety_settings,omitempty"`
-	GenerationConfig   GeminiChatGenerationConfig `json:"generation_config,omitempty"`
+	SafetySettings     []GeminiChatSafetySettings `json:"safetySettings,omitempty"`
+	GenerationConfig   GeminiChatGenerationConfig `json:"generationConfig,omitempty"`
 	Tools              []GeminiChatTool           `json:"tools,omitempty"`
-	SystemInstructions *GeminiChatContent         `json:"system_instruction,omitempty"`
+	SystemInstructions *GeminiChatContent         `json:"systemInstruction,omitempty"`
 }
 
 type GeminiThinkingConfig struct {
@@ -54,13 +54,13 @@ type GeminiFileData struct {
 
 type GeminiPart struct {
 	Text                string                         `json:"text,omitempty"`
+	Thought             bool                           `json:"thought,omitempty"`
 	InlineData          *GeminiInlineData              `json:"inlineData,omitempty"`
 	FunctionCall        *FunctionCall                  `json:"functionCall,omitempty"`
 	FunctionResponse    *FunctionResponse              `json:"functionResponse,omitempty"`
 	FileData            *GeminiFileData                `json:"fileData,omitempty"`
 	ExecutableCode      *GeminiPartExecutableCode      `json:"executableCode,omitempty"`
 	CodeExecutionResult *GeminiPartCodeExecutionResult `json:"codeExecutionResult,omitempty"`
-	Thought             bool                           `json:"thought,omitempty"` // Added for thought processing
 }
 
 type GeminiChatContent struct {

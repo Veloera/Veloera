@@ -28,8 +28,10 @@ import {
   Checkbox as SemiCheckbox,
   Row,
   Col,
+  ImagePreview,
 } from '@douyinfe/semi-ui';
 import { getChannelModels, loadChannelModels } from '../../components/utils.js';
+import { IconHelpCircle } from '@douyinfe/semi-icons';
 import {
   IconEyeOpened,
   IconEyeClosedSolid,
@@ -301,6 +303,8 @@ const EditChannel = (props) => {
   const [basicModels, setBasicModels] = useState([]);
   const [fullModels, setFullModels] = useState([]);
   const [customModel, setCustomModel] = useState('');
+  const [modalImageUrl, setModalImageUrl] = useState('');
+  const [isModalOpenurl, setIsModalOpenurl] = useState(false);
 
   // 处理密钥列表的变化
   const updateKeyListToInput = (newKeyList) => {
@@ -678,7 +682,7 @@ const EditChannel = (props) => {
     fetchModels().then();
     fetchGroups().then();
     if (isEdit) {
-      loadChannel().then(() => { });
+      loadChannel().then(() => {});
     } else {
       setInputs(originInputs);
       let localModels = getChannelModels(originInputs.type); // Use originInputs.type for initial state
@@ -1180,7 +1184,9 @@ const EditChannel = (props) => {
                   type={'warning'}
                   description={
                     <>
-                      {t('2025年5月10日后添加的渠道，不需要再在部署的时候移除模型名称中的"."')}
+                      {t(
+                        '2025年5月10日后添加的渠道，不需要再在部署的时候移除模型名称中的"."',
+                      )}
                       {/*<br />*/}
                       {/*<Typography.Text*/}
                       {/*  style={{*/}
@@ -1225,7 +1231,7 @@ const EditChannel = (props) => {
               <Input
                 label={t('默认 API 版本')}
                 name='azure_other'
-                placeholder={t('请输入默认 API 版本，例如：2024-12-01-preview')}
+                placeholder={t('请输入默认 API 版本，例如：2025-04-01-preview')}
                 onChange={(value) => {
                   handleInputChange('other', value);
                 }}
@@ -1395,10 +1401,10 @@ const EditChannel = (props) => {
                 name='other'
                 placeholder={t(
                   '请输入部署地区，例如：us-central1\n支持使用模型映射格式\n' +
-                  '{\n' +
-                  '    "default": "us-central1",\n' +
-                  '    "claude-3-5-sonnet-20240620": "europe-west1"\n' +
-                  '}',
+                    '{\n' +
+                    '    "default": "us-central1",\n' +
+                    '    "claude-3-5-sonnet-20240620": "europe-west1"\n' +
+                    '}',
                 )}
                 autosize={{ minRows: 2 }}
                 onChange={(value) => {
@@ -1451,6 +1457,22 @@ const EditChannel = (props) => {
                 placeholder={
                   '请输入Account ID，例如：d6b5da8hk1awo8nap34ube6gh'
                 }
+                onChange={(value) => {
+                  handleInputChange('other', value);
+                }}
+                value={inputs.other}
+                autoComplete='new-password'
+              />
+            </>
+          )}
+          {inputs.type === 49 && (
+            <>
+              <div style={{ marginTop: 10 }}>
+                <Typography.Text strong>智能体ID：</Typography.Text>
+              </div>
+              <Input
+                name='other'
+                placeholder={'请输入智能体ID，例如：7342866812345'}
                 onChange={(value) => {
                   handleInputChange('other', value);
                 }}
@@ -1815,6 +1837,11 @@ const EditChannel = (props) => {
             {t('填入模板')}
           </Typography.Text>
         </Spin>
+        <ImagePreview
+          src={modalImageUrl}
+          visible={isModalOpenurl}
+          onVisibleChange={(visible) => setIsModalOpenurl(visible)}
+        />
       </SideSheet>
     </>
   );

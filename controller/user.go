@@ -666,7 +666,14 @@ func UpdateSelf(c *gin.Context) {
 		user.Password = "" // rollback to what it should be
 		cleanUser.Password = ""
 	}
-	updatePassword := user.Password != ""
+	updatePassword, err := checkUpdatePassword(user.OriginalPassword, user.Password, cleanUser.Id)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": err.Error(),
+		})
+		return
+	}
 	if err := cleanUser.Update(updatePassword); err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"success": false,
@@ -679,6 +686,23 @@ func UpdateSelf(c *gin.Context) {
 		"success": true,
 		"message": "",
 	})
+	return
+}
+
+func checkUpdatePassword(originalPassword string, newPassword string, userId int) (updatePassword bool, err error) {
+	var currentUser *model.User
+	currentUser, err = model.GetUserById(userId, true)
+	if err != nil {
+		return
+	}
+	if !common.ValidatePasswordAndHash(originalPassword, currentUser.Password) {
+		err = fmt.Errorf("原密码错误")
+		return
+	}
+	if newPassword == "" {
+		return
+	}
+	updatePassword = true
 	return
 }
 

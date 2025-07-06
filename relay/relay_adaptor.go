@@ -10,6 +10,7 @@ import (
 	"veloera/relay/channel/claude"
 	"veloera/relay/channel/cloudflare"
 	"veloera/relay/channel/cohere"
+	"veloera/relay/channel/coze"
 	"veloera/relay/channel/deepseek"
 	"veloera/relay/channel/dify"
 	"veloera/relay/channel/gemini"
@@ -90,6 +91,8 @@ func GetAdaptor(apiType int) channel.Adaptor {
 		return &openai.Adaptor{}
 	case constant.APITypeXai:
 		return &xai.Adaptor{}
+	case constant.APITypeCoze:
+		return &coze.Adaptor{}
 	}
 	return nil
 }

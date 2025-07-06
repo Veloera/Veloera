@@ -57,6 +57,7 @@ const PersonalSetting = () => {
     email_verification_code: '',
     email: '',
     self_account_deletion_confirmation: '',
+    original_password: '',
     set_new_password: '',
     set_new_password_confirmation: '',
   });
@@ -292,11 +293,24 @@ const PersonalSetting = () => {
   };
 
   const changePassword = async () => {
+    if (inputs.original_password === '') {
+      showError(t('请输入原密码！'));
+      return;
+    }
+    if (inputs.set_new_password === '') {
+      showError(t('请输入新密码！'));
+      return;
+    }
+    if (inputs.original_password === inputs.set_new_password) {
+      showError(t('新密码需要和原密码不一致！'));
+      return;
+    }
     if (inputs.set_new_password !== inputs.set_new_password_confirmation) {
       showError(t('两次输入的密码不一致！'));
       return;
     }
     const res = await API.put(`/api/user/self`, {
+      original_password: inputs.original_password,
       password: inputs.set_new_password,
     });
     const { success, message } = res.data;
@@ -895,8 +909,8 @@ const PersonalSetting = () => {
               </div>
             </Card>
             <Card style={{ marginTop: 10 }}>
-              <Tabs type="line" defaultActiveKey="notification">
-                <TabPane tab={t('通知设置')} itemKey="notification">
+              <Tabs type='line' defaultActiveKey='notification'>
+                <TabPane tab={t('通知设置')} itemKey='notification'>
                   <div style={{ marginTop: 20 }}>
                     <Typography.Text strong>{t('通知方式')}</Typography.Text>
                     <div style={{ marginTop: 10 }}>
@@ -1072,23 +1086,36 @@ const PersonalSetting = () => {
                     </Typography.Text>
                   </div>
                 </TabPane>
-                <TabPane tab={t('价格设置')} itemKey="price">
+                <TabPane tab={t('价格设置')} itemKey='price'>
                   <div style={{ marginTop: 20 }}>
-                    <Typography.Text strong>{t('接受未设置价格模型')}</Typography.Text>
+                    <Typography.Text strong>
+                      {t('接受未设置价格模型')}
+                    </Typography.Text>
                     <div style={{ marginTop: 10 }}>
                       <Checkbox
-                        checked={notificationSettings.acceptUnsetModelRatioModel}
-                        onChange={e => handleNotificationSettingChange('acceptUnsetModelRatioModel', e.target.checked)}
+                        checked={
+                          notificationSettings.acceptUnsetModelRatioModel
+                        }
+                        onChange={(e) =>
+                          handleNotificationSettingChange(
+                            'acceptUnsetModelRatioModel',
+                            e.target.checked,
+                          )
+                        }
                       >
                         {t('接受未设置价格模型')}
                       </Checkbox>
-                      <Typography.Text type="secondary" style={{ marginTop: 8, display: 'block' }}>
-                        {t('当模型没有设置价格时仍接受调用，仅当您信任该网站时使用，可能会产生高额费用')}
+                      <Typography.Text
+                        type='secondary'
+                        style={{ marginTop: 8, display: 'block' }}
+                      >
+                        {t(
+                          '当模型没有设置价格时仍接受调用，仅当您信任该网站时使用，可能会产生高额费用',
+                        )}
                       </Typography.Text>
                     </div>
                   </div>
                 </TabPane>
-
               </Tabs>
               <div style={{ marginTop: 20 }}>
                 <Button type='primary' onClick={saveNotificationSettings}>
@@ -1197,6 +1224,16 @@ const PersonalSetting = () => {
             >
               <div style={{ marginTop: 20 }}>
                 <Input
+                  name='original_password'
+                  placeholder={t('原密码')}
+                  type='password'
+                  value={inputs.original_password}
+                  onChange={(value) =>
+                    handleInputChange('original_password', value)
+                  }
+                />
+                <Input
+                  style={{ marginTop: 20 }}
                   name='set_new_password'
                   placeholder={t('新密码')}
                   value={inputs.set_new_password}

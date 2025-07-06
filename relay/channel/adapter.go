@@ -1,11 +1,12 @@
 package channel
 
 import (
-	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
 	"veloera/dto"
 	relaycommon "veloera/relay/common"
+
+	"github.com/gin-gonic/gin"
 )
 
 type Adaptor interface {

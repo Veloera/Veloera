@@ -2,13 +2,14 @@ package aws
 
 import (
 	"errors"
-	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
 	"veloera/dto"
 	"veloera/relay/channel/claude"
 	relaycommon "veloera/relay/common"
 	"veloera/setting/model_setting"
+
+	"github.com/gin-gonic/gin"
 )
 
 const (

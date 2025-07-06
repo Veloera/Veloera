@@ -118,6 +118,7 @@ const LogsTable = () => {
       default:
         return (
           <Tag color='grey' size='large'>
+          <Tag color='grey' size='large'>
             {t('未知')}
           </Tag>
         );
@@ -622,7 +623,6 @@ const LogsTable = () => {
             </Paragraph>
           );
         }
-
         let content = other?.claude
           ? renderClaudeModelPriceSimple(
               other.model_ratio,
@@ -945,7 +945,6 @@ const LogsTable = () => {
                 other.completion_ratio,
                 other.model_price,
                 other.group_ratio,
-                other.user_group_ratio,
                 other.cache_ratio || 1.0,
                 other.cache_creation_ratio || 1.0,
               )
@@ -954,7 +953,14 @@ const LogsTable = () => {
                 other.completion_ratio,
                 other.model_price,
                 other.group_ratio,
-                other.user_group_ratio,
+                other?.user_group_ratio,
+                false,
+                1.0,
+                undefined,
+                other.web_search || false,
+                other.web_search_call_count || 0,
+                other.file_search || false,
+                other.file_search_call_count || 0,
               ),
         });
       }
@@ -1012,6 +1018,15 @@ const LogsTable = () => {
             other?.group_ratio,
             other?.cache_tokens || 0,
             other?.cache_ratio || 1.0,
+            other?.image || false,
+            other?.image_ratio || 0,
+            other?.image_output || 0,
+            other?.web_search || false,
+            other?.web_search_call_count || 0,
+            other?.web_search_price || 0,
+            other?.file_search || false,
+            other?.file_search_call_count || 0,
+            other?.file_search_price || 0,
           );
         }
         expandDataLocal.push({
@@ -1517,7 +1532,7 @@ const LogsTable = () => {
             <Select.Option value='2'>{t('消费')}</Select.Option>
             <Select.Option value='3'>{t('管理')}</Select.Option>
             <Select.Option value='4'>{t('系统')}</Select.Option>
-            <Select.Option value='5'>{t('签到')}</Select.Option> {/* 添加签到选项 */}
+            <Select.Option value='5'>{t('签到')}</Select.Option>
             <Select.Option value='6'>{t('错误')}</Select.Option>
           </Select>
           <Button

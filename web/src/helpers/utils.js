@@ -143,6 +143,7 @@ export function openPage(url) {
 }
 
 export function removeTrailingSlash(url) {
+  if (!url) return '';
   if (url.endsWith('/')) {
     return url.slice(0, -1);
   } else {
