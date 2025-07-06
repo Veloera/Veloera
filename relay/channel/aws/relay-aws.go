@@ -26,11 +26,18 @@ func newAwsClient(c *gin.Context, info *relaycommon.RelayInfo) (*bedrockruntime.
 	ak := awsSecret[0]
 	sk := awsSecret[1]
 	region := awsSecret[2]
-	client := bedrockruntime.New(bedrockruntime.Options{
+
+	options := bedrockruntime.Options{
 		Region:      region,
 		Credentials: aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider(ak, sk, "")),
-	})
+	}
 
+	if info.BaseUrl != "" {
+		baseEndpoint := info.BaseUrl
+		options.BaseEndpoint = &baseEndpoint
+	}
+
+	client := bedrockruntime.New(options)
 	return client, nil
 }
 
