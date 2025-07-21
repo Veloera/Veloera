@@ -1,3 +1,21 @@
+/*
+Copyright (c) 2025 Tethys Plex
+
+This file is part of Veloera.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+*/
 import React, { useEffect, useState, useRef } from 'react';
 import { Button, Col, Form, Row, Spin } from '@douyinfe/semi-ui';
 import { useTranslation } from 'react-i18next';
@@ -17,6 +35,7 @@ export default function SettingsCreditLimit(props) {
     PreConsumedQuota: '',
     QuotaForInviter: '',
     QuotaForInvitee: '',
+    AffEnabled: false,
   });
   const refForm = useRef();
   const [inputsRow, setInputsRow] = useState(inputs);
@@ -110,6 +129,8 @@ export default function SettingsCreditLimit(props) {
                   onChange={handleFieldChange('PreConsumedQuota')}
                 />
               </Col>
+            </Row>
+            <Row gutter={16}>
               <Col xs={24} sm={12} md={8} lg={8} xl={8}>
                 <Form.InputNumber
                   label={t('邀请新用户奖励额度')}
@@ -122,8 +143,6 @@ export default function SettingsCreditLimit(props) {
                   onChange={handleFieldChange('QuotaForInviter')}
                 />
               </Col>
-            </Row>
-            <Row>
               <Col xs={24} sm={12} md={8} lg={8} xl={6}>
                 <Form.InputNumber
                   label={t('新用户使用邀请码奖励额度')}
@@ -134,6 +153,13 @@ export default function SettingsCreditLimit(props) {
                   extraText={''}
                   placeholder={t('例如：1000')}
                   onChange={handleFieldChange('QuotaForInvitee')}
+                />
+              </Col>
+              <Col xs={24} sm={12} md={8} lg={8} xl={6}>
+                <Form.Switch
+                  label={t('启用 AFF 功能')}
+                  field={'AffEnabled'}
+                  onChange={handleFieldChange('AffEnabled')}
                 />
               </Col>
             </Row>

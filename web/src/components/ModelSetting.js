@@ -1,3 +1,21 @@
+/*
+Copyright (c) 2025 Tethys Plex
+
+This file is part of Veloera.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+*/
 import React, { useEffect, useState } from 'react';
 import { Card, Spin, Tabs } from '@douyinfe/semi-ui';
 
@@ -20,11 +38,15 @@ const ModelSetting = () => {
     'global.pass_through_request_enabled': false,
     'global.hide_upstream_error_enabled': false,
     'global.block_browser_extension_enabled': false,
+    'global.rate_limit_exempt_enabled': false,
+    'global.rate_limit_exempt_group': 'bulk-ok',
+    'global.safe_check_exempt_enabled': false,
+    'global.safe_check_exempt_group': 'nsfw-ok',
     'general_setting.ping_interval_enabled': false,
     'general_setting.ping_interval_seconds': 60,
     'gemini.thinking_adapter_enabled': false,
     'gemini.thinking_adapter_budget_tokens_percentage': 0.6,
-    'gemini.models_supported_thinking_budget': '', 
+    'gemini.models_supported_thinking_budget': '',
   });
 
   let [loading, setLoading] = useState(false);

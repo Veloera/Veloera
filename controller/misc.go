@@ -1,3 +1,19 @@
+// Copyright (c) 2025 Tethys Plex
+//
+// This file is part of Veloera.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
 package controller
 
 import (
@@ -32,6 +48,10 @@ func TestStatus(c *gin.Context) {
 }
 
 func GetStatus(c *gin.Context) {
+	common.OptionMapRWMutex.RLock()
+	affEnabled := common.OptionMap["AffEnabled"] == "true"
+	common.OptionMapRWMutex.RUnlock()
+	
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "",
@@ -75,6 +95,7 @@ func GetStatus(c *gin.Context) {
 			"oidc_authorization_endpoint": system_setting.GetOIDCSettings().AuthorizationEndpoint,
 			"setup":                       constant.Setup,
 			"check_in_enabled":            common.CheckInEnabled,
+			"aff_enabled":                 affEnabled,
 		},
 	})
 	return
@@ -275,4 +296,40 @@ func ResetPassword(c *gin.Context) {
 		"data":    password,
 	})
 	return
+}
+
+// GetCustomCSS serves the global CSS content
+func GetCustomCSS(c *gin.Context) {
+	common.OptionMapRWMutex.RLock()
+	cssContent := common.OptionMap["global_css"]
+	common.OptionMapRWMutex.RUnlock()
+	
+	if cssContent == "" {
+		c.Status(http.StatusNoContent)
+		return
+	}
+	
+	// Basic security validation to prevent script tag injection in CSS
+	if strings.Contains(strings.ToLower(cssContent), "<script") {
+		c.Status(http.StatusBadRequest)
+		return
+	}
+	
+	c.Header("Content-Type", "text/css")
+	c.String(http.StatusOK, cssContent)
+}
+
+// GetCustomJS serves the global JavaScript content
+func GetCustomJS(c *gin.Context) {
+	common.OptionMapRWMutex.RLock()
+	jsContent := common.OptionMap["global_js"]
+	common.OptionMapRWMutex.RUnlock()
+	
+	if jsContent == "" {
+		c.Status(http.StatusNoContent)
+		return
+	}
+	
+	c.Header("Content-Type", "application/javascript")
+	c.String(http.StatusOK, jsContent)
 }

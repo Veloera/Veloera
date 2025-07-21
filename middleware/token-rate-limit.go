@@ -1,3 +1,19 @@
+// Copyright (c) 2025 Tethys Plex
+//
+// This file is part of Veloera.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
 package middleware
 
 import (
@@ -7,6 +23,7 @@ import (
 	"strconv"
 	"time"
 	"veloera/common"
+	"veloera/setting/model_setting"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
@@ -116,6 +133,11 @@ func tokenMemoryRateLimitHandler(duration int64, totalMaxCount, successMaxCount 
 func TokenRateLimit() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		if !c.GetBool("token_rate_limit_enabled") {
+			c.Next()
+			return
+		}
+		tokenGroup := c.GetString("token_group")
+		if model_setting.ShouldBypassRateLimit(tokenGroup) {
 			c.Next()
 			return
 		}

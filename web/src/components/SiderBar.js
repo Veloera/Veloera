@@ -1,3 +1,21 @@
+/*
+Copyright (c) 2025 Tethys Plex
+
+This file is part of Veloera.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+*/
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { UserContext } from '../context/User';
@@ -21,26 +39,18 @@ import {
   IconCommentStroked,
   IconCreditCard,
   IconGift,
-  IconHelpCircle,
   IconHistogram,
-  IconHome,
   IconImage,
   IconKey,
   IconLayers,
-  IconPriceTag,
+  IconMail,
   IconSetting,
   IconUser,
 } from '@douyinfe/semi-icons';
 import {
-  Avatar,
-  Dropdown,
-  Layout,
   Nav,
-  Switch,
   Divider,
 } from '@douyinfe/semi-ui';
-import { setStatusData } from '../helpers/data.js';
-import { stringToColor } from '../helpers/render.js';
 import { useSetTheme, useTheme } from '../context/Theme/index.js';
 import { StyleContext } from '../context/Style/index.js';
 import Text from '@douyinfe/semi-ui/lib/es/typography/text';
@@ -77,20 +87,21 @@ const iconStyle = (itemKey, selectedKeys) => {
 // Define routerMap as a constant outside the component
 const routerMap = {
   home: '/',
-  channel: '/channel',
-  token: '/token',
-  redemption: '/redemption',
-  topup: '/topup',
-  user: '/user',
-  log: '/log',
-  midjourney: '/midjourney',
-  setting: '/setting',
+  channel: '/admin/channels',
+  token: '/app/tokens',
+  redemption: '/admin/coupons',
+  topup: '/app/wallet',
+  user: '/admin/users',
+  log: '/app/logs/api-usage',
+  midjourney: '/app/logs/drawing',
+  setting: '/admin/settings',
   about: '/about',
-  detail: '/detail',
+  detail: '/app/dashboard',
   pricing: '/pricing',
-  task: '/task',
+  task: '/app/logs/tasks',
   playground: '/playground',
-  personal: '/personal',
+  personal: '/app/me',
+  message: '/admin/messages',
 };
 
 const SiderBar = () => {
@@ -128,6 +139,7 @@ const SiderBar = () => {
       'task',
       'playground',
       'personal',
+      'message',
     ];
     // 添加聊天项的keys
     for (let i = 0; i < chatItems.length; i++) {
@@ -150,7 +162,7 @@ const SiderBar = () => {
       {
         text: t('数据看板'),
         itemKey: 'detail',
-        to: '/detail',
+        to: '/app/dashboard',
         icon: <IconCalendarClock />,
         className:
           localStorage.getItem('enable_data_export') === 'true'
@@ -160,19 +172,19 @@ const SiderBar = () => {
       {
         text: t('API令牌'),
         itemKey: 'token',
-        to: '/token',
+        to: '/app/tokens',
         icon: <IconKey />,
       },
       {
         text: t('使用日志'),
         itemKey: 'log',
-        to: '/log',
+        to: '/app/logs/api-usage',
         icon: <IconHistogram />,
       },
       {
         text: t('绘图日志'),
         itemKey: 'midjourney',
-        to: '/midjourney',
+        to: '/app/logs/drawing',
         icon: <IconImage />,
         className:
           localStorage.getItem('enable_drawing') === 'true'
@@ -182,7 +194,7 @@ const SiderBar = () => {
       {
         text: t('任务日志'),
         itemKey: 'task',
-        to: '/task',
+        to: '/app/logs/tasks',
         icon: <IconChecklistStroked />,
         className:
           localStorage.getItem('enable_task') === 'true' ? '' : 'tableHiddle',
@@ -201,13 +213,13 @@ const SiderBar = () => {
       {
         text: t('钱包'),
         itemKey: 'topup',
-        to: '/topup',
+        to: '/app/wallet',
         icon: <IconCreditCard />,
       },
       {
         text: t('个人设置'),
         itemKey: 'personal',
-        to: '/personal',
+        to: '/app/me',
         icon: <IconUser />,
       },
     ],
@@ -219,27 +231,34 @@ const SiderBar = () => {
       {
         text: t('渠道'),
         itemKey: 'channel',
-        to: '/channel',
+        to: '/admin/channels',
         icon: <IconLayers />,
         className: isAdmin() ? '' : 'tableHiddle',
       },
       {
         text: t('兑换码'),
         itemKey: 'redemption',
-        to: '/redemption',
+        to: '/admin/coupons',
         icon: <IconGift />,
+        className: isAdmin() ? '' : 'tableHiddle',
+      },
+      {
+        text: t('消息管理'),
+        itemKey: 'message',
+        to: '/admin/messages',
+        icon: <IconMail />,
         className: isAdmin() ? '' : 'tableHiddle',
       },
       {
         text: t('用户管理'),
         itemKey: 'user',
-        to: '/user',
+        to: '/admin/users',
         icon: <IconUser />,
       },
       {
         text: t('系统设置'),
         itemKey: 'setting',
-        to: '/setting',
+        to: '/admin/settings',
         icon: <IconSetting />,
       },
     ],

@@ -1,3 +1,21 @@
+/*
+Copyright (c) 2025 Tethys Plex
+
+This file is part of Veloera.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+*/
 import React, { useContext, useEffect, useState } from 'react';
 import { Dimmer, Loader, Segment } from 'semantic-ui-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -22,20 +40,20 @@ const OAuth2Callback = (props) => {
     if (success) {
       if (message === 'bind') {
         showSuccess('绑定成功！');
-        navigate('/setting');
+        navigate('/admin/settings');
       } else {
         userDispatch({ type: 'login', payload: data });
         localStorage.setItem('user', JSON.stringify(data));
         setUserData(data);
         updateAPI();
         showSuccess('登录成功！');
-        navigate(searchParams.get('returnTo') || '/token');
+        navigate(searchParams.get('returnTo') || '/app/tokens');
       }
     } else {
       showError(message);
       if (count === 0) {
         setPrompt(`操作失败，重定向至登录界面中...`);
-        navigate('/setting'); // in case this is failed to bind GitHub
+        navigate('/admin/settings'); // in case this is failed to bind GitHub
         return;
       }
       count++;

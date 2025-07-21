@@ -1,3 +1,21 @@
+/*
+Copyright (c) 2025 Tethys Plex
+
+This file is part of Veloera.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+*/
 body {
   margin: 0;
   padding-top: 0;
@@ -39,12 +57,44 @@ body {
   padding-right: 30px;
 }
 
+.semi-navigation-item {
+  display: flex;
+  align-items: center; /* 垂直居中 */
+}
+
+.semi-navigation-list a {
+  display: block;      /* 确保 a 是块级元素，margin-bottom 才生效 */
+  margin-bottom: 6px;
+  border-radius: 99px;
+}
+
+.semi-navigation-list a li {
+  border-radius: 99px;
+}
+
+.semi-navigation-list span {
+  display: block;
+  margin-bottom: 1px;
+}
+
+.semi-table-row-cell > div:first-of-type > * {
+  margin-right: 3px !important;
+}
+
 .semi-banner {
   border-radius: 5px;
 }
 
 .semi-table-body {
   border-radius: 5px;
+}
+
+.semi-switch-checked {
+  background-color: var(--semi-color-primary);
+}
+
+.semi-switch-checked:hover {
+  background-color: var(--semi-color-primary-hover);
 }
 
 @media only screen and (max-width: 767px) {
@@ -232,6 +282,10 @@ code {
   padding: 0 16px;
 }
 
+.semi-banner {
+  margin-bottom: 0.7rem;
+}
+
 .topnav .semi-navigation-item {
   border-radius: 4px;
   margin: 0 2px;
@@ -240,7 +294,6 @@ code {
 
 .topnav .semi-navigation-item:hover {
   background-color: var(--semi-color-primary-light-default);
-  transform: translateY(-2px);
   box-shadow: 0 2px 8px rgba(var(--semi-color-primary-rgb), 0.2);
 }
 

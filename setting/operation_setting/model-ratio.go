@@ -1,7 +1,25 @@
+// Copyright (c) 2025 Tethys Plex
+//
+// This file is part of Veloera.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
 package operation_setting
 
 import (
 	"encoding/json"
+	"errors"
+	"strconv"
 	"strings"
 	"sync"
 	"veloera/common"
@@ -13,6 +31,14 @@ const (
 	USD     = 500 // $0.002 = 1 -> $1 = 500
 	RMB     = USD / USD2RMB
 )
+
+// FallbackPricingConfig represents the configuration for fallback pricing
+type FallbackPricingConfig struct {
+	Enabled         bool    `json:"enabled"`
+	SinglePrice     float64 `json:"single_price,omitempty"`
+	InputRatio      float64 `json:"input_ratio,omitempty"`
+	CompletionRatio float64 `json:"completion_ratio,omitempty"`
+}
 
 // modelRatio
 // https://platform.openai.com/docs/models/model-endpoint-compatibility
@@ -538,6 +564,131 @@ func GetAudioCompletionRatio(name string) float64 {
 		return 2
 	}
 	return 2
+}
+
+// GetFallbackPricingConfig retrieves the fallback pricing configuration from options
+func GetFallbackPricingConfig() FallbackPricingConfig {
+	common.OptionMapRWMutex.RLock()
+	defer common.OptionMapRWMutex.RUnlock()
+
+	enabled := common.OptionMap["fallback_pricing_enabled"] == "true"
+	singlePrice, _ := strconv.ParseFloat(common.OptionMap["fallback_single_price"], 64)
+	inputRatio, _ := strconv.ParseFloat(common.OptionMap["fallback_input_ratio"], 64)
+	completionRatio, _ := strconv.ParseFloat(common.OptionMap["fallback_completion_ratio"], 64)
+
+	return FallbackPricingConfig{
+		Enabled:         enabled,
+		SinglePrice:     singlePrice,
+		InputRatio:      inputRatio,
+		CompletionRatio: completionRatio,
+	}
+}
+
+// ValidateFallbackPricingConfig validates the fallback pricing configuration
+func ValidateFallbackPricingConfig(config FallbackPricingConfig) error {
+	if !config.Enabled {
+		return nil // No validation needed when disabled
+	}
+
+	hasSinglePrice := config.SinglePrice > 0
+	hasInputRatio := config.InputRatio > 0
+	hasCompletionRatio := config.CompletionRatio > 0
+	hasRatios := hasInputRatio || hasCompletionRatio
+
+	// Validate mutual exclusion between single price and ratio modes
+	if hasSinglePrice && hasRatios {
+		return errors.New("cannot use both single price and ratio modes")
+	}
+
+	// When using ratio mode, both ratios must be positive
+	if hasRatios {
+		if !hasInputRatio || !hasCompletionRatio {
+			return errors.New("both input and completion ratios must be positive when using ratio mode")
+		}
+		if config.InputRatio <= 0 || config.CompletionRatio <= 0 {
+			return errors.New("both input and completion ratios must be positive when using ratio mode")
+		}
+	}
+
+	return nil
+}
+
+// GetModelPriceWithFallback returns model price with fallback support
+func GetModelPriceWithFallback(name string, printErr bool) (float64, bool) {
+	// First attempt to get specific model price using existing GetModelPrice
+	price, found := GetModelPrice(name, false)
+	if found {
+		return price, true
+	}
+
+	// If not found and fallback pricing enabled, apply fallback single price
+	fallbackConfig := GetFallbackPricingConfig()
+	if !fallbackConfig.Enabled {
+		if printErr {
+			common.SysError("model price not found and fallback pricing disabled: " + name)
+		}
+		return -1, false
+	}
+
+	// Apply fallback single price if configured
+	if fallbackConfig.SinglePrice > 0 {
+		return fallbackConfig.SinglePrice, true
+	}
+
+	// If fallback is enabled but no single price is set, return not found
+	if printErr {
+		common.SysError("model price not found and fallback single price not configured: " + name)
+	}
+	return -1, false
+}
+
+// GetModelRatioWithFallback returns model ratio with fallback support
+func GetModelRatioWithFallback(name string) (float64, bool) {
+	// First attempt to get specific model ratio using existing GetModelRatio
+	ratio, found := GetModelRatio(name)
+	if found && !SelfUseModeEnabled {
+		return ratio, true
+	}
+
+	// Check if fallback pricing is enabled and configured for ratio mode
+	fallbackConfig := GetFallbackPricingConfig()
+	if !fallbackConfig.Enabled || fallbackConfig.SinglePrice > 0 {
+		// Return original result if fallback not applicable (disabled or using single price mode)
+		return ratio, found
+	}
+
+	// Apply fallback input ratio if configured
+	if fallbackConfig.InputRatio > 0 {
+		return fallbackConfig.InputRatio, true
+	}
+
+	// Return original result if fallback input ratio not configured
+	return ratio, found
+}
+
+// GetCompletionRatioWithFallback returns completion ratio with fallback support
+func GetCompletionRatioWithFallback(name string) float64 {
+	// First attempt to get specific completion ratio using existing GetCompletionRatio
+	ratio := GetCompletionRatio(name)
+
+	// Check if we should apply fallback
+	fallbackConfig := GetFallbackPricingConfig()
+	if !fallbackConfig.Enabled || fallbackConfig.SinglePrice > 0 {
+		// Return original ratio if fallback not applicable (disabled or using single price mode)
+		return ratio
+	}
+
+	// Check if model has specific pricing or ratio configured
+	_, hasPrice := GetModelPrice(name, false)
+	_, hasRatio := GetModelRatio(name)
+
+	// If model has no specific pricing and fallback enabled with ratio mode, apply fallback completion ratio
+	if !hasPrice && (!hasRatio || SelfUseModeEnabled) && fallbackConfig.CompletionRatio > 0 {
+		return fallbackConfig.CompletionRatio
+	}
+
+	// Return original completion ratio
+	return ratio
 }
 
 func ModelRatio2JSONString() string {

@@ -1,3 +1,21 @@
+/*
+Copyright (c) 2025 Tethys Plex
+
+This file is part of Veloera.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+*/
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import {
   Banner,
@@ -24,6 +42,9 @@ const OtherSetting = () => {
     Footer: '',
     About: '',
     HomePageContent: '',
+    custom_head_html: '',
+    global_css: '',
+    global_js: '',
   });
   let [loading, setLoading] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
@@ -56,6 +77,9 @@ const OtherSetting = () => {
     About: false,
     Footer: false,
     CheckUpdate: false,
+    custom_head_html: false,
+    global_css: false,
+    global_js: false,
   });
   const handleInputChange = async (value, e) => {
     const name = e.target.id;
@@ -155,6 +179,48 @@ const OtherSetting = () => {
       showError('页脚内容更新失败');
     } finally {
       setLoadingInput((loadingInput) => ({ ...loadingInput, Footer: false }));
+    }
+  };
+
+  // 个性化设置 - 自定义头部HTML
+  const submitCustomHeadHtml = async () => {
+    try {
+      setLoadingInput((loadingInput) => ({ ...loadingInput, custom_head_html: true }));
+      await updateOption('custom_head_html', inputs.custom_head_html);
+      showSuccess('自定义头部HTML已更新');
+    } catch (error) {
+      console.error('自定义头部HTML更新失败', error);
+      showError('自定义头部HTML更新失败');
+    } finally {
+      setLoadingInput((loadingInput) => ({ ...loadingInput, custom_head_html: false }));
+    }
+  };
+
+  // 个性化设置 - 全局CSS样式
+  const submitGlobalCss = async () => {
+    try {
+      setLoadingInput((loadingInput) => ({ ...loadingInput, global_css: true }));
+      await updateOption('global_css', inputs.global_css);
+      showSuccess('全局CSS样式已更新');
+    } catch (error) {
+      console.error('全局CSS样式更新失败', error);
+      showError('全局CSS样式更新失败');
+    } finally {
+      setLoadingInput((loadingInput) => ({ ...loadingInput, global_css: false }));
+    }
+  };
+
+  // 个性化设置 - 全局JavaScript代码
+  const submitGlobalJs = async () => {
+    try {
+      setLoadingInput((loadingInput) => ({ ...loadingInput, global_js: true }));
+      await updateOption('global_js', inputs.global_js);
+      showSuccess('全局JavaScript代码已更新');
+    } catch (error) {
+      console.error('全局JavaScript代码更新失败', error);
+      showError('全局JavaScript代码更新失败');
+    } finally {
+      setLoadingInput((loadingInput) => ({ ...loadingInput, global_js: false }));
     }
   };
 
@@ -370,7 +436,7 @@ const OtherSetting = () => {
                 fullMode={false}
                 type='info'
                 description={t(
-                  '移除 One API 的版权标识必须首先获得授权，项目维护需要花费大量精力，如果本项目对你有意义，请主动支持本项目',
+                  '移除 Veloera 的版权标识不可在此处进行，且移除必须首先获得授权，项目维护需要花费大量精力，如果本项目对你有意义，请主动支持本项目',
                 )}
                 closeIcon={null}
                 style={{ marginTop: 15 }}
@@ -385,6 +451,45 @@ const OtherSetting = () => {
               />
               <Button onClick={submitFooter} loading={loadingInput['Footer']}>
                 {t('设置页脚')}
+              </Button>
+              <Form.TextArea
+                label={t('自定义头部 HTML')}
+                placeholder={t(
+                  '在此输入自定义 HTML 头部内容，将替换页面中的占位符'
+                )}
+                field={'custom_head_html'}
+                onChange={handleInputChange}
+                style={{ fontFamily: 'JetBrains Mono, Consolas' }}
+                autosize={{ minRows: 6, maxRows: 12 }}
+              />
+              <Button onClick={submitCustomHeadHtml} loading={loadingInput['custom_head_html']}>
+                {t('设置自定义头部 HTML')}
+              </Button>
+              <Form.TextArea
+                label={t('全局 CSS 样式')}
+                placeholder={t(
+                  '在此输入自定义 CSS 样式代码'
+                )}
+                field={'global_css'}
+                onChange={handleInputChange}
+                style={{ fontFamily: 'JetBrains Mono, Consolas' }}
+                autosize={{ minRows: 6, maxRows: 12 }}
+              />
+              <Button onClick={submitGlobalCss} loading={loadingInput['global_css']}>
+                {t('设置全局 CSS 样式')}
+              </Button>
+              <Form.TextArea
+                label={t('全局 JavaScript 代码')}
+                placeholder={t(
+                  '在此输入自定义 JavaScript 代码'
+                )}
+                field={'global_js'}
+                onChange={handleInputChange}
+                style={{ fontFamily: 'JetBrains Mono, Consolas' }}
+                autosize={{ minRows: 6, maxRows: 12 }}
+              />
+              <Button onClick={submitGlobalJs} loading={loadingInput['global_js']}>
+                {t('设置全局 JavaScript 代码')}
               </Button>
             </Form.Section>
           </Card>

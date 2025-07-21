@@ -1,3 +1,19 @@
+// Copyright (c) 2025 Tethys Plex
+//
+// This file is part of Veloera.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
 package router
 
 import (
@@ -82,6 +98,7 @@ func SetApiRouter(router *gin.Engine) {
 			optionRoute.GET("/", controller.GetOptions)
 			optionRoute.PUT("/", controller.UpdateOption)
 			optionRoute.POST("/rest_model_ratio", controller.ResetModelRatio)
+			optionRoute.POST("/validate_fallback_pricing", controller.ValidateFallbackPricing)
 		}
 		channelRoute := apiRouter.Group("/channel")
 		channelRoute.Use(middleware.AdminAuth())
@@ -163,6 +180,28 @@ func SetApiRouter(router *gin.Engine) {
 		{
 			taskRoute.GET("/self", middleware.UserAuth(), controller.GetUserTask)
 			taskRoute.GET("/", middleware.AdminAuth(), controller.GetAllTask)
+		}
+
+		// User message routes
+		userMessageRoute := apiRouter.Group("/user/messages")
+		userMessageRoute.Use(middleware.UserAuth())
+		{
+			userMessageRoute.GET("/", controller.GetUserMessages)
+			userMessageRoute.PUT("/:id/read", controller.MarkMessageAsRead)
+			userMessageRoute.GET("/unread_count", controller.GetUnreadCount)
+		}
+
+		// Admin message routes
+		adminMessageRoute := apiRouter.Group("/admin/messages")
+		adminMessageRoute.Use(middleware.AdminAuth())
+		{
+			adminMessageRoute.GET("/", controller.GetAllMessages)
+			adminMessageRoute.GET("/search", controller.SearchMessages)
+			adminMessageRoute.GET("/:id", controller.GetMessage)
+			adminMessageRoute.POST("/", controller.CreateMessage)
+			adminMessageRoute.PUT("/:id", controller.UpdateMessage)
+			adminMessageRoute.DELETE("/:id", controller.DeleteMessage)
+			adminMessageRoute.GET("/:id/recipients", controller.GetMessageRecipients)
 		}
 	}
 }

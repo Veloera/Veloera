@@ -1,3 +1,19 @@
+// Copyright (c) 2025 Tethys Plex
+//
+// This file is part of Veloera.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
 package controller
 
 import (
@@ -281,27 +297,41 @@ func ListModels(c *gin.Context) {
 		}
 
 		// Second, add all models available to the group (including non-prefixed ones)
-		// that haven't been added yet.
+		// that haven't been added yet and don't have prefixed versions already added.
 		for _, modelName := range models {
 			if processedModels[modelName] {
 				continue // Skip if this model (prefixed or non-prefixed) was already added
 			}
 
-			// Construct and add the non-prefixed model to userOpenAiModels
-			if modelData, ok := openAIModelsMap[modelName]; ok {
-				userOpenAiModels = append(userOpenAiModels, modelData)
-			} else {
-				userOpenAiModels = append(userOpenAiModels, dto.OpenAIModels{
-					Id:         modelName,
-					Object:     "model",
-					Created:    1626777600,
-					OwnedBy:    "custom", // Or derive from channel if possible
-					Permission: permission,
-					Root:       modelName,
-					Parent:     nil,
-				})
+			// Check if this model has prefixed versions that were already added
+			hasProcessedPrefixedVersion := false
+			if prefixedVersions, exists := modelPrefixMap[modelName]; exists {
+				for _, prefixedVersion := range prefixedVersions {
+					if processedModels[prefixedVersion] {
+						hasProcessedPrefixedVersion = true
+						break
+					}
+				}
 			}
-			processedModels[modelName] = true
+
+			// Only add the non-prefixed model if no prefixed version was added
+			if !hasProcessedPrefixedVersion {
+				// Construct and add the non-prefixed model to userOpenAiModels
+				if modelData, ok := openAIModelsMap[modelName]; ok {
+					userOpenAiModels = append(userOpenAiModels, modelData)
+				} else {
+					userOpenAiModels = append(userOpenAiModels, dto.OpenAIModels{
+						Id:         modelName,
+						Object:     "model",
+						Created:    1626777600,
+						OwnedBy:    "custom", // Or derive from channel if possible
+						Permission: permission,
+						Root:       modelName,
+						Parent:     nil,
+					})
+				}
+				processedModels[modelName] = true
+			}
 		}
 	}
 

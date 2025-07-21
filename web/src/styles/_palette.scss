@@ -1,693 +1,375 @@
-body,
-body[theme-mode='dark'] .semi-always-light {
-  --semi-black: 0, 0, 0;
+body, body[theme-mode="dark"] .semi-always-light {
+--semi-black: 0,0,0;
+--semi-red-0: 254,241,241;
+--semi-red-1: 253,226,226;
+--semi-red-2: 251,191,188;
+--semi-red-3: 249,142,139;
+--semi-red-4: 247,105,100;
+--semi-red-5: 245,74,69;
+--semi-red-6: 216,57,49;
+--semi-red-7: 172,47,40;
+--semi-red-8: 129,37,32;
+--semi-red-9: 98,28,24;
+--semi-white: 255,255,255;
+--semi-blue-0: 240,244,255;
+--semi-blue-1: 225,234,255;
+--semi-blue-2: 186,206,253;
+--semi-blue-3: 130,167,252;
+--semi-blue-4: 78,131,253;
+--semi-blue-5: 51,112,255;
+--semi-blue-6: 36,91,219;
+--semi-blue-7: 28,76,186;
+--semi-blue-8: 19,60,154;
+--semi-blue-9: 12,41,110;
+--semi-cyan-0: 229,247,248;
+--semi-cyan-1: 194,239,240;
+--semi-cyan-2: 138,221,226;
+--semi-cyan-3: 88,203,211;
+--semi-cyan-4: 44,184,197;
+--semi-cyan-5: 5,164,182;
+--semi-cyan-6: 3,134,152;
+--semi-cyan-7: 1,105,121;
+--semi-cyan-8: 0,77,91;
+--semi-cyan-9: 0,50,61;
+--semi-grey-0: 249,249,249;
+--semi-grey-1: 230,232,234;
+--semi-grey-2: 198,202,205;
+--semi-grey-3: 167,171,176;
+--semi-grey-4: 136,141,146;
+--semi-grey-5: 107,112,117;
+--semi-grey-6: 85,91,97;
+--semi-grey-7: 65,70,76;
+--semi-grey-8: 46,50,56;
+--semi-grey-9: 28,31,35;
+--semi-lime-0: 247,250,229;
+--semi-lime-1: 238,246,198;
+--semi-lime-2: 223,238,150;
+--semi-lime-3: 210,231,106;
+--semi-lime-4: 195,221,64;
+--semi-lime-5: 179,214,0;
+--semi-lime-6: 143,172,2;
+--semi-lime-7: 102,121,1;
+--semi-lime-8: 73,87,0;
+--semi-lime-9: 53,66,0;
+--semi-pink-0: 253,236,239;
+--semi-pink-1: 251,207,216;
+--semi-pink-2: 246,160,181;
+--semi-pink-3: 242,115,150;
+--semi-pink-4: 237,72,123;
+--semi-pink-5: 233,30,99;
+--semi-pink-6: 197,19,86;
+--semi-pink-7: 162,11,72;
+--semi-pink-8: 126,5,58;
+--semi-pink-9: 90,1,43;
+--semi-teal-0: 226,246,243;
+--semi-teal-1: 190,237,229;
+--semi-teal-2: 132,219,207;
+--semi-teal-3: 81,202,186;
+--semi-teal-4: 37,184,167;
+--semi-teal-5: 0,166,150;
+--semi-teal-6: 0,138,127;
+--semi-teal-7: 0,111,104;
+--semi-teal-8: 0,83,79;
+--semi-teal-9: 0,55,54;
+--semi-amber-0: 254,251,235;
+--semi-amber-1: 252,245,206;
+--semi-amber-2: 249,232,158;
+--semi-amber-3: 246,216,111;
+--semi-amber-4: 243,198,65;
+--semi-amber-5: 240,177,20;
+--semi-amber-6: 200,138,15;
+--semi-amber-7: 160,102,10;
+--semi-amber-8: 120,70,6;
+--semi-amber-9: 80,43,3;
+--semi-green-0: 240,251,239;
+--semi-green-1: 217,245,214;
+--semi-green-2: 183,237,177;
+--semi-green-3: 142,224,133;
+--semi-green-4: 98,210,86;
+--semi-green-5: 52,199,36;
+--semi-green-6: 46,161,33;
+--semi-green-7: 35,123,25;
+--semi-green-8: 24,96,16;
+--semi-green-9: 18,75,12;
+--semi-name0-0: 238,240,251;
+--semi-name0-1: 211,218,248;
+--semi-name0-2: 169,181,241;
+--semi-name0-3: 130,145,233;
+--semi-name0-4: 92,110,226;
+--semi-name0-5: 57,76,219;
+--semi-name0-6: 42,56,183;
+--semi-name0-7: 30,39,148;
+--semi-name0-8: 19,25,112;
+--semi-name0-9: 11,14,76;
+--semi-indigo-0: 242,243,253;
+--semi-indigo-1: 224,226,250;
+--semi-indigo-2: 180,185,243;
+--semi-indigo-3: 123,131,234;
+--semi-indigo-4: 97,106,229;
+--semi-indigo-5: 73,84,230;
+--semi-indigo-6: 41,51,199;
+--semi-indigo-7: 22,31,162;
+--semi-indigo-8: 10,18,133;
+--semi-indigo-9: 12,18,100;
+--semi-orange-0: 255,245,235;
+--semi-orange-1: 254,234,210;
+--semi-orange-2: 254,212,164;
+--semi-orange-3: 255,186,107;
+--semi-orange-4: 255,165,61;
+--semi-orange-5: 255,136,0;
+--semi-orange-6: 222,120,2;
+--semi-orange-7: 178,98,6;
+--semi-orange-8: 143,79,4;
+--semi-orange-9: 107,57,0;
+--semi-purple-0: 246,241,254;
+--semi-purple-1: 236,226,254;
+--semi-purple-2: 205,178,250;
+--semi-purple-3: 173,130,247;
+--semi-purple-4: 147,90,246;
+--semi-purple-5: 127,59,245;
+--semi-purple-6: 100,37,208;
+--semi-purple-7: 78,27,167;
+--semi-purple-8: 56,13,130;
+--semi-purple-9: 39,5,97;
+--semi-violet-0: 252,238,252;
+--semi-violet-1: 248,222,248;
+--semi-violet-2: 239,185,239;
+--semi-violet-3: 229,143,229;
+--semi-violet-4: 219,102,219;
+--semi-violet-5: 209,54,209;
+--semi-violet-6: 178,32,178;
+--semi-violet-7: 140,33,140;
+--semi-violet-8: 104,18,104;
+--semi-violet-9: 70,11,70;
+--semi-wathet-0: 236,249,254;
+--semi-wathet-1: 217,243,253;
+--semi-wathet-2: 177,232,252;
+--semi-wathet-3: 126,218,251;
+--semi-wathet-4: 80,206,251;
+--semi-wathet-5: 20,192,255;
+--semi-wathet-6: 4,159,215;
+--semi-wathet-7: 3,126,170;
+--semi-wathet-8: 0,97,133;
+--semi-wathet-9: 0,71,97;
+--semi-yellow-0: 253,249,237;
+--semi-yellow-1: 250,241,209;
+--semi-yellow-2: 248,230,171;
+--semi-yellow-3: 247,220,130;
+--semi-yellow-4: 250,211,85;
+--semi-yellow-5: 255,198,10;
+--semi-yellow-6: 220,155,4;
+--semi-yellow-7: 170,120,3;
+--semi-yellow-8: 121,81,1;
+--semi-yellow-9: 92,58,0;
+--semi-carmine-0: 254,241,248;
+--semi-carmine-1: 253,221,239;
+--semi-carmine-2: 249,174,217;
+--semi-carmine-3: 245,122,192;
+--semi-carmine-4: 241,75,169;
+--semi-carmine-5: 240,29,148;
+--semi-carmine-6: 199,16,119;
+--semi-carmine-7: 158,19,97;
+--semi-carmine-8: 122,15,75;
+--semi-carmine-9: 82,10,50;
+--semi-neutral-0: 245,246,247;
+--semi-neutral-1: 242,243,245;
+--semi-neutral-2: 239,240,241;
+--semi-neutral-3: 222,224,227;
+--semi-neutral-4: 187,191,196;
+--semi-neutral-5: 143,149,158;
+--semi-neutral-6: 100,106,115;
+--semi-neutral-7: 55,60,67;
+--semi-neutral-8: 43,47,54;
+--semi-neutral-9: 31,35,41;
+--semi-saffron-0: 254,255,240;
+--semi-saffron-1: 255,255,204;
+--semi-saffron-2: 255,252,163;
+--semi-saffron-3: 255,246,122;
+--semi-saffron-4: 255,242,88;
+--semi-saffron-5: 255,233,40;
+--semi-saffron-6: 229,206,0;
+--semi-saffron-7: 194,168,0;
+--semi-saffron-8: 143,124,0;
+--semi-saffron-9: 92,79,0;
+--semi-turquoise-0: 234,250,248;
+--semi-turquoise-1: 213,246,242;
+--semi-turquoise-2: 169,239,230;
+--semi-turquoise-3: 100,232,214;
+--semi-turquoise-4: 20,225,198;
+--semi-turquoise-5: 0,214,185;
+--semi-turquoise-6: 4,180,156;
+--semi-turquoise-7: 7,131,114;
+--semi-turquoise-8: 3,99,86;
+--semi-turquoise-9: 2,75,65;
+--semi-light-blue-0: 233,247,253;
+--semi-light-blue-1: 201,236,252;
+--semi-light-blue-2: 149,216,248;
+--semi-light-blue-3: 98,195,245;
+--semi-light-blue-4: 48,172,241;
+--semi-light-blue-5: 0,149,238;
+--semi-light-blue-6: 0,123,202;
+--semi-light-blue-7: 0,99,167;
+--semi-light-blue-8: 0,75,131;
+--semi-light-blue-9: 0,53,95;
+--semi-light-green-0: 243,248,236;
+--semi-light-green-1: 227,240,208;
+--semi-light-green-2: 200,226,165;
+--semi-light-green-3: 173,211,126;
+--semi-light-green-4: 147,197,91;
+--semi-light-green-5: 123,182,60;
+--semi-light-green-6: 100,152,48;
+--semi-light-green-7: 78,121,38;
+--semi-light-green-8: 57,91,27;
+--semi-light-green-9: 37,61,18;
 
-  --semi-red-0: 254, 240, 236;
 
-  --semi-red-1: 253, 216, 207;
-
-  --semi-red-2: 252, 174, 160;
-
-  --semi-red-3: 250, 130, 113;
-
-  --semi-red-4: 249, 83, 67;
-
-  --semi-red-5: 247, 34, 22;
-
-  --semi-red-6: 211, 16, 12;
-
-  --semi-red-7: 176, 5, 7;
-
-  --semi-red-8: 140, 0, 7;
-
-  --semi-red-9: 104, 0, 8;
-
-  --semi-white: 255, 255, 255;
-
-  --semi-blue-0: 234, 246, 254;
-
-  --semi-blue-1: 203, 231, 254;
-
-  --semi-blue-2: 151, 206, 252;
-
-  --semi-blue-3: 100, 180, 251;
-
-  --semi-blue-4: 50, 152, 249;
-
-  --semi-blue-5: 0, 123, 248;
-
-  --semi-blue-6: 0, 102, 212;
-
-  --semi-blue-7: 0, 82, 177;
-
-  --semi-blue-8: 0, 63, 141;
-
-  --semi-blue-9: 0, 45, 105;
-
-  --semi-cyan-0: 228, 248, 247;
-
-  --semi-cyan-1: 192, 240, 240;
-
-  --semi-cyan-2: 135, 223, 225;
-
-  --semi-cyan-3: 84, 205, 210;
-
-  --semi-cyan-4: 39, 186, 195;
-
-  --semi-cyan-5: 0, 167, 180;
-
-  --semi-cyan-6: 0, 137, 150;
-
-  --semi-cyan-7: 0, 107, 120;
-
-  --semi-cyan-8: 0, 79, 90;
-
-  --semi-cyan-9: 0, 52, 60;
-
-  --semi-grey-0: 249, 249, 249;
-
-  --semi-grey-1: 230, 231, 234;
-
-  --semi-grey-2: 198, 200, 205;
-
-  --semi-grey-3: 167, 169, 176;
-
-  --semi-grey-4: 136, 138, 146;
-
-  --semi-grey-5: 107, 109, 117;
-
-  --semi-grey-6: 85, 87, 97;
-
-  --semi-grey-7: 65, 67, 76;
-
-  --semi-grey-8: 46, 47, 56;
-
-  --semi-grey-9: 28, 29, 35;
-
-  --semi-lime-0: 243, 250, 230;
-
-  --semi-lime-1: 229, 245, 196;
-
-  --semi-lime-2: 208, 236, 141;
-
-  --semi-lime-3: 190, 226, 90;
-
-  --semi-lime-4: 177, 217, 43;
-
-  --semi-lime-5: 166, 207, 0;
-
-  --semi-lime-6: 135, 173, 0;
-
-  --semi-lime-7: 106, 138, 0;
-
-  --semi-lime-8: 78, 103, 0;
-
-  --semi-lime-9: 51, 69, 0;
-
-  --semi-pink-0: 253, 235, 240;
-
-  --semi-pink-1: 250, 204, 219;
-
-  --semi-pink-2: 245, 156, 187;
-
-  --semi-pink-3: 241, 109, 159;
-
-  --semi-pink-4: 236, 63, 135;
-
-  --semi-pink-5: 231, 20, 114;
-
-  --semi-pink-6: 195, 11, 99;
-
-  --semi-pink-7: 160, 4, 84;
-
-  --semi-pink-8: 124, 0, 68;
-
-  --semi-pink-9: 88, 0, 51;
-
-  --semi-teal-0: 228, 247, 242;
-
-  --semi-teal-1: 192, 240, 227;
-
-  --semi-teal-2: 135, 225, 202;
-
-  --semi-teal-3: 84, 209, 180;
-
-  --semi-teal-4: 39, 194, 160;
-
-  --semi-teal-5: 0, 179, 143;
-
-  --semi-teal-6: 0, 149, 122;
-
-  --semi-teal-7: 0, 119, 99;
-
-  --semi-teal-8: 0, 90, 76;
-
-  --semi-teal-9: 0, 60, 52;
-
-  --semi-amber-0: 253, 249, 234;
-
-  --semi-amber-1: 252, 240, 203;
-
-  --semi-amber-2: 248, 223, 153;
-
-  --semi-amber-3: 245, 203, 104;
-
-  --semi-amber-4: 241, 180, 56;
-
-  --semi-amber-5: 238, 155, 10;
-
-  --semi-amber-6: 198, 119, 6;
-
-  --semi-amber-7: 159, 87, 3;
-
-  --semi-amber-8: 119, 59, 1;
-
-  --semi-amber-9: 79, 35, 0;
-
-  --semi-brand-0: 235, 239, 247;
-
-  --semi-brand-1: 205, 216, 240;
-
-  --semi-brand-2: 160, 179, 224;
-
-  --semi-brand-3: 119, 144, 209;
-
-  --semi-brand-4: 83, 111, 193;
-
-  --semi-brand-5: 51, 81, 178;
-
-  --semi-brand-6: 40, 66, 158;
-
-  --semi-brand-7: 31, 53, 137;
-
-  --semi-brand-8: 23, 40, 117;
-
-  --semi-brand-9: 16, 30, 96;
-
-  --semi-green-0: 236, 247, 235;
-
-  --semi-green-1: 208, 240, 206;
-
-  --semi-green-2: 164, 225, 161;
-
-  --semi-green-3: 123, 209, 121;
-
-  --semi-green-4: 85, 194, 85;
-
-  --semi-green-5: 53, 179, 55;
-
-  --semi-green-6: 43, 149, 46;
-
-  --semi-green-7: 33, 119, 37;
-
-  --semi-green-8: 24, 90, 28;
-
-  --semi-green-9: 15, 60, 19;
-
-  --semi-indigo-0: 236, 239, 248;
-
-  --semi-indigo-1: 207, 216, 240;
-
-  --semi-indigo-2: 163, 179, 225;
-
-  --semi-indigo-3: 124, 144, 210;
-
-  --semi-indigo-4: 88, 111, 195;
-
-  --semi-indigo-5: 57, 81, 180;
-
-  --semi-indigo-6: 46, 66, 160;
-
-  --semi-indigo-7: 36, 52, 139;
-
-  --semi-indigo-8: 27, 40, 119;
-
-  --semi-indigo-9: 19, 30, 98;
-
-  --semi-orange-0: 255, 247, 234;
-
-  --semi-orange-1: 254, 235, 203;
-
-  --semi-orange-2: 253, 211, 152;
-
-  --semi-orange-3: 252, 184, 101;
-
-  --semi-orange-4: 251, 154, 50;
-
-  --semi-orange-5: 250, 121, 0;
-
-  --semi-orange-6: 214, 93, 0;
-
-  --semi-orange-7: 179, 69, 0;
-
-  --semi-orange-8: 143, 48, 0;
-
-  --semi-orange-9: 107, 30, 0;
-
-  --semi-purple-0: 246, 232, 247;
-
-  --semi-purple-1: 237, 201, 240;
-
-  --semi-purple-2: 216, 151, 225;
-
-  --semi-purple-3: 194, 107, 209;
-
-  --semi-purple-4: 172, 67, 194;
-
-  --semi-purple-5: 148, 33, 179;
-
-  --semi-purple-6: 126, 24, 159;
-
-  --semi-purple-7: 104, 17, 138;
-
-  --semi-purple-8: 84, 11, 118;
-
-  --semi-purple-9: 66, 6, 97;
-
-  --semi-violet-0: 238, 236, 249;
-
-  --semi-violet-1: 215, 207, 243;
-
-  --semi-violet-2: 178, 163, 232;
-
-  --semi-violet-3: 146, 122, 220;
-
-  --semi-violet-4: 117, 85, 209;
-
-  --semi-violet-5: 91, 51, 197;
-
-  --semi-violet-6: 80, 40, 177;
-
-  --semi-violet-7: 70, 31, 156;
-
-  --semi-violet-8: 59, 23, 136;
-
-  --semi-violet-9: 50, 16, 115;
-
-  --semi-yellow-0: 254, 253, 234;
-
-  --semi-yellow-1: 254, 250, 203;
-
-  --semi-yellow-2: 252, 241, 151;
-
-  --semi-yellow-3: 251, 229, 100;
-
-  --semi-yellow-4: 249, 214, 50;
-
-  --semi-yellow-5: 248, 196, 0;
-
-  --semi-yellow-6: 207, 153, 0;
-
-  --semi-yellow-7: 165, 114, 0;
-
-  --semi-yellow-8: 124, 79, 0;
-
-  --semi-yellow-9: 83, 49, 0;
-
-  --semi-light-blue-0: 233, 248, 253;
-
-  --semi-light-blue-1: 201, 238, 251;
-
-  --semi-light-blue-2: 148, 219, 247;
-
-  --semi-light-blue-3: 97, 199, 244;
-
-  --semi-light-blue-4: 48, 178, 240;
-
-  --semi-light-blue-5: 0, 156, 236;
-
-  --semi-light-blue-6: 0, 129, 200;
-
-  --semi-light-blue-7: 0, 103, 165;
-
-  --semi-light-blue-8: 0, 79, 129;
-
-  --semi-light-blue-9: 0, 55, 93;
-
-  --semi-light-green-0: 243, 248, 235;
-
-  --semi-light-green-1: 227, 240, 206;
-
-  --semi-light-green-2: 200, 225, 162;
-
-  --semi-light-green-3: 173, 210, 122;
-
-  --semi-light-green-4: 147, 195, 86;
-
-  --semi-light-green-5: 123, 180, 54;
-
-  --semi-light-green-6: 100, 150, 44;
-
-  --semi-light-green-7: 78, 120, 34;
-
-  --semi-light-green-8: 57, 90, 24;
-
-  --semi-light-green-9: 37, 60, 16;
 }
+body[theme-mode="dark"], body .semi-always-dark {
+--semi-black: 0,0,0;
+--semi-red-0: 54,25,24;
+--semi-red-1: 74,29,27;
+--semi-red-2: 107,40,39;
+--semi-red-3: 158,56,54;
+--semi-red-4: 204,71,67;
+--semi-red-5: 240,91,86;
+--semi-red-6: 250,120,115;
+--semi-red-7: 255,156,153;
+--semi-red-8: 254,198,195;
+--semi-red-9: 255,224,224;
+--semi-white: 255,255,255;
+--semi-blue-0: 21,31,51;
+--semi-blue-1: 25,42,76;
+--semi-blue-2: 32,62,120;
+--semi-blue-3: 40,81,163;
+--semi-blue-4: 46,101,209;
+--semi-blue-5: 76,136,255;
+--semi-blue-6: 112,160,255;
+--semi-blue-7: 153,187,255;
+--semi-blue-8: 184,207,255;
+--semi-blue-9: 206,223,255;
+--semi-lime-0: 46,54,5;
+--semi-lime-1: 73,87,6;
+--semi-lime-2: 109,130,5;
+--semi-lime-3: 145,173,2;
+--semi-lime-4: 171,201,18;
+--semi-lime-5: 185,214,39;
+--semi-lime-6: 199,224,77;
+--semi-lime-7: 214,234,117;
+--semi-lime-8: 231,245,166;
+--semi-lime-9: 246,255,204;
+--semi-green-0: 25,48,22;
+--semi-green-1: 31,71,27;
+--semi-green-2: 41,107,34;
+--semi-green-3: 51,148,40;
+--semi-green-4: 59,176,46;
+--semi-green-5: 84,194,72;
+--semi-green-6: 109,209,98;
+--semi-green-7: 146,222,137;
+--semi-green-8: 189,240,184;
+--semi-green-9: 214,245,210;
+--semi-indigo-0: 29,31,71;
+--semi-indigo-1: 38,42,94;
+--semi-indigo-2: 53,59,140;
+--semi-indigo-3: 65,73,181;
+--semi-indigo-4: 76,85,212;
+--semi-indigo-5: 95,105,237;
+--semi-indigo-6: 115,123,235;
+--semi-indigo-7: 158,165,255;
+--semi-indigo-8: 187,192,246;
+--semi-indigo-9: 210,213,253;
+--semi-orange-0: 51,33,11;
+--semi-orange-1: 87,51,10;
+--semi-orange-2: 132,81,23;
+--semi-orange-3: 189,112,23;
+--semi-orange-4: 222,130,24;
+--semi-orange-5: 242,150,44;
+--semi-orange-6: 245,165,74;
+--semi-orange-7: 250,188,117;
+--semi-orange-8: 255,216,172;
+--semi-orange-9: 255,234,206;
+--semi-purple-0: 40,23,69;
+--semi-purple-1: 54,29,97;
+--semi-purple-2: 77,38,145;
+--semi-purple-3: 101,51,189;
+--semi-purple-4: 124,74,212;
+--semi-purple-5: 151,98,245;
+--semi-purple-6: 164,114,252;
+--semi-purple-7: 185,144,255;
+--semi-purple-8: 211,186,253;
+--semi-purple-9: 227,212,255;
+--semi-violet-0: 59,21,59;
+--semi-violet-1: 79,28,79;
+--semi-violet-2: 122,40,122;
+--semi-violet-3: 148,59,148;
+--semi-violet-4: 181,74,181;
+--semi-violet-5: 212,87,212;
+--semi-violet-6: 222,115,222;
+--semi-violet-7: 232,152,232;
+--semi-violet-8: 242,191,242;
+--semi-violet-9: 251,218,251;
+--semi-wathet-0: 20,41,48;
+--semi-wathet-1: 23,55,66;
+--semi-wathet-2: 34,91,112;
+--semi-wathet-3: 39,130,163;
+--semi-wathet-4: 46,165,209;
+--semi-wathet-5: 66,189,235;
+--semi-wathet-6: 95,212,254;
+--semi-wathet-7: 137,223,254;
+--semi-wathet-8: 194,238,255;
+--semi-wathet-9: 222,246,255;
+--semi-yellow-0: 56,46,12;
+--semi-yellow-1: 87,71,17;
+--semi-yellow-2: 143,114,17;
+--semi-yellow-3: 201,157,8;
+--semi-yellow-4: 240,187,10;
+--semi-yellow-5: 250,200,35;
+--semi-yellow-6: 252,212,86;
+--semi-yellow-7: 255,222,117;
+--semi-yellow-8: 255,230,148;
+--semi-yellow-9: 252,239,194;
+--semi-carmine-0: 66,27,49;
+--semi-carmine-1: 92,37,66;
+--semi-carmine-2: 145,55,106;
+--semi-carmine-3: 173,64,126;
+--semi-carmine-4: 204,71,146;
+--semi-carmine-5: 227,82,163;
+--semi-carmine-6: 237,102,179;
+--semi-carmine-7: 255,145,207;
+--semi-carmine-8: 255,189,226;
+--semi-carmine-9: 255,219,239;
+--semi-neutral-0: 26,26,26;
+--semi-neutral-1: 41,41,41;
+--semi-neutral-2: 55,55,55;
+--semi-neutral-3: 67,67,67;
+--semi-neutral-4: 95,95,95;
+--semi-neutral-5: 117,117,117;
+--semi-neutral-6: 166,166,166;
+--semi-neutral-7: 224,224,224;
+--semi-neutral-8: 232,232,232;
+--semi-neutral-9: 235,235,235;
+--semi-saffron-0: 56,52,12;
+--semi-saffron-1: 92,85,20;
+--semi-saffron-2: 135,123,16;
+--semi-saffron-3: 199,179,0;
+--semi-saffron-4: 232,209,0;
+--semi-saffron-5: 245,226,49;
+--semi-saffron-6: 250,237,87;
+--semi-saffron-7: 252,244,124;
+--semi-saffron-8: 255,252,158;
+--semi-saffron-9: 255,255,199;
+--semi-neutral-3-5: 80,80,80;
+--semi-neutral-6-5: 207,207,207;
+--semi-neutral-9-5: 248,248,248;
+--semi-turquoise-0: 22,46,43;
+--semi-turquoise-1: 21,61,56;
+--semi-turquoise-2: 35,102,93;
+--semi-turquoise-3: 38,150,135;
+--semi-turquoise-4: 55,184,166;
+--semi-turquoise-5: 65,204,185;
+--semi-turquoise-6: 92,219,202;
+--semi-turquoise-7: 127,235,220;
+--semi-turquoise-8: 183,247,239;
+--semi-turquoise-9: 218,249,245;
 
-body[theme-mode='dark'],
-body .semi-always-dark {
-  --semi-black: 0, 0, 0;
 
-  --semi-red-0: 104, 0, 8;
-
-  --semi-red-1: 140, 0, 7;
-
-  --semi-red-2: 176, 5, 7;
-
-  --semi-red-3: 211, 16, 12;
-
-  --semi-red-4: 247, 34, 22;
-
-  --semi-red-5: 249, 83, 67;
-
-  --semi-red-6: 250, 130, 113;
-
-  --semi-red-7: 252, 174, 160;
-
-  --semi-red-8: 253, 216, 207;
-
-  --semi-red-9: 254, 240, 236;
-
-  --semi-white: 255, 255, 255;
-
-  --semi-blue-0: 0, 45, 105;
-
-  --semi-blue-1: 0, 63, 141;
-
-  --semi-blue-2: 0, 82, 177;
-
-  --semi-blue-3: 0, 102, 212;
-
-  --semi-blue-4: 0, 123, 248;
-
-  --semi-blue-5: 50, 152, 249;
-
-  --semi-blue-6: 100, 180, 251;
-
-  --semi-blue-7: 151, 206, 252;
-
-  --semi-blue-8: 203, 231, 254;
-
-  --semi-blue-9: 234, 246, 254;
-
-  --semi-cyan-0: 0, 52, 60;
-
-  --semi-cyan-1: 0, 79, 90;
-
-  --semi-cyan-2: 0, 107, 120;
-
-  --semi-cyan-3: 0, 137, 150;
-
-  --semi-cyan-4: 0, 167, 180;
-
-  --semi-cyan-5: 39, 186, 195;
-
-  --semi-cyan-6: 84, 205, 210;
-
-  --semi-cyan-7: 135, 223, 225;
-
-  --semi-cyan-8: 192, 240, 240;
-
-  --semi-cyan-9: 228, 248, 247;
-
-  --semi-grey-0: 28, 29, 35;
-
-  --semi-grey-1: 46, 47, 56;
-
-  --semi-grey-2: 65, 67, 76;
-
-  --semi-grey-3: 85, 87, 97;
-
-  --semi-grey-4: 107, 109, 117;
-
-  --semi-grey-5: 136, 138, 146;
-
-  --semi-grey-6: 167, 169, 176;
-
-  --semi-grey-7: 198, 200, 205;
-
-  --semi-grey-8: 230, 231, 234;
-
-  --semi-grey-9: 249, 249, 249;
-
-  --semi-lime-0: 51, 69, 0;
-
-  --semi-lime-1: 78, 103, 0;
-
-  --semi-lime-2: 106, 138, 0;
-
-  --semi-lime-3: 135, 173, 0;
-
-  --semi-lime-4: 166, 207, 0;
-
-  --semi-lime-5: 177, 217, 43;
-
-  --semi-lime-6: 190, 226, 90;
-
-  --semi-lime-7: 208, 236, 141;
-
-  --semi-lime-8: 229, 245, 196;
-
-  --semi-lime-9: 243, 250, 230;
-
-  --semi-pink-0: 88, 0, 51;
-
-  --semi-pink-1: 124, 0, 68;
-
-  --semi-pink-2: 160, 4, 84;
-
-  --semi-pink-3: 195, 11, 99;
-
-  --semi-pink-4: 231, 20, 114;
-
-  --semi-pink-5: 236, 63, 135;
-
-  --semi-pink-6: 241, 109, 159;
-
-  --semi-pink-7: 245, 156, 187;
-
-  --semi-pink-8: 250, 204, 219;
-
-  --semi-pink-9: 253, 235, 240;
-
-  --semi-teal-0: 0, 60, 52;
-
-  --semi-teal-1: 0, 90, 76;
-
-  --semi-teal-2: 0, 119, 99;
-
-  --semi-teal-3: 0, 149, 122;
-
-  --semi-teal-4: 0, 179, 143;
-
-  --semi-teal-5: 39, 194, 160;
-
-  --semi-teal-6: 84, 209, 180;
-
-  --semi-teal-7: 135, 225, 202;
-
-  --semi-teal-8: 192, 240, 227;
-
-  --semi-teal-9: 228, 247, 242;
-
-  --semi-amber-0: 79, 35, 0;
-
-  --semi-amber-1: 119, 59, 1;
-
-  --semi-amber-2: 159, 87, 3;
-
-  --semi-amber-3: 198, 119, 6;
-
-  --semi-amber-4: 238, 155, 10;
-
-  --semi-amber-5: 241, 180, 56;
-
-  --semi-amber-6: 245, 203, 104;
-
-  --semi-amber-7: 248, 223, 153;
-
-  --semi-amber-8: 252, 240, 203;
-
-  --semi-amber-9: 253, 249, 234;
-
-  --semi-brand-0: 16, 30, 96;
-
-  --semi-brand-1: 23, 40, 117;
-
-  --semi-brand-2: 31, 53, 137;
-
-  --semi-brand-3: 40, 66, 158;
-
-  --semi-brand-4: 51, 81, 178;
-
-  --semi-brand-5: 83, 111, 193;
-
-  --semi-brand-6: 119, 144, 209;
-
-  --semi-brand-7: 160, 179, 224;
-
-  --semi-brand-8: 205, 216, 240;
-
-  --semi-brand-9: 235, 239, 247;
-
-  --semi-green-0: 15, 60, 19;
-
-  --semi-green-1: 24, 90, 28;
-
-  --semi-green-2: 33, 119, 37;
-
-  --semi-green-3: 43, 149, 46;
-
-  --semi-green-4: 53, 179, 55;
-
-  --semi-green-5: 85, 194, 85;
-
-  --semi-green-6: 123, 209, 121;
-
-  --semi-green-7: 164, 225, 161;
-
-  --semi-green-8: 208, 240, 206;
-
-  --semi-green-9: 236, 247, 235;
-
-  --semi-indigo-0: 19, 30, 98;
-
-  --semi-indigo-1: 27, 40, 119;
-
-  --semi-indigo-2: 36, 52, 139;
-
-  --semi-indigo-3: 46, 66, 160;
-
-  --semi-indigo-4: 57, 81, 180;
-
-  --semi-indigo-5: 88, 111, 195;
-
-  --semi-indigo-6: 124, 144, 210;
-
-  --semi-indigo-7: 163, 179, 225;
-
-  --semi-indigo-8: 207, 216, 240;
-
-  --semi-indigo-9: 236, 239, 248;
-
-  --semi-orange-0: 107, 30, 0;
-
-  --semi-orange-1: 143, 48, 0;
-
-  --semi-orange-2: 179, 69, 0;
-
-  --semi-orange-3: 214, 93, 0;
-
-  --semi-orange-4: 250, 121, 0;
-
-  --semi-orange-5: 251, 154, 50;
-
-  --semi-orange-6: 252, 184, 101;
-
-  --semi-orange-7: 253, 211, 152;
-
-  --semi-orange-8: 254, 235, 203;
-
-  --semi-orange-9: 255, 247, 234;
-
-  --semi-purple-0: 66, 6, 97;
-
-  --semi-purple-1: 84, 11, 118;
-
-  --semi-purple-2: 104, 17, 138;
-
-  --semi-purple-3: 126, 24, 159;
-
-  --semi-purple-4: 148, 33, 179;
-
-  --semi-purple-5: 172, 67, 194;
-
-  --semi-purple-6: 194, 107, 209;
-
-  --semi-purple-7: 216, 151, 225;
-
-  --semi-purple-8: 237, 201, 240;
-
-  --semi-purple-9: 246, 232, 247;
-
-  --semi-violet-0: 50, 16, 115;
-
-  --semi-violet-1: 59, 23, 136;
-
-  --semi-violet-2: 70, 31, 156;
-
-  --semi-violet-3: 80, 40, 177;
-
-  --semi-violet-4: 91, 51, 197;
-
-  --semi-violet-5: 117, 85, 209;
-
-  --semi-violet-6: 146, 122, 220;
-
-  --semi-violet-7: 178, 163, 232;
-
-  --semi-violet-8: 215, 207, 243;
-
-  --semi-violet-9: 238, 236, 249;
-
-  --semi-yellow-0: 83, 49, 0;
-
-  --semi-yellow-1: 124, 79, 0;
-
-  --semi-yellow-2: 165, 114, 0;
-
-  --semi-yellow-3: 207, 153, 0;
-
-  --semi-yellow-4: 248, 196, 0;
-
-  --semi-yellow-5: 249, 214, 50;
-
-  --semi-yellow-6: 251, 229, 100;
-
-  --semi-yellow-7: 252, 241, 151;
-
-  --semi-yellow-8: 254, 250, 203;
-
-  --semi-yellow-9: 254, 253, 234;
-
-  --semi-light-blue-0: 0, 55, 93;
-
-  --semi-light-blue-1: 0, 79, 129;
-
-  --semi-light-blue-2: 0, 103, 165;
-
-  --semi-light-blue-3: 0, 129, 200;
-
-  --semi-light-blue-4: 0, 156, 236;
-
-  --semi-light-blue-5: 48, 178, 240;
-
-  --semi-light-blue-6: 97, 199, 244;
-
-  --semi-light-blue-7: 148, 219, 247;
-
-  --semi-light-blue-8: 201, 238, 251;
-
-  --semi-light-blue-9: 233, 248, 253;
-
-  --semi-light-green-0: 37, 60, 16;
-
-  --semi-light-green-1: 57, 90, 24;
-
-  --semi-light-green-2: 78, 120, 34;
-
-  --semi-light-green-3: 100, 150, 44;
-
-  --semi-light-green-4: 123, 180, 54;
-
-  --semi-light-green-5: 147, 195, 86;
-
-  --semi-light-green-6: 173, 210, 122;
-
-  --semi-light-green-7: 200, 225, 162;
-
-  --semi-light-green-8: 227, 240, 206;
-
-  --semi-light-green-9: 243, 248, 235;
 }

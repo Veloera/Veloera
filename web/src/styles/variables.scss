@@ -1,3 +1,4 @@
+
 $prefix: 'semi';
 
 /* sizing */
@@ -48,22 +49,27 @@ $z-image_preview_header: 1; // Image 组件预览层中 header 部分 z-index
 // 正在拖拽中的元素的 z-index，需要高于所有的弹出层组件 z-index
 $z-transfer_right_item_drag_item_move: 2000; // 穿梭框右侧面板中正在拖拽元素的z-index
 $z-tagInput_drag_item_move: 2000; // 标签输入框中正在拖拽元素的z-index
-$z-resizable_handler: 2000; // 伸缩框组件中handler的z-index
+$z-resizable_handler: 2000; // 伸缩框组件中handler的z-index   
+
 
 // font
 
-$font-family-regular:
-  Helvetica, Georgia, Arial, 'Noto Color Emoji'; // semi 预置字体回退
-$font-size-small: 12px; // 小文本字号
-$font-size-regular: 14px; // 常规文本字号
 
-$font-size-header-6: 16px; // 六级标题字号
-$font-size-header-5: 18px; // 五级标题字号
-$font-size-header-4: 20px; // 四级标题字号
-$font-size-header-3: 24px; // 三级标题字号
-$font-size-header-2: 28px; // 二级标题字号
-$font-size-header-1: 35px; // 一级标题字号
+$font-family-regular: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif; // semi 预置字体回退
+$font-size-small: 12px; // 小文本字号
+$font-size-regular:  14px; // 常规文本字号
+
+$font-size-header-6:  16px; // 六级标题字号
+$font-size-header-5: 16px; // 五级标题字号
+$font-size-header-4: 18px; // 四级标题字号
+$font-size-header-3: 20px; // 三级标题字号
+$font-size-header-2: 24px; // 二级标题字号
+$font-size-header-1: 30px; // 一级标题字号
+
 
 $font-weight-light: 200; // 字重 - 轻
 $font-weight-regular: 400; // 字重 - 常规
 $font-weight-bold: 600; // 字重 - 加粗
+        
+
+

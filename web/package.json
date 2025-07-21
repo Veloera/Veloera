@@ -6,8 +6,9 @@
   "dependencies": {
     "@douyinfe/semi-icons": "^2.63.1",
     "@douyinfe/semi-ui": "^2.69.1",
-    "@visactor/react-vchart": "~1.8.8",
-    "@visactor/vchart": "~1.8.8",
+    "@semi-bot/semi-theme-veloera-theme": "^1.0.0",
+    "@visactor/react-vchart": "~1.13.11",
+    "@visactor/vchart": "~1.13.11",
     "@visactor/vchart-semi-theme": "~1.8.8",
     "axios": "^0.27.2",
     "dayjs": "^1.11.11",
@@ -26,7 +27,8 @@
     "react-turnstile": "^1.0.5",
     "semantic-ui-offline": "^2.5.0",
     "semantic-ui-react": "^2.1.3",
-    "sse": "https://github.com/mpetazzoni/sse.js"
+    "sse": "https://github.com/mpetazzoni/sse.js",
+    "vite-plugin-semi-theme": "^0.6.0"
   },
   "scripts": {
     "dev": "vite",

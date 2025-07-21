@@ -1,3 +1,19 @@
+// Copyright (c) 2025 Tethys Plex
+//
+// This file is part of Veloera.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
 package controller
 
 import (
@@ -103,12 +119,13 @@ func enhancePricingWithPrefixes(pricing []model.Pricing, group string) []model.P
 
 	// Now add original models that either:
 	// - Don't have a prefixed version
-	// - OR are also available directly (without prefix)
+	// - AND are also available directly (without prefix)
 	for _, modelPricing := range pricing {
 		modelName := modelPricing.ModelName
 
-		// If this model doesn't have a prefixed version, or is available from non-prefixed channels
-		if !modelsWithPrefix[modelName] || modelsFromNonPrefixedChannels[modelName] {
+		// Only add original model if it doesn't have a prefixed version AND is available from non-prefixed channels
+		// This prevents duplicate display when a model has both prefixed and non-prefixed versions
+		if !modelsWithPrefix[modelName] && modelsFromNonPrefixedChannels[modelName] {
 			result = append(result, modelPricing)
 		}
 	}

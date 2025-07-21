@@ -1,3 +1,21 @@
+/*
+Copyright (c) 2025 Tethys Plex
+
+This file is part of Veloera.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+*/
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -697,11 +715,14 @@ const EditChannel = (props) => {
 
   const submit = async () => {
      // Update inputs.key from keyList before submitting if in list mode
+     let finalKey = inputs.key;
      if (useKeyListMode) {
-       updateKeyListToInput(keyList);
+       // Filter out empty strings before joining
+       const filteredKeyList = keyList.filter(key => key.trim().length > 0);
+       finalKey = filteredKeyList.join(',');
      }
 
-    if (!isEdit && (inputs.name === '' || inputs.key === '')) {
+    if (!isEdit && (inputs.name === '' || finalKey === '')) {
       showInfo(t('请填写渠道名称和渠道密钥！'));
       return;
     }
@@ -731,6 +752,10 @@ const EditChannel = (props) => {
 
 
     let localInputs = { ...inputs };
+    // Use the finalKey from multi-key mode if applicable
+    if (useKeyListMode) {
+      localInputs.key = finalKey;
+    }
     if (localInputs.base_url && localInputs.base_url.endsWith('/')) {
       localInputs.base_url = localInputs.base_url.slice(
         0,

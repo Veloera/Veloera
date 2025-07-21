@@ -1,3 +1,19 @@
+// Copyright (c) 2025 Tethys Plex
+//
+// This file is part of Veloera.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
 package controller
 
 import (
@@ -543,20 +559,28 @@ func GetUserModels(c *gin.Context) {
 	}
 
 	// Then add remaining models without prefixes that are allowed for the user's group
+	// Only add base models that don't have any prefixed versions already added
 	for group := range groups {
 		groupModels := model.GetGroupModels(group)
 		for _, baseModel := range groupModels {
-			// Check if this base model was already added with a prefix
-			isPrefixed := false
+			// Skip if this base model was already added
+			if addedModels[baseModel] {
+				continue
+			}
+
+			// Check if any prefixed version of this base model was already added
+			hasAddedPrefixedVersion := false
 			if prefixedModels, ok := modelPrefixMap[baseModel]; ok {
 				for _, prefixedName := range prefixedModels {
 					if addedModels[prefixedName] {
-						isPrefixed = true
+						hasAddedPrefixedVersion = true
 						break
 					}
 				}
 			}
-			if !isPrefixed && !addedModels[baseModel] {
+
+			// Only add the base model if no prefixed version was added
+			if !hasAddedPrefixedVersion {
 				models = append(models, baseModel)
 				addedModels[baseModel] = true
 			}

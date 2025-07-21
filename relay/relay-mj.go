@@ -1,3 +1,19 @@
+// Copyright (c) 2025 Tethys Plex
+//
+// This file is part of Veloera.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
 package relay
 
 import (
@@ -158,7 +174,7 @@ func RelaySwapFace(c *gin.Context) *dto.MidjourneyResponse {
 		return service.MidjourneyErrorWrapper(constant.MjRequestError, "sour_base64_and_target_base64_is_required")
 	}
 	modelName := service.CoverActionToModelName(constant.MjActionSwapFace)
-	modelPrice, success := operation_setting.GetModelPrice(modelName, true)
+	modelPrice, success := operation_setting.GetModelPriceWithFallback(modelName, true)
 	// 如果没有配置价格，则使用默认价格
 	if !success {
 		defaultPrice, ok := operation_setting.GetDefaultModelRatioMap()[modelName]
@@ -464,7 +480,7 @@ func RelayMidjourneySubmit(c *gin.Context, relayMode int) *dto.MidjourneyRespons
 	fullRequestURL := fmt.Sprintf("%s%s", baseURL, requestURL)
 
 	modelName := service.CoverActionToModelName(midjRequest.Action)
-	modelPrice, success := operation_setting.GetModelPrice(modelName, true)
+	modelPrice, success := operation_setting.GetModelPriceWithFallback(modelName, true)
 	// 如果没有配置价格，则使用默认价格
 	if !success {
 		defaultPrice, ok := operation_setting.GetDefaultModelRatioMap()[modelName]

@@ -13,3 +13,5 @@ one-api
 .DS_Store
 tiktoken_cache
 .aider*
+.history/
+.kiro/

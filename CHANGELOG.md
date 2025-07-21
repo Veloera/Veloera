@@ -6,8 +6,71 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## Unreleased changes
 
+### Documentation
+- :robot: changelog file generated [`d0c8365b`](https://github.com/Veloera/Veloera/commit/d0c8365b)
+- :robot: changelog file generated [`870be6ef`](https://github.com/Veloera/Veloera/commit/870be6ef)
+- :robot: changelog file generated [`88aafb02`](https://github.com/Veloera/Veloera/commit/88aafb02)
+- :robot: changelog file generated [`46629169`](https://github.com/Veloera/Veloera/commit/46629169)
+- :robot: changelog file generated [`474c94f2`](https://github.com/Veloera/Veloera/commit/474c94f2)
+- :robot: changelog file generated [`edcead5f`](https://github.com/Veloera/Veloera/commit/edcead5f)
+- :robot: changelog file generated [`bd405a7a`](https://github.com/Veloera/Veloera/commit/bd405a7a)
+- :robot: changelog file generated [`48f4877a`](https://github.com/Veloera/Veloera/commit/48f4877a)
+- :robot: changelog file generated [`ebdd544d`](https://github.com/Veloera/Veloera/commit/ebdd544d)
+- :robot: changelog file generated [`8bfb23e3`](https://github.com/Veloera/Veloera/commit/8bfb23e3)
+- :robot: changelog file generated [`bbc8bfbd`](https://github.com/Veloera/Veloera/commit/bbc8bfbd)
+
+### Chore
+- add copyright header to most source files [`ffc8c43a`](https://github.com/Veloera/Veloera/commit/ffc8c43a)
+- add script to update copyright headers in web files [`111a5633`](https://github.com/Veloera/Veloera/commit/111a5633)
+- add script to update copyright headers in Go files [`0d843243`](https://github.com/Veloera/Veloera/commit/0d843243)
+- delete a useless bin file [`f1337203`](https://github.com/Veloera/Veloera/commit/f1337203)
+
+### Other
+- Merge branch 'main' of https://github.com/Veloera/Veloera [`1deb6e68`](https://github.com/Veloera/Veloera/commit/1deb6e68)
+
+## v0.3.29.1 (2025-07-07)
+
+### Chore
+- update dependencies and upgrade @visactor packages to latest versions [`077ef9a3`](https://github.com/Veloera/Veloera/commit/077ef9a3)
+
+## v0.3.29 (2025-07-07)
+
+### Feature
+- add PR merge readiness check workflow [`9ac574b2`](https://github.com/Veloera/Veloera/commit/9ac574b2)
+- add exemption settings (#123) [`cc8a497a`](https://github.com/Veloera/Veloera/commit/cc8a497a)
+
+### Bug Fixes
+- fix submit when using key list mode by filtering empty keys and updating input key [`afade86f`](https://github.com/Veloera/Veloera/commit/afade86f)
+- upgrade @visactor/react-vchart from 1.8.11 to 1.13.11 (#125) [`29f7c060`](https://github.com/Veloera/Veloera/commit/29f7c060)
+- upgrade @visactor/vchart from 1.8.11 to 1.13.11 (#124) [`0e276ca2`](https://github.com/Veloera/Veloera/commit/0e276ca2)
+- add custom endpoint support to aws bedrock adapter (#126) [`00b2b0b1`](https://github.com/Veloera/Veloera/commit/00b2b0b1)
+- add Redis null check in redemption Redeem function (#121) [`0d9354e8`](https://github.com/Veloera/Veloera/commit/0d9354e8)
+
+### Continuous Integration
+- remove merge readiness check workflow [`cae72d2a`](https://github.com/Veloera/Veloera/commit/cae72d2a)
+- remove comment from GITHUB_TOKEN line in merge readiness check workflow [`37424cf3`](https://github.com/Veloera/Veloera/commit/37424cf3)
+
+### Documentation
+- :robot: changelog file generated [`95570017`](https://github.com/Veloera/Veloera/commit/95570017)
+
+### Chore
+- remove add_responses_method.sh script [`52be55d6`](https://github.com/Veloera/Veloera/commit/52be55d6)
+
+### Other
+- Merge branch 'main' of https://github.com/Veloera/Veloera [`e72425ef`](https://github.com/Veloera/Veloera/commit/e72425ef)
+
+## v0.3.28.1 (2025-06-28)
+
+### Feature
+- add support for GitHub channel and model listing (#113) [`55a54f4d`](https://github.com/Veloera/Veloera/commit/55a54f4d)
+
+## v0.3.28 (2025-06-28)
+
 ### Feature
 - implement error logging (#112) [`7e55b846`](https://github.com/Veloera/Veloera/commit/7e55b846)
+
+### Documentation
+- :robot: changelog file generated [`1af99f86`](https://github.com/Veloera/Veloera/commit/1af99f86)
 
 ## v0.3.27.2 (2025-06-28)
 
