@@ -484,7 +484,9 @@ func CovertGemini2OpenAI(textRequest dto.GeneralOpenAIRequest, info *relaycommon
 		if content.Role == "assistant" {
 			content.Role = "model"
 		}
-		geminiRequest.Contents = append(geminiRequest.Contents, content)
+		if len(content.Parts) > 0 {
+			geminiRequest.Contents = append(geminiRequest.Contents, content)
+		}
 	}
 
 	if len(system_content) > 0 {
