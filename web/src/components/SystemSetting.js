@@ -1085,7 +1085,7 @@ const SystemSetting = () => {
                         field='LinuxDOMinimumTrustLevel'
                         label='LinuxDO Minimum Trust Level'
                         placeholder='允许注册的最低信任等级'
-                        min={1}
+                        min={0}
                         max={4}
                       />
                     </Col>
