@@ -28,6 +28,7 @@ import {
   TagInput,
   Spin,
   Card,
+  Select,
 } from '@douyinfe/semi-ui';
 const { Text } = Typography;
 import {
@@ -89,6 +90,10 @@ const SystemSetting = () => {
     LinuxDOOAuthEnabled: '',
     LinuxDOClientId: '',
     LinuxDOClientSecret: '',
+    LinuxDOMinimumTrustLevel: '',
+    // reverse proxy settings
+    ReverseProxyEnabled: '',
+    ReverseProxyProvider: '',
   });
 
   const [originInputs, setOriginInputs] = useState({});
@@ -127,6 +132,7 @@ const SystemSetting = () => {
           case 'EmailAliasRestrictionEnabled':
           case 'SMTPSSLEnabled':
           case 'LinuxDOOAuthEnabled':
+          case 'ReverseProxyEnabled':
           case 'oidc.enabled':
             item.value = item.value === 'true';
             break;
@@ -507,6 +513,27 @@ const SystemSetting = () => {
         value: inputs.LinuxDOClientSecret,
       });
     }
+    if (originInputs['LinuxDOMinimumTrustLevel'] !== inputs.LinuxDOMinimumTrustLevel) {
+      options.push({
+        key: 'LinuxDOMinimumTrustLevel',
+        value: inputs.LinuxDOMinimumTrustLevel,
+      });
+    }
+
+    if (options.length > 0) {
+      await updateOptions(options);
+    }
+  };
+
+  const submitReverseProxy = async () => {
+    const options = [];
+
+    if (originInputs['ReverseProxyEnabled'] !== inputs.ReverseProxyEnabled) {
+      options.push({ key: 'ReverseProxyEnabled', value: inputs.ReverseProxyEnabled });
+    }
+    if (originInputs['ReverseProxyProvider'] !== inputs.ReverseProxyProvider) {
+      options.push({ key: 'ReverseProxyProvider', value: inputs.ReverseProxyProvider });
+    }
 
     if (options.length > 0) {
       await updateOptions(options);
@@ -557,6 +584,42 @@ const SystemSetting = () => {
                     style={{ width: '100%' }}
                   />
                   <Button onClick={submitServerAddress}>更新服务器地址</Button>
+                </Form.Section>
+              </Card>
+              
+              <Card>
+                <Form.Section text='反向代理设置'>
+                  <Text>用以支持系统在反向代理后运行时正确识别客户端IP地址</Text>
+                  <Form.Checkbox
+                    field='ReverseProxyEnabled'
+                    noLabel
+                    onChange={(e) =>
+                      handleCheckboxChange('ReverseProxyEnabled', e)
+                    }
+                  >
+                    系统在反向代理后运行
+                  </Form.Checkbox>
+                  {inputs.ReverseProxyEnabled && (
+                    <Row
+                      gutter={{ xs: 8, sm: 16, md: 24, lg: 24, xl: 24, xxl: 24 }}
+                      style={{ marginTop: 16 }}
+                    >
+                      <Col xs={24} sm={24} md={12} lg={12} xl={12}>
+                        <Form.Select
+                          field='ReverseProxyProvider'
+                          label='反向代理提供商'
+                          placeholder='请选择反向代理提供商'
+                          style={{ width: '100%' }}
+                        >
+                          <Select.Option value='nginx'>Nginx / OpenResty (通用)</Select.Option>
+                          <Select.Option value='cloudflare'>Cloudflare</Select.Option>
+                        </Form.Select>
+                      </Col>
+                    </Row>
+                  )}
+                  <Button onClick={submitReverseProxy} style={{ marginTop: 16 }}>
+                    保存反向代理设置
+                  </Button>
                 </Form.Section>
               </Card>
               <Card>
@@ -1002,19 +1065,28 @@ const SystemSetting = () => {
                   <Row
                     gutter={{ xs: 8, sm: 16, md: 24, lg: 24, xl: 24, xxl: 24 }}
                   >
-                    <Col xs={24} sm={24} md={12} lg={12} xl={12}>
+                    <Col xs={24} sm={24} md={10} lg={10} xl={10}>
                       <Form.Input
                         field='LinuxDOClientId'
                         label='Linux DO Client ID'
                         placeholder='输入你注册的 LinuxDO OAuth APP 的 ID'
                       />
                     </Col>
-                    <Col xs={24} sm={24} md={12} lg={12} xl={12}>
+                    <Col xs={24} sm={24} md={10} lg={10} xl={10}>
                       <Form.Input
                         field='LinuxDOClientSecret'
                         label='Linux DO Client Secret'
                         type='password'
                         placeholder='敏感信息不会发送到前端显示'
+                      />
+                    </Col>
+                    <Col xs={24} sm={24} md={4} lg={4} xl={4}>
+                      <Form.InputNumber
+                        field='LinuxDOMinimumTrustLevel'
+                        label='LinuxDO Minimum Trust Level'
+                        placeholder='允许注册的最低信任等级'
+                        min={0}
+                        max={4}
                       />
                     </Col>
                   </Row>

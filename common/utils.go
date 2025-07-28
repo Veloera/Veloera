@@ -37,6 +37,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
@@ -279,4 +280,124 @@ func GetAudioDuration(ctx context.Context, filename string) (float64, error) {
 	}
 
 	return strconv.ParseFloat(string(bytes.TrimSpace(output)), 64)
+}
+
+// GetClientIP detects the client IP address based on reverse proxy configuration
+// This function handles different proxy configurations (Cloudflare, Nginx) and falls back to direct connection IP
+func GetClientIP(c *gin.Context) string {
+	// If reverse proxy is not enabled, use direct connection IP
+	if !ReverseProxyEnabled {
+		return c.ClientIP()
+	}
+
+	var ip string
+	
+	// Handle different proxy providers
+	switch ReverseProxyProvider {
+	case "cloudflare":
+		// Cloudflare uses CF-Connecting-IP header
+		ip = c.GetHeader("CF-Connecting-IP")
+		if ip != "" && IsValidIP(ip) {
+			return SanitizeIP(ip)
+		}
+	case "nginx":
+		// Nginx/OpenResty typically uses X-Real-IP header first
+		ip = c.GetHeader("X-Real-IP")
+		if ip != "" && IsValidIP(ip) {
+			return SanitizeIP(ip)
+		}
+		
+		// Fallback to X-Forwarded-For header (get first IP in chain)
+		forwardedFor := c.GetHeader("X-Forwarded-For")
+		if forwardedFor != "" {
+			// X-Forwarded-For can contain multiple IPs separated by commas
+			// The first IP is typically the original client IP
+			ips := strings.Split(forwardedFor, ",")
+			if len(ips) > 0 {
+				firstIP := strings.TrimSpace(ips[0])
+				if IsValidIP(firstIP) {
+					return SanitizeIP(firstIP)
+				}
+			}
+		}
+	}
+	
+	// Fallback to connection IP if proxy headers are missing or invalid
+	return c.ClientIP()
+}
+
+// DetectProxyHeaders analyzes request headers to determine proxy configuration
+// Returns the detected provider and the IP address found
+func DetectProxyHeaders(c *gin.Context) (provider string, ip string) {
+	// Check for Cloudflare headers first
+	if cfIP := c.GetHeader("CF-Connecting-IP"); cfIP != "" && IsValidIP(cfIP) {
+		return "cloudflare", SanitizeIP(cfIP)
+	}
+	
+	// Check for Nginx/OpenResty headers
+	if realIP := c.GetHeader("X-Real-IP"); realIP != "" && IsValidIP(realIP) {
+		return "nginx", SanitizeIP(realIP)
+	}
+	
+	// Check X-Forwarded-For as secondary option for Nginx
+	if forwardedFor := c.GetHeader("X-Forwarded-For"); forwardedFor != "" {
+		ips := strings.Split(forwardedFor, ",")
+		if len(ips) > 0 {
+			firstIP := strings.TrimSpace(ips[0])
+			if IsValidIP(firstIP) {
+				return "nginx", SanitizeIP(firstIP)
+			}
+		}
+	}
+	
+	// No proxy headers detected
+	return "", ""
+}
+
+// IsValidIP validates if a string is a valid IP address (IPv4 or IPv6)
+func IsValidIP(ip string) bool {
+	if ip == "" {
+		return false
+	}
+	
+	// Remove any surrounding whitespace
+	ip = strings.TrimSpace(ip)
+	
+	// Use net.ParseIP to validate the IP address
+	parsedIP := net.ParseIP(ip)
+	if parsedIP == nil {
+		return false
+	}
+	
+	// Additional validation: reject obviously invalid IPs
+	// Reject localhost/loopback addresses in proxy context
+	if parsedIP.IsLoopback() {
+		return false
+	}
+	
+	// Reject unspecified addresses (0.0.0.0 or ::)
+	if parsedIP.IsUnspecified() {
+		return false
+	}
+	
+	return true
+}
+
+// SanitizeIP cleans and validates an IP address string
+func SanitizeIP(ip string) string {
+	if ip == "" {
+		return ""
+	}
+	
+	// Remove surrounding whitespace
+	ip = strings.TrimSpace(ip)
+	
+	// Parse and reformat the IP to ensure it's in standard format
+	parsedIP := net.ParseIP(ip)
+	if parsedIP == nil {
+		return ""
+	}
+	
+	// Return the standardized string representation
+	return parsedIP.String()
 }

@@ -55,6 +55,7 @@ import {
   Checkbox,
   Tabs,
   TabPane,
+  Switch,
 } from '@douyinfe/semi-ui';
 import {
   getQuotaPerUnit,
@@ -111,6 +112,7 @@ const PersonalSetting = () => {
     webhookSecret: '',
     notificationEmail: '',
     acceptUnsetModelRatioModel: false,
+    showIPInLogs: false,
   });
   const [showWebhookDocs, setShowWebhookDocs] = useState(false);
 
@@ -168,6 +170,7 @@ const PersonalSetting = () => {
         notificationEmail: settings.notification_email || '',
         acceptUnsetModelRatioModel:
           settings.accept_unset_model_ratio_model || false,
+        showIPInLogs: settings.show_ip_in_logs || false,
       });
     }
   }, [userState?.user?.setting]);
@@ -432,16 +435,17 @@ const PersonalSetting = () => {
         notification_email: notificationSettings.notificationEmail,
         accept_unset_model_ratio_model:
           notificationSettings.acceptUnsetModelRatioModel,
+        show_ip_in_logs: notificationSettings.showIPInLogs,
       });
 
       if (res.data.success) {
-        showSuccess(t('通知设置已更新'));
+        showSuccess(t('设置已更新'));
         await getUserData();
       } else {
         showError(res.data.message);
       }
     } catch (error) {
-      showError(t('更新通知设置失败'));
+      showError(t('更新设置失败'));
     }
   };
 
@@ -1110,6 +1114,25 @@ const PersonalSetting = () => {
                       </Checkbox>
                       <Typography.Text type="secondary" style={{ marginTop: 8, display: 'block' }}>
                         {t('当模型没有设置价格时仍接受调用，仅当您信任该网站时使用，可能会产生高额费用')}
+                      </Typography.Text>
+                    </div>
+                  </div>
+                </TabPane>
+                <TabPane tab={t('其他设置')} itemKey="other">
+                  <div style={{ marginTop: 20 }}>
+                    <Typography.Text strong>{t('在消费日志显示调用 IP')}</Typography.Text>
+                    <div style={{ marginTop: 10 }}>
+                      <Switch
+                        checked={notificationSettings.showIPInLogs}
+                        onChange={(checked) =>
+                          handleNotificationSettingChange('showIPInLogs', checked)
+                        }
+                      />
+                      <Typography.Text
+                        type='secondary'
+                        style={{ marginTop: 8, display: 'block' }}
+                      >
+                        {t('启用后，您的消费日志中将显示请求的 IP 地址，用于安全监控和审计')}
                       </Typography.Text>
                     </div>
                   </div>

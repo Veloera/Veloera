@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 	"unicode/utf8"
 
@@ -243,13 +244,6 @@ func CovertGemini2OpenAI(textRequest dto.GeneralOpenAIRequest, info *relaycommon
 		},
 	}
 
-	// Check if the current model supports thinking budget
-	if isModelSupportedThinkingBudget(info.OriginModelName, model_setting.GetGeminiSettings().ModelsSupportedThinkingBudget) {
-		geminiRequest.GenerationConfig.ThinkingConfig = &GeminiThinkingConfig{
-			IncludeThoughts: true,
-		}
-	}
-
 	if model_setting.IsGeminiModelSupportImagine(info.UpstreamModelName) {
 		geminiRequest.GenerationConfig.ResponseModalities = []string{
 			"TEXT",
@@ -257,13 +251,21 @@ func CovertGemini2OpenAI(textRequest dto.GeneralOpenAIRequest, info *relaycommon
 		}
 	}
 
+	// Set thinking budget
 	if model_setting.GetGeminiSettings().ThinkingAdapterEnabled {
-		if geminiRequest.GenerationConfig.ThinkingConfig != nil { // Only apply if ThinkingConfig was instantiated
-			if strings.HasSuffix(info.OriginModelName, "-thinking") {
-				budgetTokens := model_setting.GetGeminiSettings().ThinkingAdapterBudgetTokensPercentage * float64(geminiRequest.GenerationConfig.MaxOutputTokens)
-				if budgetTokens == 0 || budgetTokens > 24576 {
-					budgetTokens = 24576
+		if isModelSupportedThinkingBudget(info.OriginModelName, model_setting.GetGeminiSettings().ModelsSupportedThinkingBudget) {
+			geminiRequest.GenerationConfig.ThinkingConfig = &GeminiThinkingConfig{
+				IncludeThoughts: true,
+			}
+			if strings.Contains(info.OriginModelName, "-thinking-") {
+				parts := strings.SplitN(info.OriginModelName, "-thinking-", 2)
+				if len(parts) == 2 && parts[1] != "" {
+					if budgetTokens, err := strconv.Atoi(parts[1]); err == nil {
+						geminiRequest.GenerationConfig.ThinkingConfig.SetThinkingBudget(budgetTokens)
+					}
 				}
+			} else if strings.HasSuffix(info.OriginModelName, "-thinking") {
+				budgetTokens := model_setting.GetGeminiSettings().ThinkingAdapterBudgetTokensPercentage * float64(geminiRequest.GenerationConfig.MaxOutputTokens)
 				geminiRequest.GenerationConfig.ThinkingConfig.SetThinkingBudget(int(budgetTokens))
 			} else if strings.HasSuffix(info.OriginModelName, "-nothinking") {
 				geminiRequest.GenerationConfig.ThinkingConfig.SetThinkingBudget(0)

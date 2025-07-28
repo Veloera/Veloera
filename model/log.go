@@ -48,6 +48,7 @@ type Log struct {
 	TokenId          int    `json:"token_id" gorm:"default:0;index"`
 	Group            string `json:"group" gorm:"index"`
 	Other            string `json:"other"`
+	ClientIP         string `json:"client_ip,omitempty" gorm:"column:client_ip;index"`
 }
 
 const (
@@ -114,6 +115,14 @@ func RecordErrorLog(c *gin.Context, userId int, channelId int, modelName string,
 	common.LogInfo(c, fmt.Sprintf("record error log: userId=%d, channelId=%d, modelName=%s, tokenName=%s, content=%s", userId, channelId, modelName, tokenName, content))
 	username := c.GetString("username")
 	otherStr := common.MapToJsonStr(other)
+	
+	// Check if user has enabled IP logging
+	var clientIP string
+	user, err := GetUserById(userId, false)
+	if err == nil && user != nil && user.GetShowIPInLogs() {
+		clientIP = common.GetClientIP(c)
+	}
+	
 	log := &Log{
 		UserId:           userId,
 		Username:         username,
@@ -131,8 +140,9 @@ func RecordErrorLog(c *gin.Context, userId int, channelId int, modelName string,
 		IsStream:         isStream,
 		Group:            group,
 		Other:            otherStr,
+		ClientIP:         clientIP,
 	}
-	err := LOG_DB.Create(log).Error
+	err = LOG_DB.Create(log).Error
 	if err != nil {
 		common.LogError(c, "failed to record log: "+err.Error())
 	}
@@ -147,6 +157,14 @@ func RecordConsumeLog(c *gin.Context, userId int, channelId int, promptTokens in
 	}
 	username := c.GetString("username")
 	otherStr := common.MapToJsonStr(other)
+	
+	// Check if user has enabled IP logging
+	var clientIP string
+	user, err := GetUserById(userId, false)
+	if err == nil && user != nil && user.GetShowIPInLogs() {
+		clientIP = common.GetClientIP(c)
+	}
+	
 	log := &Log{
 		UserId:           userId,
 		Username:         username,
@@ -164,8 +182,9 @@ func RecordConsumeLog(c *gin.Context, userId int, channelId int, promptTokens in
 		IsStream:         isStream,
 		Group:            group,
 		Other:            otherStr,
+		ClientIP:         clientIP,
 	}
-	err := LOG_DB.Create(log).Error
+	err = LOG_DB.Create(log).Error
 	if err != nil {
 		common.LogError(c, "failed to record log: "+err.Error())
 	}

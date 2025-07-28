@@ -1016,6 +1016,7 @@ type UpdateUserSettingRequest struct {
 	WebhookSecret              string  `json:"webhook_secret,omitempty"`
 	NotificationEmail          string  `json:"notification_email,omitempty"`
 	AcceptUnsetModelRatioModel bool    `json:"accept_unset_model_ratio_model"`
+	ShowIPInLogs               bool    `json:"show_ip_in_logs"`
 }
 
 func UpdateUserSetting(c *gin.Context) {
@@ -1045,6 +1046,9 @@ func UpdateUserSetting(c *gin.Context) {
 		})
 		return
 	}
+
+	// 验证IP日志设置 (布尔值无需额外验证，但可以添加业务逻辑检查)
+	// ShowIPInLogs 是布尔类型，Go会自动处理true/false值
 
 	// 如果是webhook类型,验证webhook地址
 	if req.QuotaWarningType == constant.NotifyTypeWebhook {
@@ -1091,7 +1095,8 @@ func UpdateUserSetting(c *gin.Context) {
 	settings := map[string]interface{}{
 		constant.UserSettingNotifyType:            req.QuotaWarningType,
 		constant.UserSettingQuotaWarningThreshold: req.QuotaWarningThreshold,
-		"accept_unset_model_ratio_model":          req.AcceptUnsetModelRatioModel,
+		constant.UserAcceptUnsetRatioModel:        req.AcceptUnsetModelRatioModel,
+		constant.UserSettingShowIPInLogs:          req.ShowIPInLogs,
 	}
 
 	// 如果是webhook类型,添加webhook相关设置

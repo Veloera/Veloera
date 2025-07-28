@@ -29,6 +29,7 @@ import SettingsCreditLimit from '../pages/Setting/Operation/SettingsCreditLimit.
 import SettingsRebate from '../pages/Setting/Operation/SettingsRebate.js';
 import ModelSettingsVisualEditor from '../pages/Setting/Operation/ModelSettingsVisualEditor.js';
 import GroupRatioSettings from '../pages/Setting/Operation/GroupRatioSettings.js';
+import ModelCommonRatioSettings from '../pages/Setting/Operation/ModelCommonRatioSettings.js';
 import ModelRatioSettings from '../pages/Setting/Operation/ModelRatioSettings.js';
 
 import { API, showError, showSuccess } from '../helpers';
@@ -186,6 +187,10 @@ const OperationSetting = () => {
         {/* 分组倍率设置 */}
         <Card style={{ marginTop: '10px' }}>
           <GroupRatioSettings options={inputs} refresh={onRefresh} />
+        </Card>
+        {/* 模型倍率相关设置 */}
+        <Card style={{ marginTop: '10px' }}>
+          <ModelCommonRatioSettings options={inputs} refresh={onRefresh} />
         </Card>
         {/* 合并模型倍率设置和可视化倍率设置 */}
         <Card style={{ marginTop: '10px' }}>

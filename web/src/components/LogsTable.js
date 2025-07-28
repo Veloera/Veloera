@@ -590,6 +590,7 @@ const LogsTable = () => {
         );
       },
     },
+
     {
       key: COLUMN_KEYS.RETRY,
       title: t('重试'),
@@ -1070,6 +1071,27 @@ const LogsTable = () => {
             value: `${other.channel_id} - ${other.channel_name}`,
           });
         }
+        // 添加客户端IP（如果有）
+        if (logs[i].client_ip && logs[i].client_ip.trim() !== '') {
+          expandDataLocal.push({
+            key: t('客户端IP'),
+            value: (
+              <Tag
+                color='blue'
+                size='large'
+                onClick={(event) => {
+                  copyText(event, logs[i].client_ip);
+                }}
+                style={{ 
+                  fontFamily: 'monospace',
+                  cursor: 'pointer'
+                }}
+              >
+                {logs[i].client_ip}
+              </Tag>
+            ),
+          });
+        }
         expandDataLocal.push({
           key: t('错误详情'),
           value: (
@@ -1230,6 +1252,28 @@ const LogsTable = () => {
               >
                 {other.output_content}
               </Paragraph>
+            ),
+          });
+        }
+        
+        // 添加客户端IP（如果有）
+        if (logs[i].client_ip && logs[i].client_ip.trim() !== '') {
+          expandDataLocal.push({
+            key: t('客户端IP'),
+            value: (
+              <Tag
+                color='blue'
+                size='large'
+                onClick={(event) => {
+                  copyText(event, logs[i].client_ip);
+                }}
+                style={{ 
+                  fontFamily: 'monospace',
+                  cursor: 'pointer'
+                }}
+              >
+                {logs[i].client_ip}
+              </Tag>
             ),
           });
         }

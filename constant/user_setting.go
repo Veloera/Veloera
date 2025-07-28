@@ -23,6 +23,7 @@ var (
 	UserSettingWebhookSecret         = "webhook_secret"                 // WebhookSecret webhook密钥
 	UserSettingNotificationEmail     = "notification_email"             // NotificationEmail 通知邮箱地址
 	UserAcceptUnsetRatioModel        = "accept_unset_model_ratio_model" // AcceptUnsetRatioModel 是否接受未设置价格的模型
+	UserSettingShowIPInLogs          = "show_ip_in_logs"                // ShowIPInLogs 是否在消费日志中显示IP
 )
 
 var (

@@ -91,6 +91,21 @@ func (user *User) GetSetting() map[string]interface{} {
 	return common.StrToMap(user.Setting)
 }
 
+// GetShowIPInLogs returns whether the user has enabled IP logging in their settings
+func (user *User) GetShowIPInLogs() bool {
+	settings := user.GetSetting()
+	if settings == nil {
+		return false
+	}
+	
+	if showIP, exists := settings["show_ip_in_logs"]; exists {
+		if boolVal, ok := showIP.(bool); ok {
+			return boolVal
+		}
+	}
+	return false
+}
+
 func (user *User) SetSetting(setting map[string]interface{}) {
 	settingBytes, err := json.Marshal(setting)
 	if err != nil {
@@ -706,6 +721,21 @@ func GetUserSetting(id int, fromDB bool) (settingMap map[string]interface{}, err
 	}
 
 	return common.StrToMap(setting), nil
+}
+
+// GetUserShowIPInLogs gets the IP logging preference for a user by ID
+func GetUserShowIPInLogs(id int, fromDB bool) (bool, error) {
+	settings, err := GetUserSetting(id, fromDB)
+	if err != nil {
+		return false, err
+	}
+	
+	if showIP, exists := settings["show_ip_in_logs"]; exists {
+		if boolVal, ok := showIP.(bool); ok {
+			return boolVal, nil
+		}
+	}
+	return false, nil
 }
 
 func IncreaseUserQuota(id int, quota int, db bool) (err error) {

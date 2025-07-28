@@ -159,6 +159,16 @@ func PostSetup(c *gin.Context) {
 		return
 	}
 
+	// Auto-detect reverse proxy configuration based on request headers
+	err = initializeProxySettings(c)
+	if err != nil {
+		c.JSON(500, gin.H{
+			"success": false,
+			"message": "自动检测反向代理配置失败: " + err.Error(),
+		})
+		return
+	}
+
 	// Update setup status
 	constant.Setup = true
 
@@ -179,6 +189,49 @@ func PostSetup(c *gin.Context) {
 		"success": true,
 		"message": "系统初始化成功",
 	})
+}
+
+// initializeProxySettings automatically detects and configures reverse proxy settings
+// based on the headers present in the initialization request
+func initializeProxySettings(c *gin.Context) error {
+	// Use the DetectProxyHeaders function from common/utils.go
+	provider, detectedIP := common.DetectProxyHeaders(c)
+	
+	if provider != "" {
+		// Proxy headers detected, enable reverse proxy with detected provider
+		err := model.UpdateOption("ReverseProxyEnabled", "true")
+		if err != nil {
+			common.SysError("Failed to enable reverse proxy during initialization: " + err.Error())
+			return err
+		}
+		
+		err = model.UpdateOption("ReverseProxyProvider", provider)
+		if err != nil {
+			common.SysError("Failed to set reverse proxy provider during initialization: " + err.Error())
+			return err
+		}
+		
+		// Log the auto-detection result
+		common.SysLog("Auto-detected reverse proxy configuration: provider=" + provider + ", detected_ip=" + detectedIP)
+	} else {
+		// No proxy headers detected, ensure reverse proxy is disabled
+		err := model.UpdateOption("ReverseProxyEnabled", "false")
+		if err != nil {
+			common.SysError("Failed to disable reverse proxy during initialization: " + err.Error())
+			return err
+		}
+		
+		// Set default provider (nginx) for future use
+		err = model.UpdateOption("ReverseProxyProvider", "nginx")
+		if err != nil {
+			common.SysError("Failed to set default reverse proxy provider during initialization: " + err.Error())
+			return err
+		}
+		
+		common.SysLog("No reverse proxy headers detected during initialization, reverse proxy disabled")
+	}
+	
+	return nil
 }
 
 func boolToString(b bool) string {

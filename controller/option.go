@@ -127,6 +127,14 @@ func UpdateOption(c *gin.Context) {
 			})
 			return
 		}
+	case "ReverseProxyProvider":
+		if option.Value != "nginx" && option.Value != "cloudflare" {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": "反向代理提供商必须是 nginx 或 cloudflare",
+			})
+			return
+		}
 
 	}
 	err = model.UpdateOption(option.Key, option.Value)
