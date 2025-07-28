@@ -387,8 +387,9 @@ const SiderBar = () => {
           position: 'relative',
           zIndex: 95,
           height: '100%',
-          overflowY: 'auto',
-          WebkitOverflowScrolling: 'touch', // Improve scrolling on iOS devices
+          overflow: 'hidden', // 让CSS flexbox处理滚动
+          display: 'flex',
+          flexDirection: 'column',
         }}
         defaultIsCollapsed={
           localStorage.getItem('default_collapse_sidebar') === 'true'
@@ -540,9 +541,6 @@ const SiderBar = () => {
         ))}
 
         <Nav.Footer
-          style={{
-            paddingBottom: styleState?.isMobile ? '112px' : '',
-          }}
           collapseButton={true}
           collapseText={(collapsed) => {
             if (collapsed) {

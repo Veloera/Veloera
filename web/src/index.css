@@ -338,6 +338,81 @@ code {
 }
 
 /* Custom sidebar shadow */
+/* Custom sidebar navigation */
+.custom-sidebar-nav {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+}
+
+/* 确保导航列表可滚动但不影响footer */
+.custom-sidebar-nav .semi-navigation-list-wrapper {
+  flex: 1 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important; /* iOS 优化 */
+  padding-bottom: 8px !important; /* 底部留一些空隙 */
+  min-height: 0 !important; /* 确保flexbox子元素可以缩小 */
+  max-height: calc(100vh - 120px) !important; /* 限制最大高度，为footer留空间 */
+}
+
+/* Semi Design 风格的滚动条样式 */
+.custom-sidebar-nav .semi-navigation-list-wrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-sidebar-nav .semi-navigation-list-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 3px;
+}
+
+.custom-sidebar-nav .semi-navigation-list-wrapper::-webkit-scrollbar-thumb {
+  background: var(--semi-color-fill-2);
+  border-radius: 3px;
+  transition: background-color 0.3s ease;
+}
+
+.custom-sidebar-nav .semi-navigation-list-wrapper::-webkit-scrollbar-thumb:hover {
+  background: var(--semi-color-fill-1);
+}
+
+/* 滚动条样式 */
+.custom-sidebar-nav .semi-navigation-list-wrapper {
+  scrollbar-width: thin;
+  scrollbar-color: var(--semi-color-fill-2) transparent;
+}
+
+/* 确保导航内容超出容器高度时可滚动 */
+.custom-sidebar-nav .semi-navigation-list {
+  padding-bottom: 8px !important;
+}
+
+/* 固定侧边栏底部按钮位置 */
+.custom-sidebar-nav .semi-navigation-footer {
+  position: sticky !important;
+  bottom: 0 !important;
+  background: var(--semi-color-bg-1) !important;
+  border-top: 1px solid var(--semi-color-border) !important;
+  z-index: 10 !important;
+  flex-shrink: 0 !important;
+  margin-top: auto !important;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1) !important; /* 上阴影 */
+}
+
+/* 确保收起/展开按钮在缩放时保持正确位置 */
+.custom-sidebar-nav .semi-navigation-footer .semi-button {
+  width: 100% !important;
+  transform: none !important;
+  position: static !important;
+}
+
+/* 移动端特殊处理 */
+@media only screen and (max-width: 767px) {
+  .custom-sidebar-nav .semi-navigation-footer {
+    padding-bottom: env(safe-area-inset-bottom, 0) !important; /* iOS底部安全区域 */
+  }
+}
+
 /*.custom-sidebar-nav {*/
 /*  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08) !important;*/
 /*  -webkit-box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08) !important;*/
