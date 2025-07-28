@@ -51,7 +51,7 @@ func GetStatus(c *gin.Context) {
 	common.OptionMapRWMutex.RLock()
 	affEnabled := common.OptionMap["AffEnabled"] == "true"
 	common.OptionMapRWMutex.RUnlock()
-	
+
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "",
@@ -63,6 +63,7 @@ func GetStatus(c *gin.Context) {
 			"github_client_id":            common.GitHubClientId,
 			"linuxdo_oauth":               common.LinuxDOOAuthEnabled,
 			"linuxdo_client_id":           common.LinuxDOClientId,
+			"linuxdo_minimum_trust_level": common.LinuxDOMinimumTrustLevel,
 			"telegram_oauth":              common.TelegramOAuthEnabled,
 			"telegram_bot_name":           common.TelegramBotName,
 			"system_name":                 common.SystemName,
@@ -303,18 +304,18 @@ func GetCustomCSS(c *gin.Context) {
 	common.OptionMapRWMutex.RLock()
 	cssContent := common.OptionMap["global_css"]
 	common.OptionMapRWMutex.RUnlock()
-	
+
 	if cssContent == "" {
 		c.Status(http.StatusNoContent)
 		return
 	}
-	
+
 	// Basic security validation to prevent script tag injection in CSS
 	if strings.Contains(strings.ToLower(cssContent), "<script") {
 		c.Status(http.StatusBadRequest)
 		return
 	}
-	
+
 	c.Header("Content-Type", "text/css")
 	c.String(http.StatusOK, cssContent)
 }
@@ -324,12 +325,12 @@ func GetCustomJS(c *gin.Context) {
 	common.OptionMapRWMutex.RLock()
 	jsContent := common.OptionMap["global_js"]
 	common.OptionMapRWMutex.RUnlock()
-	
+
 	if jsContent == "" {
 		c.Status(http.StatusNoContent)
 		return
 	}
-	
+
 	c.Header("Content-Type", "application/javascript")
 	c.String(http.StatusOK, jsContent)
 }

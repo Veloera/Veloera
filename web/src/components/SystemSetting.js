@@ -90,6 +90,7 @@ const SystemSetting = () => {
     LinuxDOOAuthEnabled: '',
     LinuxDOClientId: '',
     LinuxDOClientSecret: '',
+    LinuxDOMinimumTrustLevel: '',
     // reverse proxy settings
     ReverseProxyEnabled: '',
     ReverseProxyProvider: '',
@@ -510,6 +511,12 @@ const SystemSetting = () => {
       options.push({
         key: 'LinuxDOClientSecret',
         value: inputs.LinuxDOClientSecret,
+      });
+    }
+    if (originInputs['LinuxDOMinimumTrustLevel'] !== inputs.LinuxDOMinimumTrustLevel) {
+      options.push({
+        key: 'LinuxDOMinimumTrustLevel',
+        value: inputs.LinuxDOMinimumTrustLevel,
       });
     }
 
@@ -1058,19 +1065,28 @@ const SystemSetting = () => {
                   <Row
                     gutter={{ xs: 8, sm: 16, md: 24, lg: 24, xl: 24, xxl: 24 }}
                   >
-                    <Col xs={24} sm={24} md={12} lg={12} xl={12}>
+                    <Col xs={24} sm={24} md={10} lg={10} xl={10}>
                       <Form.Input
                         field='LinuxDOClientId'
                         label='Linux DO Client ID'
                         placeholder='输入你注册的 LinuxDO OAuth APP 的 ID'
                       />
                     </Col>
-                    <Col xs={24} sm={24} md={12} lg={12} xl={12}>
+                    <Col xs={24} sm={24} md={10} lg={10} xl={10}>
                       <Form.Input
                         field='LinuxDOClientSecret'
                         label='Linux DO Client Secret'
                         type='password'
                         placeholder='敏感信息不会发送到前端显示'
+                      />
+                    </Col>
+                    <Col xs={24} sm={24} md={4} lg={4} xl={4}>
+                      <Form.InputNumber
+                        field='LinuxDOMinimumTrustLevel'
+                        label='LinuxDO Minimum Trust Level'
+                        placeholder='允许注册的最低信任等级'
+                        min={1}
+                        max={4}
                       />
                     </Col>
                   </Row>
