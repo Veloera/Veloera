@@ -65,6 +65,7 @@ import {
   IconPlus,
   IconRefresh,
   IconSetting,
+  IconCopy,
 } from '@douyinfe/semi-icons';
 import { loadChannelModels } from './utils.js';
 import EditTagModal from '../pages/Channel/EditTagModal.js';
@@ -1711,25 +1712,43 @@ const ChannelsTable = () => {
                   )
                   .map((model, index) => {
                     return (
-                      <Button
-                        theme='light'
-                        type='tertiary'
-                        style={{
-                          height: 'auto',
-                          padding: '10px 12px',
-                          textAlign: 'center',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          width: '100%',
-                          borderRadius: '6px',
-                        }}
-                        onClick={() => {
-                          testChannel(currentTestChannel, model);
-                        }}
-                      >
-                        {model}
-                      </Button>
+                      <Space spacing={4} style={{ alignItems: 'stretch' }}>
+                        <Button
+                          theme='light'
+                          type='tertiary'
+                          style={{
+                            height: '100%',
+                            padding: '10px 12px',
+                            textAlign: 'center',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            width: '100%',
+                            borderRadius: '6px',
+                          }}
+                          onClick={() => {
+                            testChannel(currentTestChannel, model);
+                          }}
+                        >
+                          {model}
+                        </Button>
+                        <Button
+                          theme='light'
+                          type='tertiary'
+                          style={{
+                            height: '100%',
+                            padding: '10px 12px',
+                            borderRadius: '6px',
+                          }}
+                          icon={<IconCopy />}
+                          onClick={() => {
+                            navigator.clipboard
+                              .writeText(model)
+                              .then(() => showSuccess(t('模型名称已复制')))
+                              .catch(() => showError(t('复制失败')));
+                          }}
+                        />
+                      </Space>
                     );
                   })}
               </div>
