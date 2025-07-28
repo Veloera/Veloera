@@ -248,11 +248,7 @@ func LinuxdoOAuth(c *gin.Context) {
 		}
 	} else {
 		if common.RegisterEnabled {
-			trust_level, err := strconv.Atoi(c.Query("trust_level"))
-			if err != nil {
-				trust_level = 0
-			}
-			if trust_level >= common.LinuxDOMinimumTrustLevel {
+			if linuxdoUser.TrustLevel >= common.LinuxDOMinimumTrustLevel {
 				user.DisplayName = linuxdoUser.Name
 				user.Role = common.RoleCommonUser
 				user.Status = common.UserStatusEnabled
