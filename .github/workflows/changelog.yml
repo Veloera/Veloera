@@ -1,36 +1,59 @@
-name: Generate Changelog
+name: Generate Release Notes
 
 on:
-  workflow_dispatch:
+  push:
+    tags:
+      - '*' # 每次有新的tag推送到远程仓库时触发
+  workflow_dispatch: # 允许手动触发
+
+env:
+  # AI 配置，确保在 GitHub Secrets 中设置
+  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+  OPENAI_API_BASE_URL: ${{ secrets.OPENAI_API_BASE_URL }}
+  OPENAI_MODEL: gpt-4.1-mini # 可以根据需要修改模型
 
 jobs:
-  changelog:
+  generate_and_push:
     runs-on: ubuntu-latest
-    name: Generate and Commit Changelog
+
     permissions:
-      contents: write
+      contents: write # 允许写入文件到仓库
 
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Fetch all tags and history for accurate git log
+          fetch-depth: 0 
 
-    - name: Checkout main branch and pull latest
-      run: |
-        git checkout main
-        git pull origin main
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
 
-    - name: Generate Changelog
-      uses: smichard/conventional_changelog@2.0.0
-      with:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install Python dependencies
+        run: pip install openai
 
-    - name: Set Git User Info
-      run: |
-        git config user.name 'Veloera Bot'
-        git config user.email 'github-bot@veloera.org'
+      - name: Run release notes generator script
+        id: generate_notes # 添加一个id以便引用脚本的输出
+        run: python scripts/release_notes_generator.py
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }} # 传递仓库信息给Python脚本
 
-    - name: Commit Changelog
-      run: |
-        git add CHANGELOG.md
-        git commit -m "docs: :robot: changelog file generated" || echo "No changes to commit"
-        git push origin main
+      - name: Commit and push release notes
+        # 仅当生成了文件时才执行
+        if: success() && steps.generate_notes.outputs.release_notes_file != ''
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          
+          # 获取脚本输出的tag名称和文件名
+          TAG_NAME="${{ steps.generate_notes.outputs.tag_name }}"
+          RELEASE_FILE="${{ steps.generate_notes.outputs.release_notes_file }}"
+          
+          echo "Committing release notes for tag: $TAG_NAME"
+          echo "File path: $RELEASE_FILE"
+
+          git add "$RELEASE_FILE"
+          git commit -m "docs(release): Add release notes for $TAG_NAME" || echo "No changes to commit"
+          git push

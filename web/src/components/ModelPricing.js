@@ -32,6 +32,7 @@ import {
   Popover,
   ImagePreview,
   Button,
+  Switch,
 } from '@douyinfe/semi-ui';
 import {
   IconMore,
@@ -51,6 +52,8 @@ const ModelPricing = () => {
   const [modalImageUrl, setModalImageUrl] = useState('');
   const [isModalOpenurl, setIsModalOpenurl] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState('default');
+  const [showRatio, setShowRatio] = useState(false);
+  const [hideUnavailable, setHideUnavailable] = useState(true);
 
   const rowSelection = useMemo(
     () => ({
@@ -407,15 +410,36 @@ const ModelPricing = () => {
             onClick={() => {
               copyText(selectedRowKeys);
             }}
-            disabled={selectedRowKeys == ''}
+            disabled={selectedRowKeys.length === 0}
           >
             {t('复制选中模型')}
           </Button>
+          <Space style={{ marginLeft: 16, alignItems: 'center' }}>
+            <span>{t('显示倍率')}:</span>
+            <Switch
+              checked={showRatio}
+              onChange={setShowRatio}
+            />
+          </Space>
+          <Space style={{ marginLeft: 16, alignItems: 'center' }}>
+            <span>{t('隐藏不可用模型')}:</span>
+            <Switch
+              checked={hideUnavailable}
+              onChange={setHideUnavailable}
+            />
+          </Space>
         </Space>
         <Table
           style={{ marginTop: 5 }}
-          columns={columns}
-          dataSource={models}
+          columns={columns.filter(column => {
+            if (column.dataIndex === 'available' && hideUnavailable) return false;
+            if (column.dataIndex === 'model_ratio' && !showRatio) return false;
+            return true;
+          })}
+          dataSource={models.filter(model => {
+            if (hideUnavailable && !model.enable_groups.includes(selectedGroup)) return false;
+            return true;
+          })}
           loading={loading}
           pagination={{
             formatPageText: (page) =>

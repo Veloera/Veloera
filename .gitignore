@@ -15,3 +15,4 @@ tiktoken_cache
 .aider*
 .history/
 .kiro/
+.venv
