@@ -379,7 +379,7 @@ const SiderBar = () => {
       <Nav
         className='custom-sidebar-nav'
         style={{
-          width: isCollapsed ? '60px' : '200px',
+          width: isCollapsed ? '60px' : (openedKeys.includes('chat') ? '240px' : '200px'),
           boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
           borderRight: '1px solid var(--semi-color-border)',
           background: 'var(--semi-color-bg-1)',
@@ -391,6 +391,7 @@ const SiderBar = () => {
           display: 'flex',
           flexDirection: 'column',
         }}
+        limitIndent={false} // 允许更灵活的缩进控制
         defaultIsCollapsed={
           localStorage.getItem('default_collapse_sidebar') === 'true'
         }
@@ -441,9 +442,9 @@ const SiderBar = () => {
           // 如果点击的是已经展开的子菜单的父项，则收起子菜单
           if (openedKeys.includes(key.itemKey)) {
             setOpenedKeys(openedKeys.filter((k) => k !== key.itemKey));
+          } else {
+            setSelectedKeys([key.itemKey]);
           }
-
-          setSelectedKeys([key.itemKey]);
         }}
         openKeys={openedKeys}
         onOpenChange={(data) => {
@@ -467,6 +468,7 @@ const SiderBar = () => {
                     key={subItem.itemKey}
                     itemKey={subItem.itemKey}
                     text={subItem.text}
+                    level={1} // 设置子项级别以优化缩进
                   />
                 ))}
               </Nav.Sub>

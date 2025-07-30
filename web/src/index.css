@@ -399,6 +399,17 @@ code {
   box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1) !important; /* 上阴影 */
 }
 
+/* 聊天菜单子项样式 */
+.custom-sidebar-nav .semi-navigation-sub .semi-navigation-item {
+  padding-left: 12px !important;
+}
+
+.custom-sidebar-nav .semi-navigation-sub .semi-navigation-item-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* 确保收起/展开按钮在缩放时保持正确位置 */
 .custom-sidebar-nav .semi-navigation-footer .semi-button {
   width: 100% !important;
