@@ -24,7 +24,9 @@ import (
 	"net/http"
 	"veloera/dto"
 	"veloera/relay/channel"
+	"veloera/relay/channel/openai"
 	relaycommon "veloera/relay/common"
+	relayconstant "veloera/relay/constant"
 )
 
 type Adaptor struct {
@@ -50,11 +52,13 @@ func (a *Adaptor) Init(info *relaycommon.RelayInfo) {
 }
 
 func (a *Adaptor) GetRequestURL(info *relaycommon.RelayInfo) (string, error) {
-	method := "invoke"
-	if info.IsStream {
-		method = "sse-invoke"
+	baseUrl := fmt.Sprintf("%s/api/paas/v4", info.BaseUrl)
+	switch info.RelayMode {
+	case relayconstant.RelayModeEmbeddings:
+		return fmt.Sprintf("%s/embeddings", baseUrl), nil
+	default:
+		return fmt.Sprintf("%s/chat/completions", baseUrl), nil
 	}
-	return fmt.Sprintf("%s/api/paas/v3/model-api/%s/%s", info.BaseUrl, info.UpstreamModelName, method), nil
 }
 
 func (a *Adaptor) SetupRequestHeader(c *gin.Context, req *http.Header, info *relaycommon.RelayInfo) error {
@@ -79,8 +83,7 @@ func (a *Adaptor) ConvertRerankRequest(c *gin.Context, relayMode int, request dt
 }
 
 func (a *Adaptor) ConvertEmbeddingRequest(c *gin.Context, info *relaycommon.RelayInfo, request dto.EmbeddingRequest) (any, error) {
-	//TODO implement me
-	return nil, errors.New("not implemented")
+	return request, nil
 }
 
 func (a *Adaptor) ConvertOpenAIResponsesRequest(c *gin.Context, info *relaycommon.RelayInfo, request dto.OpenAIResponsesRequest) (any, error) {
@@ -94,9 +97,9 @@ func (a *Adaptor) DoRequest(c *gin.Context, info *relaycommon.RelayInfo, request
 
 func (a *Adaptor) DoResponse(c *gin.Context, resp *http.Response, info *relaycommon.RelayInfo) (usage any, err *dto.OpenAIErrorWithStatusCode) {
 	if info.IsStream {
-		err, usage = zhipuStreamHandler(c, resp)
+		err, usage = openai.OaiStreamHandler(c, resp, info)
 	} else {
-		err, usage = zhipuHandler(c, resp)
+		err, usage = openai.OpenaiHandler(c, resp, info)
 	}
 	return
 }

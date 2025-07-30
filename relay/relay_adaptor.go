@@ -44,7 +44,6 @@ import (
 	"veloera/relay/channel/xai"
 	"veloera/relay/channel/xunfei"
 	"veloera/relay/channel/zhipu"
-	"veloera/relay/channel/zhipu_4v"
 	"veloera/relay/constant"
 )
 
@@ -68,8 +67,6 @@ func GetAdaptor(apiType int) channel.Adaptor {
 		return &xunfei.Adaptor{}
 	case constant.APITypeZhipu:
 		return &zhipu.Adaptor{}
-	case constant.APITypeZhipuV4:
-		return &zhipu_4v.Adaptor{}
 	case constant.APITypeOllama:
 		return &ollama.Adaptor{}
 	case constant.APITypePerplexity:

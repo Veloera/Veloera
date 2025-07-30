@@ -79,13 +79,8 @@ export const CHANNEL_OPTIONS = [
   },
   {
     value: 16,
-    color: 'violet',
-    label: '智谱 ChatGLM',
-  },
-  {
-    value: 26,
     color: 'purple',
-    label: '智谱 GLM-4V',
+    label: '智谱 BigModel',
   },
   {
     value: 24,
