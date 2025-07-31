@@ -82,7 +82,7 @@ func requestOpenAI2Zhipu(request dto.GeneralOpenAIRequest) *dto.GeneralOpenAIReq
 	for _, message := range request.Messages {
 		if !message.IsStringContent() {
 			mediaMessages := message.ParseContent()
-			for j, mediaMessage := range mediaMessages {
+			for _, mediaMessage := range mediaMessages {
 				if mediaMessage.Type == dto.ContentTypeImageURL {
 					imageUrl := mediaMessage.GetImageMedia()
 					// check if base64
@@ -92,8 +92,6 @@ func requestOpenAI2Zhipu(request dto.GeneralOpenAIRequest) *dto.GeneralOpenAIReq
 							imageUrl.Url = imageUrl.Url[idx+1:]
 						}
 					}
-					mediaMessage.ImageUrl = imageUrl
-					mediaMessages[j] = mediaMessage
 				}
 			}
 			message.SetMediaContent(mediaMessages)
@@ -105,12 +103,22 @@ func requestOpenAI2Zhipu(request dto.GeneralOpenAIRequest) *dto.GeneralOpenAIReq
 			ToolCallId: message.ToolCallId,
 		})
 	}
-	str, ok := request.Stop.(string)
 	var Stop []string
-	if ok {
-		Stop = []string{str}
-	} else {
-		Stop, _ = request.Stop.([]string)
+	if request.Stop != nil {
+		switch v := request.Stop.(type) {
+		case string:
+			if v != "" {
+				Stop = []string{v}
+			}
+		case []string:
+			Stop = v
+		case []any:
+			for _, item := range v {
+				if s, ok := item.(string); ok {
+					Stop = append(Stop, s)
+				}
+			}
+		}
 	}
 	return &dto.GeneralOpenAIRequest{
 		Model:       request.Model,
