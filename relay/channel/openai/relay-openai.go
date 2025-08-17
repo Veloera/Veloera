@@ -297,7 +297,7 @@ func OpenaiHandler(c *gin.Context, resp *http.Response, info *relaycommon.RelayI
 		return service.OpenAIErrorWrapper(err, "read_response_body_failed", http.StatusInternalServerError), nil
 	}
 	if common.DebugEnabled {
-		println("responseBody: ", string(responseBody))
+		common.LogInfo(c, "responseBody: "+string(responseBody))
 	}
 	err = resp.Body.Close()
 	if err != nil {
