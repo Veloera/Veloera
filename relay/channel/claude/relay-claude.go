@@ -552,24 +552,18 @@ func convertOpenAIChunkToClaudeChunk(openaiResp *dto.ChatCompletionsStreamRespon
 
 func HandleStreamResponseData(c *gin.Context, info *relaycommon.RelayInfo, claudeInfo *ClaudeResponseInfo, data string, requestMode int) *dto.OpenAIErrorWithStatusCode {
 	// First, try to detect the format of the incoming data
-	// Check if it's OpenAI format by looking for "object" field
-	var tempMap map[string]interface{}
-	tempErr := common.DecodeJsonStr(data, &tempMap)
-	if tempErr == nil {
-		if object, ok := tempMap["object"]; ok {
-			if objectStr, ok := object.(string); ok && objectStr == "chat.completion.chunk" {
-				// This is OpenAI format data, but client expects Claude format
-				if info.RelayFormat == relaycommon.RelayFormatClaude {
-					// Convert OpenAI response directly to Claude response format for the client
-					var openaiResponse dto.ChatCompletionsStreamResponse
-					if err := common.DecodeJsonStr(data, &openaiResponse); err == nil {
-						// Create a simple Claude-like response and send it directly
-						claudeResp := convertOpenAIChunkToClaudeChunk(&openaiResponse, claudeInfo)
-						if claudeResp != nil {
-							helper.ClaudeChunkData(c, *claudeResp, data)
-							return nil
-						}
-					}
+	// Check if it's OpenAI format by looking for the object field in the raw string
+	if strings.Contains(data, `"object":"chat.completion.chunk"`) {
+		// This is OpenAI format data, but client expects Claude format
+		if info.RelayFormat == relaycommon.RelayFormatClaude {
+			// Convert OpenAI response directly to Claude response format for the client
+			var openaiResponse dto.ChatCompletionsStreamResponse
+			if err := common.DecodeJsonStr(data, &openaiResponse); err == nil {
+				// Create a simple Claude-like response and send it directly
+				claudeResp := convertOpenAIChunkToClaudeChunk(&openaiResponse, claudeInfo)
+				if claudeResp != nil {
+					helper.ClaudeChunkData(c, *claudeResp, data)
+					return nil
 				}
 			}
 		}
