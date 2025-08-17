@@ -40,6 +40,7 @@ type ClaudeMediaMessage struct {
 	Input     any             `json:"input,omitempty"`
 	Content   json.RawMessage `json:"content,omitempty"`
 	ToolUseId string          `json:"tool_use_id,omitempty"`
+	Index     *int            `json:"index,omitempty"`
 }
 
 func (c *ClaudeMediaMessage) SetText(s string) {

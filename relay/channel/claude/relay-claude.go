@@ -519,10 +519,18 @@ func convertOpenAIChunkToClaudeChunk(openaiResp *dto.ChatCompletionsStreamRespon
 		if toolCall.Function.Name != "" {
 			// Tool call start
 			claudeResp.Type = "content_block_start"
+
+			// Generate fallback ID if toolCall.ID is empty
+			toolID := toolCall.ID
+			if toolID == "" {
+				toolID = "tool_" + common.GetUUID()
+			}
+
 			claudeResp.ContentBlock = &dto.ClaudeMediaMessage{
-				Type: "tool_use",
-				Id:   toolCall.ID,
-				Name: toolCall.Function.Name,
+				Type:  "tool_use",
+				Id:    toolID,
+				Name:  toolCall.Function.Name,
+				Index: toolCall.Index,
 			}
 		} else if toolCall.Function.Arguments != "" {
 			// Tool call arguments
@@ -530,6 +538,7 @@ func convertOpenAIChunkToClaudeChunk(openaiResp *dto.ChatCompletionsStreamRespon
 			claudeResp.Delta = &dto.ClaudeMediaMessage{
 				Type:        "input_json_delta",
 				PartialJson: &toolCall.Function.Arguments,
+				Index:       toolCall.Index,
 			}
 		}
 	} else if choice.FinishReason != nil {
