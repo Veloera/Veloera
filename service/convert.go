@@ -138,10 +138,16 @@ func ClaudeToOpenAIRequest(claudeRequest dto.ClaudeRequest, info *relaycommon.Re
 					toolCalls = append(toolCalls, toolCall)
 				case "tool_result":
 					// Add tool result as a separate message
+					toolCallId := mediaMsg.ToolUseId
+					if toolCallId == "" {
+						// Generate a tool call ID if missing
+						toolCallId = fmt.Sprintf("call_%s", common.GetUUID())
+					}
+
 					oaiToolMessage := dto.Message{
 						Role:       "tool",
 						Name:       &mediaMsg.Name,
-						ToolCallId: mediaMsg.ToolUseId,
+						ToolCallId: toolCallId,
 					}
 					//oaiToolMessage.SetStringContent(*mediaMsg.GetMediaContent().Text)
 					if mediaMsg.IsStringContent() {
@@ -169,6 +175,11 @@ func ClaudeToOpenAIRequest(claudeRequest dto.ClaudeRequest, info *relaycommon.Re
 	}
 
 	openAIRequest.Messages = openAIMessages
+
+	// Convert message content arrays to strings if they only contain text content
+	for i := range openAIRequest.Messages {
+		openAIRequest.Messages[i].ConvertArrayContentToString()
+	}
 
 	return &openAIRequest, nil
 }

@@ -370,6 +370,51 @@ func (m *Message) ParseContent() []MediaContent {
 	return contentList
 }
 
+// ShouldConvertArrayToString checks if content array should be converted to string
+// Returns true if all content items are text type and content is originally array format
+func (m *Message) ShouldConvertArrayToString() bool {
+	// Check if content is originally in array format
+	var arrayContent []map[string]interface{}
+	if err := json.Unmarshal(m.Content, &arrayContent); err != nil {
+		// Not array format, no need to convert
+		return false
+	}
+
+	// Check if all items are text type
+	for _, contentItem := range arrayContent {
+		contentType, ok := contentItem["type"].(string)
+		if !ok || contentType != ContentTypeText {
+			return false
+		}
+	}
+	return true
+}
+
+// ConvertArrayContentToString converts array content to single string if all items are text
+func (m *Message) ConvertArrayContentToString() {
+	if !m.ShouldConvertArrayToString() {
+		return
+	}
+
+	// Parse the original array content
+	var arrayContent []map[string]interface{}
+	if err := json.Unmarshal(m.Content, &arrayContent); err != nil {
+		return
+	}
+
+	var textBuilder strings.Builder
+	for i, contentItem := range arrayContent {
+		if text, ok := contentItem["text"].(string); ok {
+			if i > 0 {
+				textBuilder.WriteString(" ")
+			}
+			textBuilder.WriteString(text)
+		}
+	}
+
+	m.SetStringContent(textBuilder.String())
+}
+
 type OpenAIResponsesRequest struct {
 	Model              string               `json:"model"`
 	Input              json.RawMessage      `json:"input,omitempty"`

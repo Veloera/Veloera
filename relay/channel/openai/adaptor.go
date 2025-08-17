@@ -175,6 +175,11 @@ func (a *Adaptor) ConvertOpenAIRequest(c *gin.Context, info *relaycommon.RelayIn
 	if info.ChannelType != common.ChannelTypeOpenAI && info.ChannelType != common.ChannelTypeAzure {
 		request.StreamOptions = nil
 	}
+
+	// Convert message content arrays to strings if they only contain text content
+	for i := range request.Messages {
+		request.Messages[i].ConvertArrayContentToString()
+	}
 	if strings.HasPrefix(request.Model, "o1") || strings.HasPrefix(request.Model, "o3") {
 		if request.MaxCompletionTokens == 0 && request.MaxTokens != 0 {
 			request.MaxCompletionTokens = request.MaxTokens
