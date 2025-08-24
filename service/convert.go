@@ -146,7 +146,6 @@ func ClaudeToOpenAIRequest(claudeRequest dto.ClaudeRequest, info *relaycommon.Re
 
 					oaiToolMessage := dto.Message{
 						Role:       "tool",
-						Name:       &mediaMsg.Name,
 						ToolCallId: toolCallId,
 					}
 					//oaiToolMessage.SetStringContent(*mediaMsg.GetMediaContent().Text)
