@@ -330,20 +330,20 @@ const EditChannel = (props) => {
 
     // If only one valid key remains and not explicitly disabled multi-key view, switch back to single input mode
     if (filteredKeyList.length <= 1 && supportsMultiKeyView(inputs.type) && !disableMultiKeyView) {
-        setUseKeyListMode(false);
-        // When switching back, ensure the single input shows the remaining key
-        setInputs(inputs => ({ ...inputs, key: combinedKey }));
-        // Optionally reset showKey based on preference for single input
-        // setShowKey(false); // Or keep the last showKey state
+      setUseKeyListMode(false);
+      // When switching back, ensure the single input shows the remaining key
+      setInputs(inputs => ({ ...inputs, key: combinedKey }));
+      // Optionally reset showKey based on preference for single input
+      // setShowKey(false); // Or keep the last showKey state
     } else {
-        // Otherwise, update the main inputs.key based on the list
-        setInputs(inputs => ({ ...inputs, key: combinedKey }));
+      // Otherwise, update the main inputs.key based on the list
+      setInputs(inputs => ({ ...inputs, key: combinedKey }));
     }
   };
 
   // Add a new key input box
   const addKeyInput = (initialValue = '') => {
-     const newKeyList = [...keyList, initialValue];
+    const newKeyList = [...keyList, initialValue];
     setKeyList(newKeyList);
     // Focus on the new input after it's rendered
     setTimeout(() => {
@@ -397,21 +397,21 @@ const EditChannel = (props) => {
           .map(k => k.trim())
           .filter(k => k.length > 0);
 
-         // If there are keys, set the list and focus the first input
-         if (keys.length > 0) {
-            setKeyList(keys);
-             // Focus the first input after switching to list mode
-             setTimeout(() => {
-               const inputs = document.querySelectorAll('.key-input-item input');
-               if (inputs.length > 0) {
-                 inputs[0].focus();
-               }
-            }, 0);
-         } else {
-             // If splitting resulted in no keys, stay in single mode but update input value
-             setInputs((inputs) => ({ ...inputs, [name]: value }));
-             setUseKeyListMode(false); // Ensure we don't switch to list mode with empty list
-         }
+        // If there are keys, set the list and focus the first input
+        if (keys.length > 0) {
+          setKeyList(keys);
+          // Focus the first input after switching to list mode
+          setTimeout(() => {
+            const inputs = document.querySelectorAll('.key-input-item input');
+            if (inputs.length > 0) {
+              inputs[0].focus();
+            }
+          }, 0);
+        } else {
+          // If splitting resulted in no keys, stay in single mode but update input value
+          setInputs((inputs) => ({ ...inputs, [name]: value }));
+          setUseKeyListMode(false); // Ensure we don't switch to list mode with empty list
+        }
 
 
         // The main inputs.key will be updated by updateKeyListToInput based on the list state
@@ -427,31 +427,31 @@ const EditChannel = (props) => {
         setUseKeyListMode(false); // Type 41 uses a single textarea or multi-key view disabled
         setKeyList([]); // Clear keyList if switching to single input mode
       } else if (inputs.type === 41 && value !== 41 && supportsMultiKeyView(value) && !disableMultiKeyView) {
-         // If switching from type 41 to another type that supports multi-key, check if the key contains commas/newlines
-         if (inputs.key && (inputs.key.includes(',') || inputs.key.includes('\n'))) {
-            setUseKeyListMode(true);
-            setShowKey(true);
-            const keys = inputs.key
-              .split(/[,\n]/)
-              .map(k => k.trim())
-              .filter(k => k.length > 0);
-            setKeyList(keys);
-         } else {
-            setUseKeyListMode(false);
-            setKeyList([]); // Clear keyList if switching from type 41 to single mode
-         }
+        // If switching from type 41 to another type that supports multi-key, check if the key contains commas/newlines
+        if (inputs.key && (inputs.key.includes(',') || inputs.key.includes('\n'))) {
+          setUseKeyListMode(true);
+          setShowKey(true);
+          const keys = inputs.key
+            .split(/[,\n]/)
+            .map(k => k.trim())
+            .filter(k => k.length > 0);
+          setKeyList(keys);
+        } else {
+          setUseKeyListMode(false);
+          setKeyList([]); // Clear keyList if switching from type 41 to single mode
+        }
       } else if (value !== 41 && inputs.key && (inputs.key.includes(',') || inputs.key.includes('\n')) && supportsMultiKeyView(value) && !disableMultiKeyView) {
-           // If changing type between non-41 types that support multi-key, and key already contains multi-keys
-           setUseKeyListMode(true);
-           setShowKey(true);
-            const keys = inputs.key
-              .split(/[,\n]/)
-              .map(k => k.trim())
-              .filter(k => k.length > 0);
-            setKeyList(keys);
+        // If changing type between non-41 types that support multi-key, and key already contains multi-keys
+        setUseKeyListMode(true);
+        setShowKey(true);
+        const keys = inputs.key
+          .split(/[,\n]/)
+          .map(k => k.trim())
+          .filter(k => k.length > 0);
+        setKeyList(keys);
       } else {
-         setUseKeyListMode(false);
-         setKeyList([]); // Clear keyList if switching to single mode
+        setUseKeyListMode(false);
+        setKeyList([]); // Clear keyList if switching to single mode
       }
 
 
@@ -530,56 +530,56 @@ const EditChannel = (props) => {
       }
       if (data.setting !== '' && data.setting !== null) { // Handle null setting
         try { // Add try-catch in case it's not valid JSON
-           data.setting = JSON.stringify(
-             JSON.parse(data.setting),
-             null,
-             2,
-           );
+          data.setting = JSON.stringify(
+            JSON.parse(data.setting),
+            null,
+            2,
+          );
         } catch (e) {
-           console.error("Failed to parse channel setting:", data.setting, e);
-           data.setting = data.setting; // Keep as is if invalid JSON
+          console.error("Failed to parse channel setting:", data.setting, e);
+          data.setting = data.setting; // Keep as is if invalid JSON
         }
       } else {
-          data.setting = ''; // Ensure it's an empty string if null
+        data.setting = ''; // Ensure it's an empty string if null
       }
-       if (data.param_override !== '' && data.param_override !== null) { // Handle null param_override
-         try { // Add try-catch in case it's not valid JSON
-            data.param_override = JSON.stringify(
-              JSON.parse(data.param_override),
-              null,
-              2,
-            );
-         } catch (e) {
-            console.error("Failed to parse channel param_override:", data.param_override, e);
-            data.param_override = data.param_override; // Keep as is if invalid JSON
-         }
+      if (data.param_override !== '' && data.param_override !== null) { // Handle null param_override
+        try { // Add try-catch in case it's not valid JSON
+          data.param_override = JSON.stringify(
+            JSON.parse(data.param_override),
+            null,
+            2,
+          );
+        } catch (e) {
+          console.error("Failed to parse channel param_override:", data.param_override, e);
+          data.param_override = data.param_override; // Keep as is if invalid JSON
+        }
       } else {
-          data.param_override = ''; // Ensure it's an empty string if null
+        data.param_override = ''; // Ensure it's an empty string if null
       }
 
       if (data.system_prompt !== '' && data.system_prompt !== null) { // Handle null system_prompt
         // Keep as is since it's already a string, no need to parse JSON
       } else {
-          data.system_prompt = ''; // Ensure it's an empty string if null
+        data.system_prompt = ''; // Ensure it's an empty string if null
       }
 
 
       // 处理密钥
       if (data.key && supportsMultiKeyView(data.type)) {
-         const keys = data.key.split(',').map(k => k.trim()).filter(k => k.length > 0);
-         if (keys.length > 1) {
-           setUseKeyListMode(true);
-           setShowKey(true); // Ensure showKey is true for list mode
-           setKeyList(keys);
-         } else {
-           setUseKeyListMode(false);
-           setKeyList([]); // Clear keyList if not in list mode
-         }
+        const keys = data.key.split(',').map(k => k.trim()).filter(k => k.length > 0);
+        if (keys.length > 1) {
+          setUseKeyListMode(true);
+          setShowKey(true); // Ensure showKey is true for list mode
+          setKeyList(keys);
+        } else {
+          setUseKeyListMode(false);
+          setKeyList([]); // Clear keyList if not in list mode
+        }
       } else {
         setUseKeyListMode(false);
         setKeyList([]);
       }
-       setInitialKey(data.key); // Store initial key for single input mode placeholder
+      setInitialKey(data.key); // Store initial key for single input mode placeholder
 
 
       setInputs(data);
@@ -660,22 +660,22 @@ const EditChannel = (props) => {
     }
   }, [props.editingChannel.id]);
 
-   useEffect(() => {
-       // When switching back from list mode to single mode, ensure the single input is focused
-       if (!useKeyListMode && singleKeyInputRef.current) {
-           singleKeyInputRef.current.focus();
-       }
-   }, [useKeyListMode]);
+  useEffect(() => {
+    // When switching back from list mode to single mode, ensure the single input is focused
+    if (!useKeyListMode && singleKeyInputRef.current) {
+      singleKeyInputRef.current.focus();
+    }
+  }, [useKeyListMode]);
 
 
   const submit = async () => {
-     // Update inputs.key from keyList before submitting if in list mode
-     let finalKey = inputs.key;
-     if (useKeyListMode) {
-       // Filter out empty strings before joining
-       const filteredKeyList = keyList.filter(key => key.trim().length > 0);
-       finalKey = filteredKeyList.join(',');
-     }
+    // Update inputs.key from keyList before submitting if in list mode
+    let finalKey = inputs.key;
+    if (useKeyListMode) {
+      // Filter out empty strings before joining
+      const filteredKeyList = keyList.filter(key => key.trim().length > 0);
+      finalKey = filteredKeyList.join(',');
+    }
 
     if (!isEdit && (inputs.name === '' || finalKey === '')) {
       showInfo(t('请填写渠道名称和渠道密钥！'));
@@ -689,21 +689,21 @@ const EditChannel = (props) => {
       showInfo(t('模型映射必须是合法的 JSON格式！'));
       return;
     }
-     if (inputs.setting !== '' && !verifyJSON(inputs.setting)) {
+    if (inputs.setting !== '' && !verifyJSON(inputs.setting)) {
       showInfo(t('渠道额外设置必须是合法的 JSON 格式！'));
       return;
     }
-     if (inputs.param_override !== '' && !verifyJSON(inputs.param_override)) {
+    if (inputs.param_override !== '' && !verifyJSON(inputs.param_override)) {
       showInfo(t('参数覆盖必须是合法的 JSON 格式！'));
       return;
     }
-     if (inputs.other !== '' && inputs.type === 41) {
-        // For type 41, check if it's JSON only if it starts with {
-        if (inputs.other.trim().startsWith('{') && !verifyJSON(inputs.other)) {
-             showInfo(t('部署地区必须是合法的 JSON 格式或纯文本！'));
-             return;
-        }
-     }
+    if (inputs.other !== '' && inputs.type === 41) {
+      // For type 41, check if it's JSON only if it starts with {
+      if (inputs.other.trim().startsWith('{') && !verifyJSON(inputs.other)) {
+        showInfo(t('部署地区必须是合法的 JSON 格式或纯文本！'));
+        return;
+      }
+    }
 
 
     let localInputs = { ...inputs };
@@ -731,17 +731,17 @@ const EditChannel = (props) => {
     localInputs.group = localInputs.groups.join(',');
 
     // Ensure other is string for type 41 if it was JSON
-     if (localInputs.type === 41 && typeof localInputs.other !== 'string') {
-        localInputs.other = JSON.stringify(localInputs.other);
-     }
+    if (localInputs.type === 41 && typeof localInputs.other !== 'string') {
+      localInputs.other = JSON.stringify(localInputs.other);
+    }
 
-     // Ensure setting and param_override are strings if they are objects (parsed from JSON)
-     if (typeof localInputs.setting !== 'string') {
-        localInputs.setting = JSON.stringify(localInputs.setting);
-     }
-     if (typeof localInputs.param_override !== 'string') {
-        localInputs.param_override = JSON.stringify(localInputs.param_override);
-     }
+    // Ensure setting and param_override are strings if they are objects (parsed from JSON)
+    if (typeof localInputs.setting !== 'string') {
+      localInputs.setting = JSON.stringify(localInputs.setting);
+    }
+    if (typeof localInputs.param_override !== 'string') {
+      localInputs.param_override = JSON.stringify(localInputs.param_override);
+    }
 
 
     if (isEdit) {
@@ -800,113 +800,113 @@ const EditChannel = (props) => {
     }
 
     if (addedCount > 0) {
-       setModelOptions(localModelOptions);
-       handleInputChange('models', localModels);
-       setCustomModel(''); // Clear input only if something was added
+      setModelOptions(localModelOptions);
+      handleInputChange('models', localModels);
+      setCustomModel(''); // Clear input only if something was added
     }
   };
 
-   // Handle key down event for key list input
-   const handleKeyInputKeyDown = (e, index) => {
-     if (e.key === 'Enter' || e.key === ',') {
-       e.preventDefault(); // Prevent default newline or comma
-       const currentValue = keyList[index].trim();
-       if (currentValue.length > 0) {
-         // If the current input has content, ensure it's in the list (handled by updateKeyAtIndex)
-         // Then add a new empty input below
-         addKeyInput();
-       } else if (e.key === 'Enter') {
-          // If Enter is pressed on an empty input, just add a new empty one
-           addKeyInput();
-       }
-       // If it's a comma on an empty input, do nothing (just prevent default)
-     } else if (e.key === 'Backspace' && keyList[index] === '' && keyList.length > 1 && index > 0) {
-        // If backspace is pressed on an empty input and there are other inputs before it
-         e.preventDefault(); // Prevent default backspace
-         const prevInput = document.querySelectorAll('.key-input-item input')[index - 1];
-         removeKeyInput(index);
-         // Focus on the previous input
-         if (prevInput) {
-             prevInput.focus();
-         }
-     }
-   };
-
-   // Handle paste event for key list input
-   const handleKeyInputPaste = (e, index) => {
-      const clipboardData = e.clipboardData || window.clipboardData;
-      const pastedData = clipboardData.getData('Text');
-
-      // Check if pasted data contains newline or comma
-      if (pastedData.includes('\n') || pastedData.includes(',')) {
-         e.preventDefault(); // Prevent default paste behavior
-
-         // Get current value in the input where pasting
-         const currentValue = keyList[index];
-
-         // Process the pasted data and the current value
-         const combinedValue = currentValue + pastedData;
-         const newKeys = combinedValue
-           .split(/[,\n]/) // Split by comma or newline
-           .map(k => k.trim())
-           .filter(k => k.length > 0); // Filter out empty strings
-
-         // Update the key list state
-         const newKeyList = [...keyList];
-         // Remove the original key at the current index
-         newKeyList.splice(index, 1);
-         // Insert the new keys at the current index
-         newKeyList.splice(index, 0, ...newKeys);
-
-         updateKeyListToInput(newKeyList); // Update state and sync with inputs.key
-
-          // Focus on the last inserted input if new ones were added
-         if (newKeys.length > 0) {
-             setTimeout(() => {
-                const inputs = document.querySelectorAll('.key-input-item input');
-                 if (inputs.length >= index + newKeys.length) {
-                    inputs[index + newKeys.length - 1].focus();
-                 }
-             }, 0);
-         } else {
-             // If pasted content resulted in no valid keys, focus on the previous input or the first if at index 0
-             setTimeout(() => {
-                 const inputs = document.querySelectorAll('.key-input-item input');
-                 if (inputs.length > 0) {
-                     const targetIndex = index > 0 ? index - 1 : 0;
-                     if (inputs[targetIndex]) {
-                         inputs[targetIndex].focus();
-                     }
-                 }
-             }, 0);
-         }
+  // Handle key down event for key list input
+  const handleKeyInputKeyDown = (e, index) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault(); // Prevent default newline or comma
+      const currentValue = keyList[index].trim();
+      if (currentValue.length > 0) {
+        // If the current input has content, ensure it's in the list (handled by updateKeyAtIndex)
+        // Then add a new empty input below
+        addKeyInput();
+      } else if (e.key === 'Enter') {
+        // If Enter is pressed on an empty input, just add a new empty one
+        addKeyInput();
       }
-      // If no newline or comma, allow default paste
-   };
+      // If it's a comma on an empty input, do nothing (just prevent default)
+    } else if (e.key === 'Backspace' && keyList[index] === '' && keyList.length > 1 && index > 0) {
+      // If backspace is pressed on an empty input and there are other inputs before it
+      e.preventDefault(); // Prevent default backspace
+      const prevInput = document.querySelectorAll('.key-input-item input')[index - 1];
+      removeKeyInput(index);
+      // Focus on the previous input
+      if (prevInput) {
+        prevInput.focus();
+      }
+    }
+  };
 
-    // Toggle multi-key view disable state
-    const toggleDisableMultiKeyView = () => {
-        setDisableMultiKeyView(prev => !prev);
-        // When disabling multi-key view, force single input mode
-        if (!disableMultiKeyView) {
-            setUseKeyListMode(false);
-            // When switching to single mode, combine existing keys back into one string
-            const combinedKey = keyList.join(',');
-            setInputs(inputs => ({ ...inputs, key: combinedKey }));
-            setKeyList([]); // Clear key list state
-        } else {
-            // When enabling multi-key view (if applicable and key has multiple entries)
-            if (supportsMultiKeyView(inputs.type) && inputs.key && (inputs.key.includes(',') || inputs.key.includes('\n'))) {
-                 setUseKeyListMode(true);
-                 setShowKey(true);
-                 const keys = inputs.key
-                   .split(/[,\n]/)
-                   .map(k => k.trim())
-                   .filter(k => k.length > 0);
-                 setKeyList(keys);
+  // Handle paste event for key list input
+  const handleKeyInputPaste = (e, index) => {
+    const clipboardData = e.clipboardData || window.clipboardData;
+    const pastedData = clipboardData.getData('Text');
+
+    // Check if pasted data contains newline or comma
+    if (pastedData.includes('\n') || pastedData.includes(',')) {
+      e.preventDefault(); // Prevent default paste behavior
+
+      // Get current value in the input where pasting
+      const currentValue = keyList[index];
+
+      // Process the pasted data and the current value
+      const combinedValue = currentValue + pastedData;
+      const newKeys = combinedValue
+        .split(/[,\n]/) // Split by comma or newline
+        .map(k => k.trim())
+        .filter(k => k.length > 0); // Filter out empty strings
+
+      // Update the key list state
+      const newKeyList = [...keyList];
+      // Remove the original key at the current index
+      newKeyList.splice(index, 1);
+      // Insert the new keys at the current index
+      newKeyList.splice(index, 0, ...newKeys);
+
+      updateKeyListToInput(newKeyList); // Update state and sync with inputs.key
+
+      // Focus on the last inserted input if new ones were added
+      if (newKeys.length > 0) {
+        setTimeout(() => {
+          const inputs = document.querySelectorAll('.key-input-item input');
+          if (inputs.length >= index + newKeys.length) {
+            inputs[index + newKeys.length - 1].focus();
+          }
+        }, 0);
+      } else {
+        // If pasted content resulted in no valid keys, focus on the previous input or the first if at index 0
+        setTimeout(() => {
+          const inputs = document.querySelectorAll('.key-input-item input');
+          if (inputs.length > 0) {
+            const targetIndex = index > 0 ? index - 1 : 0;
+            if (inputs[targetIndex]) {
+              inputs[targetIndex].focus();
             }
-        }
-    };
+          }
+        }, 0);
+      }
+    }
+    // If no newline or comma, allow default paste
+  };
+
+  // Toggle multi-key view disable state
+  const toggleDisableMultiKeyView = () => {
+    setDisableMultiKeyView(prev => !prev);
+    // When disabling multi-key view, force single input mode
+    if (!disableMultiKeyView) {
+      setUseKeyListMode(false);
+      // When switching to single mode, combine existing keys back into one string
+      const combinedKey = keyList.join(',');
+      setInputs(inputs => ({ ...inputs, key: combinedKey }));
+      setKeyList([]); // Clear key list state
+    } else {
+      // When enabling multi-key view (if applicable and key has multiple entries)
+      if (supportsMultiKeyView(inputs.type) && inputs.key && (inputs.key.includes(',') || inputs.key.includes('\n'))) {
+        setUseKeyListMode(true);
+        setShowKey(true);
+        const keys = inputs.key
+          .split(/[,\n]/)
+          .map(k => k.trim())
+          .filter(k => k.length > 0);
+        setKeyList(keys);
+      }
+    }
+  };
 
 
   // 渲染密钥输入组件
@@ -934,34 +934,34 @@ const EditChannel = (props) => {
       return (
         <div>
           <div style={{ marginTop: 8, marginBottom: '8px' }}>
-                <Checkbox
-                    checked={disableMultiKeyView}
-                    onChange={toggleDisableMultiKeyView}
-                >
-                    {t('禁用多密钥视图')}
-                </Checkbox>
-            </div>
+            <Checkbox
+              checked={disableMultiKeyView}
+              onChange={toggleDisableMultiKeyView}
+            >
+              {t('禁用多密钥视图')}
+            </Checkbox>
+          </div>
           <div style={{ maxHeight: '50vh', overflowY: 'auto' }}>
-          {keyList.map((key, index) => (
-            <div key={index} style={{ display: 'flex', marginBottom: '8px' }} className="key-input-item">
-              <Input
-                style={{ flex: 1 }}
-                value={key}
-                onChange={(value) => updateKeyAtIndex(index, value)}
-                onKeyDown={(e) => handleKeyInputKeyDown(e, index)}
-                 onPaste={(e) => handleKeyInputPaste(e, index)}
-                placeholder={t('请输入密钥')}
-              />
-              <Button
-                icon={<IconMinusCircle />}
-                type="danger"
-                theme="borderless"
-                onClick={() => removeKeyInput(index)}
-                style={{ marginLeft: '8px' }}
-                 disabled={keyList.length <= 1} // Disable remove if only one key left
-              />
-            </div>
-          ))}
+            {keyList.map((key, index) => (
+              <div key={index} style={{ display: 'flex', marginBottom: '8px' }} className="key-input-item">
+                <Input
+                  style={{ flex: 1 }}
+                  value={key}
+                  onChange={(value) => updateKeyAtIndex(index, value)}
+                  onKeyDown={(e) => handleKeyInputKeyDown(e, index)}
+                  onPaste={(e) => handleKeyInputPaste(e, index)}
+                  placeholder={t('请输入密钥')}
+                />
+                <Button
+                  icon={<IconMinusCircle />}
+                  type="danger"
+                  theme="borderless"
+                  onClick={() => removeKeyInput(index)}
+                  style={{ marginLeft: '8px' }}
+                  disabled={keyList.length <= 1} // Disable remove if only one key left
+                />
+              </div>
+            ))}
           </div>
           <Button
             icon={<IconPlusCircle />}
@@ -970,10 +970,10 @@ const EditChannel = (props) => {
           >
             {t('添加密钥')}
           </Button>
-           <Typography.Text type="secondary" style={{ marginLeft: 16 }}>
+          <Typography.Text type="secondary" style={{ marginLeft: 16 }}>
             {t('在输入框中输入逗号或回车可自动换行添加')}
-           </Typography.Text>
-            
+          </Typography.Text>
+
         </div>
       );
     }
@@ -981,29 +981,29 @@ const EditChannel = (props) => {
     // 默认单行密钥输入 (or if multi-key view is disabled or not supported)
     return (
       <>
-      {supportsMultiKeyView(inputs.type) && ( // Only show checkbox if multi-key view is supported
-        <Checkbox
-          checked={disableMultiKeyView}
-          onChange={toggleDisableMultiKeyView}
-          style={{ marginRight: 8, marginBottom: 8, marginTop: 8 }} // Add some spacing
-        >
-           {t('禁用多密钥视图')}
-        </Checkbox>
-      )}
+        {supportsMultiKeyView(inputs.type) && ( // Only show checkbox if multi-key view is supported
+          <Checkbox
+            checked={disableMultiKeyView}
+            onChange={toggleDisableMultiKeyView}
+            style={{ marginRight: 8, marginBottom: 8, marginTop: 8 }} // Add some spacing
+          >
+            {t('禁用多密钥视图')}
+          </Checkbox>
+        )}
 
-      <Input
-         ref={singleKeyInputRef} // Attach ref here
-        label={t('密钥')}
-        name='key'
-        required
-        type={showKey ? 'text' : 'password'}
-        placeholder={t(type2secretPrompt(inputs.type))}
-        onChange={(value) => {
-          handleInputChange('key', value);
-        }}
-        onPaste={(e) => {
-          // Handle paste for single input mode to switch to list mode, if supported and not disabled
-          if (supportsMultiKeyView(inputs.type) && !disableMultiKeyView) {
+        <Input
+          ref={singleKeyInputRef} // Attach ref here
+          label={t('密钥')}
+          name='key'
+          required
+          type={showKey ? 'text' : 'password'}
+          placeholder={t(type2secretPrompt(inputs.type))}
+          onChange={(value) => {
+            handleInputChange('key', value);
+          }}
+          onPaste={(e) => {
+            // Handle paste for single input mode to switch to list mode, if supported and not disabled
+            if (supportsMultiKeyView(inputs.type) && !disableMultiKeyView) {
               const clipboardData = e.clipboardData || window.clipboardData;
               const pastedData = clipboardData.getData('Text');
 
@@ -1011,72 +1011,72 @@ const EditChannel = (props) => {
               if (pastedData.includes('\n') || pastedData.includes(',')) {
                 e.preventDefault(); // Prevent default paste
 
-                 // Prepend existing key if any
-                 const combinedData = (inputs.key || '') + pastedData;
+                // Prepend existing key if any
+                const combinedData = (inputs.key || '') + pastedData;
 
-                 // Process the pasted data to switch to list mode
+                // Process the pasted data to switch to list mode
                 const keys = combinedData
                   .split(/[,\n]/)
                   .map(k => k.trim())
                   .filter(k => k.length > 0);
 
                 if (keys.length > 0) {
-                    setUseKeyListMode(true);
-                    setShowKey(true);
-                    setKeyList(keys);
-                     // Update the main inputs.key state based on the new list
-                    handleInputChange('key', keys.join(','));
+                  setUseKeyListMode(true);
+                  setShowKey(true);
+                  setKeyList(keys);
+                  // Update the main inputs.key state based on the new list
+                  handleInputChange('key', keys.join(','));
 
-                     // Focus the first input after switching to list mode
-                     setTimeout(() => {
-                       const inputs = document.querySelectorAll('.key-input-item input');
-                       if (inputs.length > 0) {
-                         inputs[0].focus();
-                       }
-                    }, 0);
+                  // Focus the first input after switching to list mode
+                  setTimeout(() => {
+                    const inputs = document.querySelectorAll('.key-input-item input');
+                    if (inputs.length > 0) {
+                      inputs[0].focus();
+                    }
+                  }, 0);
 
                 } else {
-                    // If splitting resulted in no valid keys, just update the input value (which is empty after split)
-                     handleInputChange('key', '');
+                  // If splitting resulted in no valid keys, just update the input value (which is empty after split)
+                  handleInputChange('key', '');
                 }
               }
               // If no newline or comma, allow default paste (handled by onChange)
-          }
-           // If multi-key view not supported or disabled, allow default paste (handled by onChange)
-        }}
-        value={inputs.key}
-        autoComplete='new-password'
-        addonAfter={
-          <Space>
-            
-            <Button
-              theme="borderless"
-              icon={showKey ? <IconEyeClosedSolid /> : <IconEyeOpened />}
-              onClick={() => setShowKey(!showKey)}
-              style={{ padding: '0 4px' }}
-            />
-          </Space>
-        }
-      />
-      {supportsMultiKeyView(inputs.type) && disableMultiKeyView && (
-        <Button
-          type='danger'
-          theme='borderless'
-          onClick={() => {
-            Modal.confirm({
-              title: t('确认清空密钥'),
-              content: t('您确定要清空密钥输入框的内容吗？'),
-              onOk: () => {
-                handleInputChange('key', '');
-                showSuccess(t('密钥已清空'));
-              },
-            });
+            }
+            // If multi-key view not supported or disabled, allow default paste (handled by onChange)
           }}
-          style={{ marginTop: 8 }}
-        >
-          {t('清空')}
-        </Button>
-      )}
+          value={inputs.key}
+          autoComplete='new-password'
+          addonAfter={
+            <Space>
+
+              <Button
+                theme="borderless"
+                icon={showKey ? <IconEyeClosedSolid /> : <IconEyeOpened />}
+                onClick={() => setShowKey(!showKey)}
+                style={{ padding: '0 4px' }}
+              />
+            </Space>
+          }
+        />
+        {supportsMultiKeyView(inputs.type) && disableMultiKeyView && (
+          <Button
+            type='danger'
+            theme='borderless'
+            onClick={() => {
+              Modal.confirm({
+                title: t('确认清空密钥'),
+                content: t('您确定要清空密钥输入框的内容吗？'),
+                onOk: () => {
+                  handleInputChange('key', '');
+                  showSuccess(t('密钥已清空'));
+                },
+              });
+            }}
+            style={{ marginTop: 8 }}
+          >
+            {t('清空')}
+          </Button>
+        )}
       </>
     );
   };
@@ -1456,6 +1456,35 @@ const EditChannel = (props) => {
             value={inputs.models}
             autoComplete='new-password'
             optionList={modelOptions}
+            renderSelectedItem={(optionNode) => {
+              const modelName = String(optionNode?.value ?? '');
+
+              const handleCopy = async (e) => {
+                e.stopPropagation();
+                try {
+                  await navigator.clipboard.writeText(modelName);
+                  showSuccess(t('已复制：{{name}}', { name: modelName }));
+                } catch (error) {
+                  console.error('Failed to copy to clipboard:', error);
+                  showError(t('复制失败'));
+                }
+              };
+
+              return {
+                isRenderInTag: true,
+                content: (
+                  <span
+                    className="cursor-pointer select-none"
+                    role="button"
+                    tabIndex={0}
+                    title={t('点击复制模型名称')}
+                    onClick={handleCopy}
+                  >
+                    {optionNode.label || modelName}
+                  </span>
+                ),
+              };
+            }}
           />
           <div style={{ lineHeight: '40px', marginBottom: '12px' }}>
             <Space>
