@@ -1374,5 +1374,8 @@
   "不需要设置模型价格，系统将弱化用量计算，您可专注于使用模型。": "No need to set the model price, the system will weaken the usage calculation, you can focus on using the model.",
   "适用于展示系统功能的场景。": "Suitable for scenarios where the system functions are displayed.",
   "可在初始化后修改": "Can be modified after initialization",
-  "初始化系统": "Initialize system"
+  "初始化系统": "Initialize system",
+  "点击复制模型名称": "Click to copy model name",
+  "已复制：{{name}}": "Copied: {{name}}",
+  "复制失败": "Copy failed"
 }

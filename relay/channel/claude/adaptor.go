@@ -74,6 +74,12 @@ func (a *Adaptor) ConvertOpenAIRequest(c *gin.Context, info *relaycommon.RelayIn
 	if request == nil {
 		return nil, errors.New("request is nil")
 	}
+
+	// Convert message content arrays to strings if they only contain text content
+	for i := range request.Messages {
+		request.Messages[i].ConvertArrayContentToString()
+	}
+
 	return RequestOpenAI2ClaudeMessage(*request)
 }
 

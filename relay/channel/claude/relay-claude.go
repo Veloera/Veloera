@@ -480,7 +480,104 @@ func FormatClaudeResponseInfo(requestMode int, claudeResponse *dto.ClaudeRespons
 	return true
 }
 
+func convertOpenAIChunkToClaudeChunk(openaiResp *dto.ChatCompletionsStreamResponse, claudeInfo *ClaudeResponseInfo) *dto.ClaudeResponse {
+	if openaiResp == nil || len(openaiResp.Choices) == 0 {
+		return nil
+	}
+
+	choice := openaiResp.Choices[0]
+	claudeResp := &dto.ClaudeResponse{
+		Id:    openaiResp.Id,
+		Model: openaiResp.Model,
+	}
+
+	// Handle different types of OpenAI chunks
+	if choice.Delta.Role != "" {
+		// This is the start of a message
+		claudeResp.Type = "message_start"
+		claudeResp.Message = &dto.ClaudeMediaMessage{
+			Id:    openaiResp.Id,
+			Model: openaiResp.Model,
+			Role:  "assistant",
+			Usage: &dto.ClaudeUsage{
+				InputTokens:  claudeInfo.Usage.PromptTokens,
+				OutputTokens: claudeInfo.Usage.CompletionTokens,
+			},
+		}
+	} else if choice.Delta.Content != nil && *choice.Delta.Content != "" {
+		// This is text content
+		claudeResp.Type = "content_block_delta"
+		claudeResp.Delta = &dto.ClaudeMediaMessage{
+			Type: "text_delta",
+		}
+		claudeResp.Delta.SetText(*choice.Delta.Content)
+		// Update response text for usage calculation
+		claudeInfo.ResponseText.WriteString(*choice.Delta.Content)
+	} else if choice.Delta.ToolCalls != nil && len(choice.Delta.ToolCalls) > 0 {
+		// This is tool call content
+		toolCall := choice.Delta.ToolCalls[0]
+		if toolCall.Function.Name != "" {
+			// Tool call start
+			claudeResp.Type = "content_block_start"
+
+			// Generate fallback ID if toolCall.ID is empty
+			toolID := toolCall.ID
+			if toolID == "" {
+				toolID = "tool_" + common.GetUUID()
+			}
+
+			claudeResp.ContentBlock = &dto.ClaudeMediaMessage{
+				Type:  "tool_use",
+				Id:    toolID,
+				Name:  toolCall.Function.Name,
+				Index: toolCall.Index,
+			}
+		} else if toolCall.Function.Arguments != "" {
+			// Tool call arguments
+			claudeResp.Type = "content_block_delta"
+			claudeResp.Delta = &dto.ClaudeMediaMessage{
+				Type:        "input_json_delta",
+				PartialJson: &toolCall.Function.Arguments,
+				Index:       toolCall.Index,
+			}
+		}
+	} else if choice.FinishReason != nil {
+		// This is the end of the message
+		claudeResp.Type = "message_delta"
+		claudeResp.Usage = &dto.ClaudeUsage{
+			OutputTokens: claudeInfo.Usage.CompletionTokens,
+		}
+	}
+
+	// Update usage if available
+	if openaiResp.Usage != nil {
+		claudeInfo.Usage.PromptTokens = openaiResp.Usage.PromptTokens
+		claudeInfo.Usage.CompletionTokens = openaiResp.Usage.CompletionTokens
+		claudeInfo.Usage.TotalTokens = openaiResp.Usage.TotalTokens
+	}
+
+	return claudeResp
+}
+
 func HandleStreamResponseData(c *gin.Context, info *relaycommon.RelayInfo, claudeInfo *ClaudeResponseInfo, data string, requestMode int) *dto.OpenAIErrorWithStatusCode {
+	// First, try to detect the format of the incoming data
+	// Check if it's OpenAI format by looking for the object field in the raw string
+	if strings.Contains(data, `"object":"chat.completion.chunk"`) {
+		// This is OpenAI format data, but client expects Claude format
+		if info.RelayFormat == relaycommon.RelayFormatClaude {
+			// Convert OpenAI response directly to Claude response format for the client
+			var openaiResponse dto.ChatCompletionsStreamResponse
+			if err := common.DecodeJsonStr(data, &openaiResponse); err == nil {
+				// Create a simple Claude-like response and send it directly
+				claudeResp := convertOpenAIChunkToClaudeChunk(&openaiResponse, claudeInfo)
+				if claudeResp != nil {
+					helper.ClaudeChunkData(c, *claudeResp, data)
+					return nil
+				}
+			}
+		}
+	}
+
 	var claudeResponse dto.ClaudeResponse
 	err := common.DecodeJsonStr(data, &claudeResponse)
 	if err != nil {

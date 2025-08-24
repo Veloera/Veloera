@@ -296,6 +296,9 @@ func OpenaiHandler(c *gin.Context, resp *http.Response, info *relaycommon.RelayI
 	if err != nil {
 		return service.OpenAIErrorWrapper(err, "read_response_body_failed", http.StatusInternalServerError), nil
 	}
+	if common.DebugEnabled {
+		common.LogInfo(c, "responseBody: "+string(responseBody))
+	}
 	err = resp.Body.Close()
 	if err != nil {
 		return service.OpenAIErrorWrapper(err, "close_response_body_failed", http.StatusInternalServerError), nil
@@ -449,6 +452,9 @@ func OpenaiTTSHandler(c *gin.Context, resp *http.Response, info *relaycommon.Rel
 	if err != nil {
 		return service.OpenAIErrorWrapper(err, "read_response_body_failed", http.StatusInternalServerError), nil
 	}
+	if common.DebugEnabled {
+		common.LogInfo(c, "responseBody: "+string(responseBody))
+	}
 	err = resp.Body.Close()
 	if err != nil {
 		return service.OpenAIErrorWrapper(err, "close_response_body_failed", http.StatusInternalServerError), nil
@@ -488,6 +494,9 @@ func OpenaiSTTHandler(c *gin.Context, resp *http.Response, info *relaycommon.Rel
 	if err != nil {
 		return service.OpenAIErrorWrapper(err, "read_response_body_failed", http.StatusInternalServerError), nil
 	}
+	if common.DebugEnabled {
+		common.LogInfo(c, "responseBody: "+string(responseBody))
+	}
 	err = resp.Body.Close()
 	if err != nil {
 		return service.OpenAIErrorWrapper(err, "close_response_body_failed", http.StatusInternalServerError), nil
@@ -521,6 +530,9 @@ func OpenaiResponsesHandler(c *gin.Context, resp *http.Response, info *relaycomm
 	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return service.OpenAIErrorWrapper(err, "read_response_body_failed", http.StatusInternalServerError), nil
+	}
+	if common.DebugEnabled {
+		common.LogInfo(c, "responseBody: "+string(responseBody))
 	}
 	err = resp.Body.Close()
 	if err != nil {

@@ -370,6 +370,38 @@ func (m *Message) ParseContent() []MediaContent {
 	return contentList
 }
 
+// ConvertArrayContentToString converts array content to single string if all items are text
+// Returns true if conversion was performed, false otherwise
+func (m *Message) ConvertArrayContentToString() bool {
+	// Parse the content as array once
+	var arrayContent []map[string]interface{}
+	if err := json.Unmarshal(m.Content, &arrayContent); err != nil {
+		// Not array format, no conversion needed
+		return false
+	}
+
+	// Check if all items are text type and collect text content
+	var textBuilder strings.Builder
+	for i, contentItem := range arrayContent {
+		contentType, ok := contentItem["type"].(string)
+		if !ok || contentType != ContentTypeText {
+			// Not all text content, no conversion needed
+			return false
+		}
+
+		if text, ok := contentItem["text"].(string); ok {
+			if i > 0 {
+				textBuilder.WriteString(" ")
+			}
+			textBuilder.WriteString(text)
+		}
+	}
+
+	// All items are text, perform conversion
+	m.SetStringContent(textBuilder.String())
+	return true
+}
+
 type OpenAIResponsesRequest struct {
 	Model              string               `json:"model"`
 	Input              json.RawMessage      `json:"input,omitempty"`
