@@ -291,13 +291,12 @@ const ModelMappingEditor = ({ value, onChange, placeholder }) => {
 
   // Remove mapping pair
   const removeMappingPair = (index) => {
-    if (mappingPairs.length > 1) {
-      const newPairs = mappingPairs.filter((_, i) => i !== index);
-      setMappingPairs(newPairs);
-      // Update parent with new JSON
-      const jsonStr = mappingsToJson(newPairs);
-      onChange(jsonStr);
-    }
+    const newPairs = mappingPairs.filter((_, i) => i !== index);
+    const finalPairs = newPairs.length > 0 ? newPairs : [{ key: '', value: '' }];
+    setMappingPairs(finalPairs);
+    // Update parent with new JSON
+    const jsonStr = mappingsToJson(finalPairs);
+    onChange(jsonStr);
   };
 
   // Update mapping pair
@@ -388,11 +387,7 @@ const ModelMappingEditor = ({ value, onChange, placeholder }) => {
             type={mode === 'visual' ? 'primary' : 'tertiary'}
             onClick={() => switchMode('visual')}
             style={{ 
-              marginRight: 8,
               borderRadius: '6px 0 0 6px'
-              //border: 'none',
-              //outline: 'none',
-              //boxShadow: 'none'
             }}
           >
             {t('可视化编辑')}
@@ -402,9 +397,6 @@ const ModelMappingEditor = ({ value, onChange, placeholder }) => {
             onClick={() => switchMode('json')}
             style={{ 
               borderRadius: '0 6px 6px 0'
-              //border: 'none',
-              //outline: 'none',
-              //boxShadow: 'none'
             }}
           >
             {t('JSON编辑')}
@@ -443,15 +435,13 @@ const ModelMappingEditor = ({ value, onChange, placeholder }) => {
                 onChange={(value) => updateMappingPair(index, 'value', value)}
                 style={{ flex: 1, marginRight: 8 }}
               />
-              {mappingPairs.length > 1 && (
-                <Button
-                  type="danger"
-                  icon={<IconMinusCircle />}
-                  size="small"
-                  onClick={() => removeMappingPair(index)}
-                  style={{ marginLeft: 4 }}
-                />
-              )}
+              <Button
+                type="danger"
+                icon={<IconMinusCircle />}
+                size="small"
+                onClick={() => removeMappingPair(index)}
+                style={{ marginLeft: 4 }}
+              />
             </div>
           ))}
           
@@ -565,6 +555,8 @@ const EditChannel = (props) => {
   const [batch, setBatch] = useState(false);
   const [autoBan, setAutoBan] = useState(true);
   const [inputs, setInputs] = useState(originInputs);
+  const [originalModelMapping, setOriginalModelMapping] = useState(''); // Save the original model_mapping data
+  const [componentResetKey, setComponentResetKey] = useState(0); // Used to force component reset
   const [originModelOptions, setOriginModelOptions] = useState([]);
   const [modelOptions, setModelOptions] = useState([]);
   const [groupOptions, setGroupOptions] = useState([]);
@@ -572,7 +564,7 @@ const EditChannel = (props) => {
   const [fullModels, setFullModels] = useState([]);
   const [customModel, setCustomModel] = useState('');
 
-  // 处理密钥列表的变化
+  // Handle changes to the key list
   const updateKeyListToInput = (newKeyList) => {
     // Filter out empty strings before joining
     const filteredKeyList = newKeyList.filter(key => key.trim().length > 0);
@@ -815,7 +807,7 @@ const EditChannel = (props) => {
       }
 
 
-      // 处理密钥
+      // Handle the key
       if (data.key && supportsMultiKeyView(data.type)) {
         const keys = data.key.split(',').map(k => k.trim()).filter(k => k.length > 0);
         if (keys.length > 1) {
@@ -832,6 +824,8 @@ const EditChannel = (props) => {
       }
       setInitialKey(data.key); // Store initial key for single input mode placeholder
 
+      // Save the original model_mapping data
+      setOriginalModelMapping(data.model_mapping);
 
       setInputs(data);
       if (data.auto_ban === 0) {
@@ -902,12 +896,17 @@ const EditChannel = (props) => {
     fetchModels().then();
     fetchGroups().then();
     if (isEdit) {
-      loadChannel().then(() => { });
+      loadChannel().then(() => {
+        // Update the reset key after data loading is complete to force component reset
+        setComponentResetKey(prev => prev + 1);
+      });
     } else {
       setInputs(originInputs);
+      setOriginalModelMapping(''); // Initialize as an empty string
       let localModels = getChannelModels(originInputs.type); // Use originInputs.type for initial state
       setBasicModels(localModels);
       setInputs((inputs) => ({ ...inputs, models: localModels }));
+      setComponentResetKey(prev => prev + 1);
     }
   }, [props.editingChannel.id]);
 
@@ -1831,7 +1830,8 @@ const EditChannel = (props) => {
             <Typography.Text strong>{t('模型重定向')}：</Typography.Text>
           </div>
           <ModelMappingEditor
-            value={inputs.model_mapping}
+            key={`model-mapping-${componentResetKey}`}
+            value={originalModelMapping || inputs.model_mapping}
             onChange={(value) => handleInputChange('model_mapping', value)}
             placeholder={t('此项可选，用于修改请求体中的模型名称')}
           />
