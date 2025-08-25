@@ -237,6 +237,257 @@ const MODEL_MAPPING_EXAMPLE = {
   'gpt-3.5-turbo': 'gpt-3.5-turbo-0125',
 };
 
+// ModelMappingEditor component for visual key-value editing
+const ModelMappingEditor = ({ value, onChange, placeholder }) => {
+  const { t } = useTranslation();
+  const [mappingPairs, setMappingPairs] = useState([]);
+  const [mode, setMode] = useState('visual'); // 'visual' or 'json'
+  const [jsonValue, setJsonValue] = useState('');
+  const [jsonError, setJsonError] = useState('');
+
+  // Parse JSON value to key-value pairs
+  const parseJsonToMappings = (jsonStr) => {
+    if (!jsonStr || jsonStr.trim() === '') {
+      return [];
+    }
+    try {
+      const parsed = JSON.parse(jsonStr);
+      if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+        return Object.entries(parsed).map(([key, value]) => ({ key, value }));
+      }
+      return [];
+    } catch {
+      return [];
+    }
+  };
+
+  // Convert key-value pairs to JSON string
+  const mappingsToJson = (pairs) => {
+    if (!pairs || pairs.length === 0) {
+      return '';
+    }
+    const obj = {};
+    pairs.forEach(pair => {
+      if (pair.key && pair.key.trim() !== '') {
+        obj[pair.key.trim()] = pair.value || '';
+      }
+    });
+    return Object.keys(obj).length > 0 ? JSON.stringify(obj, null, 2) : '';
+  };
+
+  // Initialize component state from value prop
+  useEffect(() => {
+    const pairs = parseJsonToMappings(value);
+    setMappingPairs(pairs.length > 0 ? pairs : [{ key: '', value: '' }]);
+    setJsonValue(value || '');
+    setJsonError('');
+  }, [value]);
+
+  // Add new mapping pair
+  const addMappingPair = () => {
+    const newPairs = [...mappingPairs, { key: '', value: '' }];
+    setMappingPairs(newPairs);
+  };
+
+  // Remove mapping pair
+  const removeMappingPair = (index) => {
+    if (mappingPairs.length > 1) {
+      const newPairs = mappingPairs.filter((_, i) => i !== index);
+      setMappingPairs(newPairs);
+      // Update parent with new JSON
+      const jsonStr = mappingsToJson(newPairs);
+      onChange(jsonStr);
+    }
+  };
+
+  // Update mapping pair
+  const updateMappingPair = (index, field, value) => {
+    const newPairs = [...mappingPairs];
+    newPairs[index] = { ...newPairs[index], [field]: value };
+    setMappingPairs(newPairs);
+    
+    // Update parent with new JSON
+    const jsonStr = mappingsToJson(newPairs);
+    onChange(jsonStr);
+  };
+
+  // Handle mode switch
+  const switchMode = (newMode) => {
+    if (newMode === 'json' && mode === 'visual') {
+      // Switching from visual to JSON
+      const jsonStr = mappingsToJson(mappingPairs);
+      setJsonValue(jsonStr);
+      setJsonError('');
+    } else if (newMode === 'visual' && mode === 'json') {
+      // Switching from JSON to visual
+      try {
+        if (jsonValue.trim() === '') {
+          setMappingPairs([{ key: '', value: '' }]);
+          setJsonError('');
+        } else {
+          const parsed = JSON.parse(jsonValue);
+          if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+            const pairs = Object.entries(parsed).map(([key, value]) => ({ key, value }));
+            setMappingPairs(pairs.length > 0 ? pairs : [{ key: '', value: '' }]);
+            setJsonError('');
+          } else {
+            setJsonError(t('请输入有效的JSON对象格式'));
+            return;
+          }
+        }
+      } catch (error) {
+        setJsonError(t('JSON格式错误: ') + error.message);
+        return;
+      }
+    }
+    setMode(newMode);
+  };
+
+  // Handle JSON input change
+  const handleJsonChange = (newValue) => {
+    setJsonValue(newValue);
+    
+    // Validate JSON and update parent
+    if (newValue.trim() === '') {
+      setJsonError('');
+      onChange('');
+      return;
+    }
+    
+    try {
+      const parsed = JSON.parse(newValue);
+      if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+        setJsonError('');
+        onChange(newValue);
+      } else {
+        setJsonError(t('请输入有效的JSON对象格式'));
+      }
+    } catch (error) {
+      setJsonError(t('JSON格式错误: ') + error.message);
+    }
+  };
+
+  // Fill template
+  const fillTemplate = () => {
+    const templateJson = JSON.stringify(MODEL_MAPPING_EXAMPLE, null, 2);
+    if (mode === 'visual') {
+      const pairs = parseJsonToMappings(templateJson);
+      setMappingPairs(pairs);
+      onChange(templateJson);
+    } else {
+      setJsonValue(templateJson);
+      handleJsonChange(templateJson);
+    }
+  };
+
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
+        <div style={{ display: 'flex', marginRight: 16 }}>
+          <Button
+            type={mode === 'visual' ? 'primary' : 'tertiary'}
+            onClick={() => switchMode('visual')}
+            style={{ 
+              marginRight: 8,
+              borderRadius: '6px 0 0 6px'
+              //border: 'none',
+              //outline: 'none',
+              //boxShadow: 'none'
+            }}
+          >
+            {t('可视化编辑')}
+          </Button>
+          <Button
+            type={mode === 'json' ? 'primary' : 'tertiary'}
+            onClick={() => switchMode('json')}
+            style={{ 
+              borderRadius: '0 6px 6px 0'
+              //border: 'none',
+              //outline: 'none',
+              //boxShadow: 'none'
+            }}
+          >
+            {t('JSON编辑')}
+          </Button>
+        </div>
+        <Typography.Text
+          style={{
+            color: 'rgba(var(--semi-blue-5), 1)',
+            userSelect: 'none',
+            cursor: 'pointer',
+          }}
+          onClick={fillTemplate}
+        >
+          {t('填入模板')}
+        </Typography.Text>
+      </div>
+
+      {mode === 'visual' ? (
+        <div>
+          <div style={{ marginBottom: 10 }}>
+            <Typography.Text type="secondary">{placeholder}</Typography.Text>
+          </div>
+          
+          {mappingPairs.map((pair, index) => (
+            <div key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+              <Input
+                placeholder={t('目标模型名称')}
+                value={pair.key}
+                onChange={(value) => updateMappingPair(index, 'key', value)}
+                style={{ flex: 1, marginRight: 8 }}
+              />
+              <Typography.Text style={{ margin: '0 8px' }}>→</Typography.Text>
+              <Input
+                placeholder={t('实际模型名称')}
+                value={pair.value}
+                onChange={(value) => updateMappingPair(index, 'value', value)}
+                style={{ flex: 1, marginRight: 8 }}
+              />
+              {mappingPairs.length > 1 && (
+                <Button
+                  type="danger"
+                  icon={<IconMinusCircle />}
+                  size="small"
+                  onClick={() => removeMappingPair(index)}
+                  style={{ marginLeft: 4 }}
+                />
+              )}
+            </div>
+          ))}
+          
+          <Button
+            type="tertiary"
+            icon={<IconPlusCircle />}
+            onClick={addMappingPair}
+            style={{ width: '100%', marginTop: 8, color: 'white' }}
+          >
+            {t('添加映射')}
+          </Button>
+        </div>
+      ) : (
+        <div>
+          <TextArea
+            placeholder={
+              t(
+                '此项可选，用于修改请求体中的模型名称，为一个 JSON 字符串，键为请求中模型名称，值为要替换的模型名称，例如：',
+              ) + `\n${JSON.stringify(MODEL_MAPPING_EXAMPLE, null, 2)}`
+            }
+            value={jsonValue}
+            onChange={handleJsonChange}
+            autosize
+            autoComplete='new-password'
+          />
+          {jsonError && (
+            <Typography.Text type="danger" style={{ marginTop: 4, display: 'block' }}>
+              {jsonError}
+            </Typography.Text>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const STATUS_CODE_MAPPING_EXAMPLE = {
   400: '500',
 };
@@ -1579,35 +1830,11 @@ const EditChannel = (props) => {
           <div style={{ marginTop: 10 }}>
             <Typography.Text strong>{t('模型重定向')}：</Typography.Text>
           </div>
-          <TextArea
-            placeholder={
-              t(
-                '此项可选，用于修改请求体中的模型名称，为一个 JSON 字符串，键为请求中模型名称，值为要替换的模型名称，例如：',
-              ) + `\n${JSON.stringify(MODEL_MAPPING_EXAMPLE, null, 2)}`
-            }
-            name='model_mapping'
-            onChange={(value) => {
-              handleInputChange('model_mapping', value);
-            }}
-            autosize
+          <ModelMappingEditor
             value={inputs.model_mapping}
-            autoComplete='new-password'
+            onChange={(value) => handleInputChange('model_mapping', value)}
+            placeholder={t('此项可选，用于修改请求体中的模型名称')}
           />
-          <Typography.Text
-            style={{
-              color: 'rgba(var(--semi-blue-5), 1)',
-              userSelect: 'none',
-              cursor: 'pointer',
-            }}
-            onClick={() => {
-              handleInputChange(
-                'model_mapping',
-                JSON.stringify(MODEL_MAPPING_EXAMPLE, null, 2),
-              );
-            }}
-          >
-            {t('填入模板')}
-          </Typography.Text>
           <div style={{ marginTop: 10 }}>
             <Typography.Text strong>{t('渠道标签')}</Typography.Text>
           </div>

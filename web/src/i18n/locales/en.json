@@ -852,7 +852,6 @@
   "查看全部": "View all",
   "高延迟": "high latency",
   "异常": "abnormal",
-  "API地址": "API address",
   "的未命名令牌": "unnamed token",
   "令牌更新成功！": "Token updated successfully!",
   "(origin) Discord原链接": "(origin) Discord original link",
@@ -1377,5 +1376,12 @@
   "初始化系统": "Initialize system",
   "点击复制模型名称": "Click to copy model name",
   "已复制：{{name}}": "Copied: {{name}}",
-  "复制失败": "Copy failed"
+  "复制失败": "Copy failed",
+  "请输入有效的JSON对象格式": "Please enter a valid JSON object format",
+  "JSON格式错误": "JSON format error",
+  "可视化编辑": "Visual editing",
+  "JSON编辑": "JSON editing",
+  "目标模型名称": "Target model name",
+  "实际模型名称": "Actual model name",
+  "添加映射": "Add mapping"
 }
