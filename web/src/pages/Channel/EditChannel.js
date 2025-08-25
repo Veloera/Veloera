@@ -253,7 +253,11 @@ const ModelMappingEditor = ({ value, onChange, placeholder }) => {
     try {
       const parsed = JSON.parse(jsonStr);
       if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
-        return Object.entries(parsed).map(([key, value]) => ({ key, value }));
+        return Object.entries(parsed).map(([key, value]) => ({ 
+          id: Date.now() + Math.random(), 
+          key, 
+          value 
+        }));
       }
       return [];
     } catch {
@@ -278,21 +282,21 @@ const ModelMappingEditor = ({ value, onChange, placeholder }) => {
   // Initialize component state from value prop
   useEffect(() => {
     const pairs = parseJsonToMappings(value);
-    setMappingPairs(pairs.length > 0 ? pairs : [{ key: '', value: '' }]);
+    setMappingPairs(pairs.length > 0 ? pairs : [{ id: Date.now() + Math.random(), key: '', value: '' }]);
     setJsonValue(value || '');
     setJsonError('');
   }, [value]);
 
   // Add new mapping pair
   const addMappingPair = () => {
-    const newPairs = [...mappingPairs, { key: '', value: '' }];
+    const newPairs = [...mappingPairs, { id: Date.now() + Math.random(), key: '', value: '' }];
     setMappingPairs(newPairs);
   };
 
   // Remove mapping pair
   const removeMappingPair = (index) => {
     const newPairs = mappingPairs.filter((_, i) => i !== index);
-    const finalPairs = newPairs.length > 0 ? newPairs : [{ key: '', value: '' }];
+    const finalPairs = newPairs.length > 0 ? newPairs : [{ id: Date.now() + Math.random(), key: '', value: '' }];
     setMappingPairs(finalPairs);
     // Update parent with new JSON
     const jsonStr = mappingsToJson(finalPairs);
@@ -321,13 +325,17 @@ const ModelMappingEditor = ({ value, onChange, placeholder }) => {
       // Switching from JSON to visual
       try {
         if (jsonValue.trim() === '') {
-          setMappingPairs([{ key: '', value: '' }]);
+          setMappingPairs([{ id: Date.now() + Math.random(), key: '', value: '' }]);
           setJsonError('');
         } else {
           const parsed = JSON.parse(jsonValue);
           if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
-            const pairs = Object.entries(parsed).map(([key, value]) => ({ key, value }));
-            setMappingPairs(pairs.length > 0 ? pairs : [{ key: '', value: '' }]);
+            const pairs = Object.entries(parsed).map(([key, value]) => ({ 
+              id: Date.now() + Math.random(), 
+              key, 
+              value 
+            }));
+            setMappingPairs(pairs.length > 0 ? pairs : [{ id: Date.now() + Math.random(), key: '', value: '' }]);
             setJsonError('');
           } else {
             setJsonError(t('请输入有效的JSON对象格式'));
@@ -335,7 +343,7 @@ const ModelMappingEditor = ({ value, onChange, placeholder }) => {
           }
         }
       } catch (error) {
-        setJsonError(t('JSON格式错误: ') + error.message);
+        setJsonError(t('JSON格式错误: {{message}}', { message: error.message }));
         return;
       }
     }
@@ -362,7 +370,7 @@ const ModelMappingEditor = ({ value, onChange, placeholder }) => {
         setJsonError(t('请输入有效的JSON对象格式'));
       }
     } catch (error) {
-      setJsonError(t('JSON格式错误: ') + error.message);
+      setJsonError(t('JSON格式错误: {{message}}', { message: error.message }));
     }
   };
 
@@ -421,7 +429,7 @@ const ModelMappingEditor = ({ value, onChange, placeholder }) => {
           </div>
           
           {mappingPairs.map((pair, index) => (
-            <div key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+            <div key={pair.id} style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
               <Input
                 placeholder={t('目标模型名称')}
                 value={pair.key}
@@ -449,7 +457,7 @@ const ModelMappingEditor = ({ value, onChange, placeholder }) => {
             type="tertiary"
             icon={<IconPlusCircle />}
             onClick={addMappingPair}
-            style={{ width: '100%', marginTop: 8, color: 'white' }}
+            style={{ width: '100%', marginTop: 8 }}
           >
             {t('添加映射')}
           </Button>
@@ -858,7 +866,8 @@ const EditChannel = (props) => {
           .map((model) => model.id),
       );
     } catch (error) {
-      showError(error.message);
+      console.error('Failed to parse model mapping JSON:', jsonStr, error);
+      return [];
     }
   };
 
