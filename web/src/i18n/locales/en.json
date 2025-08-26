@@ -1395,5 +1395,6 @@
   "清空": "Clear",
   "复制所有": "Copy all",
   "没有模型可复制": "No models to copy",
-  "此项可选，用于修改请求体中的模型名称": "Optional: remap model name in request body"
+  "此项可选，用于修改请求体中的模型名称": "Optional: remap model name in request body",
+  "💡 提示：设置重定向后，系统自动将“模型配置”中对应的“值”替换为“键”":"💡 Tip: After setting the redirect, the system automatically replaces the corresponding \"value\" in \"Model configuration\" with \"key\""
 }
