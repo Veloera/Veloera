@@ -268,6 +268,30 @@ func StreamResponseOpenAI2Claude(openAIResponse *dto.ChatCompletionsStreamRespon
 		if chosenChoice.FinishReason != nil && *chosenChoice.FinishReason != "" {
 			// should be done
 			info.FinishReason = *chosenChoice.FinishReason
+			info.Done = true
+			
+			// Handle tool call completion
+			if *chosenChoice.FinishReason == "tool_calls" || *chosenChoice.FinishReason == "function_call" {
+				// Send content_block_stop for tool call
+				claudeResponses = append(claudeResponses, generateStopBlock(info.ClaudeConvertInfo.Index))
+				
+				// Send message_delta with stop_reason
+				claudeResponses = append(claudeResponses, &dto.ClaudeResponse{
+					Type: "message_delta",
+					Usage: &dto.ClaudeUsage{
+						InputTokens:  info.PromptTokens,
+						OutputTokens: 0, // Will be updated later
+					},
+					Delta: &dto.ClaudeMediaMessage{
+						StopReason: common.GetPointer[string]("tool_use"),
+					},
+				})
+				
+				// Send message_stop
+				claudeResponses = append(claudeResponses, &dto.ClaudeResponse{
+					Type: "message_stop",
+				})
+			}
 			return claudeResponses
 		}
 		if info.Done {
