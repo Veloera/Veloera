@@ -271,7 +271,7 @@ func StreamResponseOpenAI2Claude(openAIResponse *dto.ChatCompletionsStreamRespon
 			info.Done = true
 
 			// Handle tool call completion
-			if *chosenChoice.FinishReason == "tool_calls" || *chosenChoice.FinishReason == "function_call" {
+if *chosenChoice.FinishReason == constant.FinishReasonToolCalls || *chosenChoice.FinishReason == constant.FinishReasonFunctionCall {
 				// Send content_block_stop for tool call
 				claudeResponses = append(claudeResponses, generateStopBlock(info.ClaudeConvertInfo.Index))
 
