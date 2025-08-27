@@ -1396,5 +1396,16 @@
   "复制所有": "Copy all",
   "没有模型可复制": "No models to copy",
   "此项可选，用于修改请求体中的模型名称": "Optional: remap model name in request body",
-  "💡 提示：设置重定向后，系统自动将“模型配置”中对应的“值”替换为“键”":"💡 Tip: After setting the redirect, the system automatically replaces the corresponding \"value\" in \"Model configuration\" with \"key\""
+  "💡 提示：设置重定向后，系统自动将“模型配置”中对应的“值”替换为“键”":"💡 Tip: After setting the redirect, the system automatically replaces the corresponding \"value\" in \"Model configuration\" with \"key\"",
+  "密钥为空，无法复制": "Key is empty, cannot copy",
+  "密钥已复制": "Key copied",
+  "没有有效的密钥可复制": "No valid keys to copy",
+  "已复制全部密钥（{{count}}个）": "All keys copied ({{count}})",
+  "切换为单密钥模式": "Switch to single key mode",
+  "请输入第 {{index}} 个密钥": "Please enter key {{index}}",
+  "添加密钥": "Add key",
+  "复制全部": "Copy all",
+  "总计: {{count}} 个密钥": "Total: {{count}} keys",
+  "💡 提示: 输入逗号或回车可快速添加新密钥":"💡 Tip: Enter a comma or return to quickly add a new key",
+  "切换为多密钥模式": "Switch to multi-key mode"
 }
