@@ -20,6 +20,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import {
   API,
+  copy,
   isMobile,
   shouldShowPrompt,
   showError,
@@ -76,6 +77,351 @@ import { useTranslation } from 'react-i18next';
 function renderTimestamp(timestamp) {
   return <>{timestamp2string(timestamp)}</>;
 }
+
+// 辅助函数：获取失败的模型统计
+const getFailedModelsStats = (batchTestResults, currentModels = null) => {
+  // 如果提供了当前模型列表，只统计当前模型中的失败情况
+  const currentModelSet = currentModels ? new Set(currentModels.split(',').map(m => m.trim()).filter(m => m)) : null;
+  
+  // 过滤测试结果：只保留当前模型中的结果
+  const relevantResults = currentModelSet 
+    ? batchTestResults.filter(r => currentModelSet.has(r.model))
+    : batchTestResults;
+  
+  // 优化性能：只遍历一次，先获取所有失败的模型
+  const failedModels = relevantResults.filter(r => !r.success);
+  // 然后从失败模型中过滤出可重试的，避免第二次完整遍历
+  const retryableFailedModels = failedModels.filter(r => r.isRetryable);
+  
+  return {
+    failed: failedModels,
+    retryable: retryableFailedModels,
+    failedCount: failedModels.length,
+    retryableCount: retryableFailedModels.length
+  };
+};
+
+// 辅助函数：处理模型列表数据
+const processModelData = (
+  models,
+  searchKeyword,
+  batchTestResults,
+  isBatchTesting,
+  currentTestingModel,
+  testingModelsSet = null
+) => {
+  if (!models) return [];
+  
+  // 优化性能：将测试结果转换为 Map，查找时间复杂度从 O(N) 降低到 O(1)
+  const testResultsMap = new Map(batchTestResults.map(result => [result.model, result]));
+  
+  return models
+    .split(',')
+    .map(model => model.trim())
+    .filter(model => model && model.toLowerCase().includes(searchKeyword.toLowerCase()))
+    .map((model, index) => {
+      const testResult = testResultsMap.get(model);
+      return {
+        key: model,
+        model: model,
+        testResult: testResult,
+        isSuccess: testResult?.success,
+        isFailed: testResult && !testResult.success,
+        isTesting: isBatchTesting
+         ? currentTestingModel.includes(model)
+         : Boolean(testingModelsSet && testingModelsSet.has(model)),
+        isRetryable: testResult?.isRetryable
+      };
+    });
+};
+
+// 模型测试内容组件
+const ModelTestContent = ({ 
+  channel, 
+  isBatchTesting, 
+  concurrentLimit, 
+  setConcurrentLimit,
+  testAllModels,
+  modelSearchKeyword,
+  setModelSearchKeyword,
+  batchTestResults,
+  retryFailedModels,
+  handleDeleteFailedModels,
+  testProgress,
+  currentTestingModel,
+  testChannel,
+  showSuccess,
+  showError,
+  t 
+}) => {
+  const failedStats = getFailedModelsStats(batchTestResults, channel.models);
+  
+  // 追踪单个模型测试状态
+  const [testingModels, setTestingModels] = React.useState(() => new Set());
+  
+  // 单个模型测试函数
+  const runSingleTest = async (model) => {
+    setTestingModels(prev => {
+      const next = new Set(prev);
+      next.add(model);
+      return next;
+    });
+    try {
+      await testChannel(channel, model);
+    } finally {
+      setTestingModels(prev => {
+        const next = new Set(prev);
+        next.delete(model);
+        return next;
+      });
+    }
+  };
+  
+  // 使用 useMemo 缓存模型数据处理结果
+  const modelData = React.useMemo(() => processModelData(
+    channel.models,
+    modelSearchKeyword,
+    batchTestResults,
+    isBatchTesting,
+    currentTestingModel,
+    testingModels
+  ), [channel.models, modelSearchKeyword, batchTestResults, isBatchTesting, currentTestingModel, testingModels]);
+
+  return (
+    <div>
+      {/* 渠道信息和操作按钮 */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '16px 0',
+        borderBottom: '1px solid var(--semi-color-border)',
+        marginBottom: '16px'
+      }}>
+        <Typography.Title heading={6} style={{ margin: 0 }}>
+          {t('渠道')}: {channel.name}
+        </Typography.Title>
+        
+        {/* 主要操作按钮组 */}
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center',
+          gap: '12px'
+        }}>
+          {!isBatchTesting && (
+            <>
+              <Typography.Text style={{ fontSize: '14px' }}>
+                {t('并发测试模型数')}:
+              </Typography.Text>
+              <InputNumber
+                value={concurrentLimit}
+                onChange={setConcurrentLimit}
+                min={1}
+                max={10}
+                style={{ width: '80px' }}
+                size='small'
+              />
+            </>
+          )}
+          
+          <Button
+            type='primary'
+            loading={isBatchTesting}
+            onClick={testAllModels}
+            disabled={!channel?.models}
+          >
+            {isBatchTesting ? t('测试中...') : t('测试全部')}
+          </Button>
+        </div>
+      </div>
+
+      {/* 搜索框和操作按钮 */}
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        marginBottom: '16px',
+        gap: '12px'
+      }}>
+        <Input
+          placeholder={t('搜索模型...')}
+          value={modelSearchKeyword}
+          onChange={(v) => setModelSearchKeyword(v)}
+          prefix={<IconFilter />}
+          showClear
+          style={{ flex: 1 }}
+        />
+        
+        {/* 失败模型处理按钮组 */}
+        {batchTestResults.length > 0 && failedStats.failedCount > 0 && (
+          <div style={{ 
+            display: 'flex',
+            gap: '8px', 
+            alignItems: 'center'
+          }}>
+            {failedStats.retryableCount > 0 && (
+              <Button
+                type='warning'
+                loading={isBatchTesting}
+                onClick={retryFailedModels}
+                disabled={isBatchTesting}
+              >
+                {isBatchTesting ? t('重试中...') : t('重试失败 ({{count}})', { count: failedStats.retryableCount })}
+              </Button>
+            )}
+
+            <Button
+              type='danger'
+              onClick={() => handleDeleteFailedModels(failedStats.failed)}
+            >
+              {t('删除失败 ({{count}})', { count: failedStats.failedCount })}
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* 测试进度显示 */}
+      {isBatchTesting && (
+        <div style={{ marginBottom: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+            <Typography.Text style={{ fontSize: '14px' }}>
+              {t('进度')}: {testProgress.completed}/{testProgress.total}
+            </Typography.Text>
+            <div style={{
+              flex: 1,
+              height: '6px',
+              backgroundColor: 'var(--semi-color-fill-1)',
+              borderRadius: '3px',
+              overflow: 'hidden'
+            }}>
+              <div style={{
+                width: `${testProgress.total > 0 ? (testProgress.completed / testProgress.total) * 100 : 0}%`,
+                height: '100%',
+                backgroundColor: 'var(--semi-color-primary)',
+                borderRadius: '3px',
+                transition: 'width 0.3s ease'
+              }} />
+            </div>
+          </div>
+          {currentTestingModel && (
+            <Typography.Text style={{ 
+              fontSize: '12px',
+              color: 'var(--semi-color-text-1)'
+            }}>
+              {t('正在测试')}: {currentTestingModel.includes(':') ? currentTestingModel.split(':').slice(1).join(':').trim() : currentTestingModel}
+            </Typography.Text>
+          )}
+        </div>
+      )}
+
+      {/* 模型测试表格 */}
+      <Table
+        dataSource={modelData}
+        columns={[
+          {
+            title: t('模型名称'),
+            dataIndex: 'model',
+            key: 'model',
+            width: '40%',
+            render: (text, record) => (
+              <Typography.Text
+                style={{
+                  fontWeight: '500',
+                  color: record.testResult ? 
+                    (record.isSuccess ? 'var(--semi-color-success)' : 'var(--semi-color-danger)') : 
+                    'var(--semi-color-text-0)',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }}
+                ellipsis={{ showTooltip: true }}
+              >
+                {text}
+              </Typography.Text>
+            )
+          },
+          {
+            title: t('状态'),
+            key: 'status',
+            width: '20%',
+            render: (_, record) => {
+              if (record.isTesting) {
+                return <Tag color='blue'>{t('测试中')}</Tag>;
+              }
+              if (record.testResult) {
+                return (
+                  <Tag color={record.isSuccess ? 'green' : 'red'}>
+                    {record.isSuccess ? t('成功') : t('失败')}
+                  </Tag>
+                );
+              }
+              return <Tag color='default'>{t('未测试')}</Tag>;
+            }
+          },
+          {
+            title: t('耗时'),
+            key: 'duration',
+            width: '15%',
+            render: (_, record) => {
+              if (record.testResult?.time) {
+                return (
+                  <Typography.Text style={{ color: 'var(--semi-color-text-1)' }}>
+                    {record.testResult.time.toFixed(2)}s
+                  </Typography.Text>
+                );
+              }
+              return '-';
+            }
+          },
+          {
+            title: t('操作'),
+            key: 'actions',
+            width: '25%',
+            render: (_, record) => (
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <Button
+                  size='small'
+                  loading={record.isTesting}
+                  onClick={() => runSingleTest(record.model)}
+                >
+                  {record.isTesting ? t('测试中') : t('测试')}
+                </Button>
+                <Button
+                  size='small'
+                  icon={<IconCopy />}
+                  onClick={async () => {
+                    const success = await copy(record.model);
+                    if (success) {
+                      showSuccess(t('模型名称已复制'));
+                    } else {
+                      showError(t('复制失败'));
+                    }
+                  }}
+                />
+              </div>
+            )
+          }
+        ]}
+        pagination={false}
+        size='small'
+        style={{ marginBottom: '25px' }}
+      />
+
+      {/* 显示搜索结果数量 */}
+      {modelSearchKeyword && (
+        <div style={{ marginTop: '16px' }}>
+          <Typography.Text style={{ 
+            display: 'block',
+            fontSize: '14px',
+            textAlign: 'center',
+            color: 'var(--semi-color-text-1)'
+          }}>
+            {t('找到 {{count}} 个模型', { count: modelData.length })}
+          </Typography.Text>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const ChannelsTable = () => {
   const { t } = useTranslation();
@@ -1205,23 +1551,84 @@ const ChannelsTable = () => {
     }
   };
 
-  const testChannel = async (record, model) => {
-    const res = await API.get(`/api/channel/test/${record.id}?model=${model}`);
-    const { success, message, time } = res.data;
-    if (success) {
-      // Also update the channels state to persist the change
-      updateChannelProperty(record.id, (channel) => {
-        channel.response_time = time * 1000;
-        channel.test_time = Date.now() / 1000;
-      });
+  // 辅助函数：更新测试结果到状态
+  const updateTestResult = (model, result) => {
+    setBatchTestResults(prevResults => {
+      const existingIndex = prevResults.findIndex(r => r.model === model);
+      if (existingIndex >= 0) {
+        const newResults = [...prevResults];
+        newResults[existingIndex] = result;
+        return newResults;
+      } else {
+        return [...prevResults, result];
+      }
+    });
+  };
 
-      showInfo(
-        t('通道 ${name} 测试成功，耗时 ${time.toFixed(2)} 秒。')
-          .replace('${name}', record.name)
-          .replace('${time.toFixed(2)}', time.toFixed(2)),
+  // 辅助函数：创建测试结果对象
+  const createTestResult = (model, success, message, time = null, isRetryable = true) => ({
+    model,
+    success,
+    message,
+    time,
+    retryCount: 0,
+    isRetryable: success ? false : isRetryable
+  });
+
+  // 辅助函数：处理测试成功
+  const handleTestSuccess = (record, model, time) => {
+    // 更新渠道属性
+    updateChannelProperty(record.id, (channel) => {
+      channel.response_time = time * 1000;
+      channel.test_time = Date.now() / 1000;
+    });
+
+    // 更新模态框中的测试结果
+    if (shouldUpdateModalResults(record.id)) {
+      const result = createTestResult(
+        model, 
+        true, 
+        t('测试成功，耗时 {{time}} 秒', { time: time.toFixed(2) }), 
+        time
       );
-    } else {
-      showError(message);
+      updateTestResult(model, result);
+    }
+
+    showInfo(
+      t('通道 {{name}} 测试成功，耗时 {{time}} 秒。', {
+        name: record.name,
+        time: time.toFixed(2)
+      })
+    );
+  };
+
+  // 辅助函数：处理测试失败
+  const handleTestFailure = (record, model, message) => {
+    if (shouldUpdateModalResults(record.id)) {
+      const result = createTestResult(model, false, message);
+      updateTestResult(model, result);
+    }
+    showError(message);
+  };
+
+  // 辅助函数：判断是否需要更新模态框结果
+  const shouldUpdateModalResults = (recordId) => {
+    return showModelTestModal && currentTestChannel && currentTestChannel.id === recordId;
+  };
+
+  // 主要的测试渠道函数
+  const testChannel = async (record, model) => {
+    try {
+      const res = await API.get(`/api/channel/test/${record.id}?model=${model}`);
+      const { success, message, time } = res.data;
+      
+      if (success) {
+        handleTestSuccess(record, model, time);
+      } else {
+        handleTestFailure(record, model, message);
+      }
+    } catch (error) {
+      handleTestFailure(record, model, error.message || t('测试请求失败'));
     }
   };
 
@@ -1386,8 +1793,10 @@ const ChannelsTable = () => {
       setBatchTestResults(updatedResults);
       
       const newSuccessCount = retryResults.filter(r => r.success).length;
-      showInfo(t(`重试完成：成功 ${newSuccessCount} 个，失败 ${failedModelNames.length - newSuccessCount} 个`));
-      
+      showInfo(t('重试完成：成功 {{successCount}} 个，失败 {{failCount}} 个', { 
+        successCount: newSuccessCount, 
+        failCount: failedModelNames.length - newSuccessCount 
+      }));
     } catch (error) {
       if (isCancellationError(error)) {
         showInfo(t('重试已取消'));
@@ -1399,6 +1808,92 @@ const ChannelsTable = () => {
       setCurrentTestingModel('');
       setBatchTestAbortController(null);
     }
+  };
+
+  // 处理模型测试弹窗关闭
+  const handleModelTestModalClose = () => {
+    // 停止正在进行的批量测试
+    if (batchTestAbortController) {
+      batchTestAbortController.abort();
+      setBatchTestAbortController(null);
+    }
+    setShowModelTestModal(false);
+    setModelSearchKeyword('');
+    // 重置批量测试相关状态
+    setIsBatchTesting(false);
+    setBatchTestResults([]);
+    setCurrentTestingModel('');
+    setTestProgress({ completed: 0, total: 0 });
+  };
+
+  // 处理删除失败模型
+  const handleDeleteFailedModels = (failedModels) => {
+    const currentModels = currentTestChannel.models.split(',').map(m => m.trim());
+    const failedModelNames = failedModels.map(r => r.model);
+    // 优化性能：将数组转换为 Set，查找时间复杂度从 O(M) 降低到 O(1)
+    const failedModelNamesSet = new Set(failedModelNames);
+    const remainingModels = currentModels.filter(m => !failedModelNamesSet.has(m));
+    
+    if (remainingModels.length === 0) {
+      Modal.warning({
+        title: t('无法删除所有模型'),
+        content: t('删除这些失败的模型会导致渠道没有任何可用模型，这将使渠道无法正常工作。请至少保留一个模型或先添加新的可用模型。'),
+      });
+      return;
+    }
+    
+    Modal.confirm({
+      title: t('批量删除失败模型'),
+      content: (
+        <div>
+          <p>{t('确定要删除所有 {{count}} 个测试失败的模型吗？此操作不可撤销。', { count: failedModels.length })}</p>
+          <p style={{ color: '#52c41a', marginTop: '8px' }}>
+            {t('删除后将保留 {{remaining}} 个正常模型：', { remaining: remainingModels.length })}
+          </p>
+          <div style={{ 
+            maxHeight: '100px', 
+            overflowY: 'auto', 
+            background: 'var(--semi-color-fill-0)', 
+            padding: '8px', 
+            borderRadius: '4px',
+            marginTop: '4px'
+          }}>
+            {remainingModels.map((model, index) => (
+              <div key={index} style={{ fontSize: '12px' }}>{model}</div>
+            ))}
+          </div>
+        </div>
+      ),
+      onOk: async () => {
+        try {
+          const newModels = remainingModels;
+
+          const updateData = {
+            id: currentTestChannel.id,
+            models: newModels.join(','),
+          };
+
+          const res = await API.put('/api/channel/', updateData);
+          if (res.data.success) {
+            updateChannelProperty(currentTestChannel.id, (channel) => {
+              channel.models = newModels.join(',');
+            });
+            setCurrentTestChannel({
+              ...currentTestChannel,
+              models: newModels.join(',')
+            });
+
+            setBatchTestResults(prev => prev.filter(r => !failedModelNamesSet.has(r.model)));
+            await refresh();
+            showSuccess(t('已删除 {{count}} 个失败的模型', { count: failedModels.length }));
+          } else {
+            showError(res.data.message || t('批量删除失败'));
+          }
+        } catch (error) {
+          showError(error.message || t('批量删除失败'));
+        }
+      }
+    });
   };
 
   // 批量测试所有模型（并发版本）
@@ -1444,7 +1939,10 @@ const ChannelsTable = () => {
       // 保存测试结果到缓存
       saveTestResultsCache(currentTestChannel.id, results);
 
-      showInfo(t(`批量测试完成：成功 ${successCount} 个，失败 ${failCount} 个`));
+      showInfo(t('批量测试完成：成功 {{successCount}} 个，失败 {{failCount}} 个', { 
+        successCount, 
+        failCount 
+      }));
     } catch (error) {
       if (isCancellationError(error) || error.message.includes('取消')) {
         showInfo(t('测试已取消'));
@@ -1468,7 +1966,7 @@ const ChannelsTable = () => {
         channel.balance_updated_time = Date.now() / 1000;
       });
       showInfo(
-        t('通道 ${name} 余额更新成功！').replace('${name}', record.name),
+        t('通道 {{name}} 余额更新成功！', { name: record.name }),
       );
     } else {
       showError(message);
@@ -1490,7 +1988,7 @@ const ChannelsTable = () => {
     const { success, message, data } = res.data;
     if (success) {
       showSuccess(
-        t('已删除所有禁用渠道，共计 ${data} 个').replace('${data}', data),
+        t('已删除所有禁用渠道，共计 {{count}} 个', { count: data }),
       );
       await refresh();
     } else {
@@ -1523,7 +2021,7 @@ const ChannelsTable = () => {
     const res = await API.post(`/api/channel/batch`, { ids: ids });
     const { success, message, data } = res.data;
     if (success) {
-      showSuccess(t('已删除 ${data} 个通道！').replace('${data}', data));
+      showSuccess(t('已删除 {{count}} 个通道！', { count: data }));
       await refresh();
     } else {
       showError(message);
@@ -1535,7 +2033,7 @@ const ChannelsTable = () => {
     const res = await API.post(`/api/channel/fix`);
     const { success, message, data } = res.data;
     if (success) {
-      showSuccess(t('已修复 ${data} 个通道！').replace('${data}', data));
+      showSuccess(t('已修复 {{count}} 个通道！', { count: data }));
       await refresh();
     } else {
       showError(message);
@@ -1589,7 +2087,7 @@ const ChannelsTable = () => {
     switch (type) {
       case 'priority':
         if (data.priority === undefined || data.priority === '') {
-          showInfo('优先级必须是整数！');
+            showError(t('优先级必须是整数！'));
           return;
         }
         data.priority = parseInt(data.priority);
@@ -1600,7 +2098,7 @@ const ChannelsTable = () => {
           data.weight < 0 ||
           data.weight === ''
         ) {
-          showInfo('权重必须是非负整数！');
+          showInfo(t('权重必须是非负整数！'));
           return;
         }
         data.weight = parseInt(data.weight);
@@ -1610,7 +2108,7 @@ const ChannelsTable = () => {
     try {
       const res = await API.put('/api/channel/tag', data);
       if (res?.data?.success) {
-        showSuccess('更新成功！');
+        showSuccess(t('更新成功！'));
         await refresh();
       }
     } catch (error) {
@@ -1650,7 +2148,7 @@ const ChannelsTable = () => {
     });
     if (res.data.success) {
       showSuccess(
-        t('已为 ${count} 个渠道设置标签！').replace('${count}', res.data.data),
+        t('已为 {{count}} 个渠道设置标签！', { count: res.data.data }),
       );
       await refresh();
       setShowBatchSetTag(false);
@@ -2097,504 +2595,44 @@ const ChannelsTable = () => {
         />
         <div style={{ marginTop: 16 }}>
           <Typography.Text type='secondary'>
-            {t('已选择 ${count} 个渠道').replace(
-              '${count}',
-              selectedChannels.length,
-            )}
+            {t('已选择 {{count}} 个渠道', { count: selectedChannels.length })}
           </Typography.Text>
         </div>
       </Modal>
 
       {/* 模型测试弹窗 */}
       <Modal
-        title={t('选择模型进行测试')}
+        title={t('模型测试')}
         visible={showModelTestModal && currentTestChannel !== null}
-        onCancel={() => {
-          // 停止正在进行的批量测试
-          if (batchTestAbortController) {
-            batchTestAbortController.abort();
-            setBatchTestAbortController(null);
-          }
-          setShowModelTestModal(false);
-          setModelSearchKeyword('');
-          // 重置批量测试相关状态
-          setIsBatchTesting(false);
-          setBatchTestResults([]);
-          setCurrentTestingModel('');
-          setTestProgress({ completed: 0, total: 0 });
-        }}
+        onCancel={handleModelTestModalClose}
         footer={null}
         maskClosable={true}
         centered={true}
+        width={800}
       >
-        <div style={{ maxHeight: '500px', overflowY: 'auto', padding: '10px' }}>
+        <div style={{ 
+          maxHeight: '70vh', 
+          overflowY: 'auto'
+        }}>
           {currentTestChannel && (
-            <div>
-              <Typography.Title heading={6} style={{ marginBottom: '16px' }}>
-                {t('渠道')}: {currentTestChannel.name}
-              </Typography.Title>
-
-              {/* 操作按钮区域 */}
-              <div style={{ marginBottom: '16px' }}>
-                {/* 第一行：主要操作按钮 */}
-                <div style={{ 
-                  display: 'flex', 
-                  flexWrap: 'wrap',
-                  gap: '8px', 
-                  alignItems: 'center', 
-                  marginBottom: '8px' 
-                }}>
-                  <Button
-                    type='primary'
-                    loading={isBatchTesting}
-                    onClick={testAllModels}
-                    disabled={!currentTestChannel?.models}
-                  >
-                    {isBatchTesting ? t('测试中...') : t('测试全部')}
-                  </Button>
-
-                  {/* 并发数设置 */}
-                  {!isBatchTesting && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Typography.Text type='secondary'>{t('并发数')}:</Typography.Text>
-                      <InputNumber
-                        value={concurrentLimit}
-                        onChange={setConcurrentLimit}
-                        min={1}
-                        max={10}
-                        style={{ width: '80px' }}
-                        size='small'
-                      />
-                    </div>
-                  )}
-                </div>
-
-                {/* 第二行：失败模型处理按钮 */}
-                {batchTestResults.length > 0 && batchTestResults.filter(r => !r.success).length > 0 && (
-                  <div style={{ 
-                    display: 'flex', 
-                    flexWrap: 'wrap',
-                    gap: '8px', 
-                    alignItems: 'center'
-                  }}>
-                    {/* 重试失败模型按钮 */}
-                    {batchTestResults.filter(r => !r.success && r.isRetryable).length > 0 && (
-                      <Button
-                        type='secondary'
-                        loading={isBatchTesting}
-                        onClick={retryFailedModels}
-                        disabled={isBatchTesting}
-                        style={{ 
-                          backgroundColor: '#ffa940', 
-                          borderColor: '#ffa940', 
-                          color: '#fff',
-                          minWidth: 'fit-content'
-                        }}
-                      >
-                        {isBatchTesting ? t('重试中...') : t(`重试失败模型 (${batchTestResults.filter(r => !r.success && r.isRetryable).length})`)}
-                      </Button>
-                    )}
-
-                    <Button
-                      type='danger'
-                      style={{ minWidth: 'fit-content' }}
-                      onClick={() => {
-                        const failedModels = batchTestResults.filter(r => !r.success);
-                        const currentModels = currentTestChannel.models.split(',').map(m => m.trim());
-                        const failedModelNames = failedModels.map(r => r.model);
-                        const remainingModels = currentModels.filter(m => !failedModelNames.includes(m));
-                        
-                        // 检查是否会删除所有模型
-                        if (remainingModels.length === 0) {
-                          Modal.warning({
-                            title: t('无法删除所有模型'),
-                            content: t('删除这些失败的模型会导致渠道没有任何可用模型，这将使渠道无法正常工作。请至少保留一个模型或先添加新的可用模型。'),
-                          });
-                          return;
-                        }
-                        
-                        Modal.confirm({
-                          title: t('批量删除失败模型'),
-                          content: (
-                            <div>
-                              <p>{t('确定要删除所有 ${count} 个测试失败的模型吗？此操作不可撤销。').replace('${count}', failedModels.length)}</p>
-                              <p style={{ color: '#52c41a', marginTop: '8px' }}>
-                                {t('删除后将保留 ${remaining} 个正常模型：').replace('${remaining}', remainingModels.length)}
-                              </p>
-                              <div style={{ 
-                                maxHeight: '100px', 
-                                overflowY: 'auto', 
-                                background: '#f5f5f5', 
-                                padding: '8px', 
-                                borderRadius: '4px',
-                                marginTop: '4px'
-                              }}>
-                                {remainingModels.map((model, index) => (
-                                  <div key={index} style={{ fontSize: '12px' }}>{model}</div>
-                                ))}
-                              </div>
-                            </div>
-                          ),
-                          onOk: async () => {
-                            try {
-                              const newModels = remainingModels;
-
-                              // 构建正确的更新数据格式，参考EditChannel.js的实现
-                              const updateData = {
-                                id: currentTestChannel.id,
-                                type: currentTestChannel.type,
-                                name: currentTestChannel.name,
-                                key: currentTestChannel.key,
-                                base_url: currentTestChannel.base_url || '',
-                                other: currentTestChannel.other || '',
-                                models: newModels.join(','), // 更新后的模型列表，转换为逗号分隔的字符串
-                                group: currentTestChannel.group || 'default',
-                                model_mapping: currentTestChannel.model_mapping || '',
-                                status: currentTestChannel.status,
-                                priority: currentTestChannel.priority ?? 0,
-                                weight: currentTestChannel.weight ?? 0,
-                                auto_ban: currentTestChannel.auto_ban ?? 1, // 确保是数字类型
-                                test_model: currentTestChannel.test_model || '',
-                                openai_organization: currentTestChannel.openai_organization || '',
-                                status_code_mapping: currentTestChannel.status_code_mapping || '',
-                                tag: currentTestChannel.tag || '',
-                                setting: currentTestChannel.setting || '',
-                                param_override: currentTestChannel.param_override || '',
-                                model_prefix: currentTestChannel.model_prefix || '',
-                                system_prompt: currentTestChannel.system_prompt || ''
-                              };
-
-                              const res = await API.put('/api/channel/', updateData);
-                              if (res.data.success) {
-                                // 更新本地状态
-                                updateChannelProperty(currentTestChannel.id, (channel) => {
-                                  channel.models = newModels.join(',');
-                                });
-                                setCurrentTestChannel({
-                                  ...currentTestChannel,
-                                  models: newModels.join(',')
-                                });
-
-                                // 从测试结果中移除被删除的失败模型
-                                setBatchTestResults(prev => prev.filter(r => !failedModelNames.includes(r.model)));
-
-                                // 刷新数据以确保与服务器同步
-                                await refresh();
-
-                                showSuccess(t('已删除 ${count} 个失败的模型').replace('${count}', failedModels.length));
-                              } else {
-                                showError(res.data.message || t('批量删除失败'));
-                              }
-                            } catch (error) {
-                              showError(error.message || t('批量删除失败'));
-                            }
-                          }
-                        });
-                      }}
-                    >
-                      {t('删除失败模型')} ({batchTestResults.filter(r => !r.success).length})
-                    </Button>
-                  </div>
-                )}
-
-                {/* 测试进度显示 */}
-                {isBatchTesting && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Typography.Text type='secondary' size='small'>
-                        {t('进度')}: {testProgress.completed}/{testProgress.total}
-                      </Typography.Text>
-                      <div style={{
-                        flex: 1,
-                        height: '4px',
-                        backgroundColor: '#f0f0f0',
-                        borderRadius: '2px',
-                        overflow: 'hidden'
-                      }}>
-                        <div style={{
-                          width: `${testProgress.total > 0 ? (testProgress.completed / testProgress.total) * 100 : 0}%`,
-                          height: '100%',
-                          backgroundColor: '#1890ff',
-                          transition: 'width 0.3s ease'
-                        }} />
-                      </div>
-                    </div>
-                    {currentTestingModel && (
-                      <Typography.Text type='secondary' size='small'>
-                        {t('正在测试')}: {currentTestingModel}
-                      </Typography.Text>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* 搜索框 */}
-              <Input
-                placeholder={t('搜索模型...')}
-                value={modelSearchKeyword}
-                onChange={(v) => setModelSearchKeyword(v)}
-                style={{ marginBottom: '16px' }}
-                prefix={<IconFilter />}
-                showClear
-              />
-
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-                  gap: '12px',
-                  marginBottom: '16px',
-                }}
-              >
-                {currentTestChannel.models
-                  .split(',')
-                  .filter((model) =>
-                    model
-                      .toLowerCase()
-                      .includes(modelSearchKeyword.toLowerCase()),
-                  )
-                  .map((model, index) => {
-                    // 获取该模型的测试结果
-                    const testResult = batchTestResults.find(r => r.model === model.trim());
-                    const isSuccess = testResult?.success;
-                    const isFailed = testResult && !testResult.success;
-                    const isTesting = isBatchTesting && currentTestingModel.includes(model.trim());
-                    const hasRetries = testResult?.retryCount > 0;
-                    const isRetryable = testResult?.isRetryable;
-
-                    // 构造状态描述
-                    let statusDesc = '';
-                    if (hasRetries && isSuccess) {
-                      statusDesc = `（重试${testResult.retryCount}次后成功）`;
-                    } else if (hasRetries && isFailed) {
-                      statusDesc = `（已重试${testResult.retryCount}次）`;
-                    }
-
-                    return (
-                      <div key={index} style={{
-                        border: testResult ? (isSuccess ? '2px solid #00b42a' : '2px solid #f53f3f') : '1px solid #e0e0e0',
-                        borderRadius: '8px',
-                        backgroundColor: testResult ? (isSuccess ? '#f6ffed' : '#fef2f2') : 'transparent',
-                        padding: '8px',
-                        position: 'relative'
-                      }}>
-                        <Space spacing={4} style={{ alignItems: 'stretch', width: '100%' }}>
-                          <Button
-                            theme='light'
-                            type='tertiary'
-                            loading={isTesting}
-                            style={{
-                              height: '100%',
-                              padding: '10px 12px',
-                              textAlign: 'center',
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              width: '100%',
-                              borderRadius: '6px',
-                              backgroundColor: testResult ? (isSuccess ? '#f6ffed' : '#fef2f2') : 'transparent',
-                              color: testResult ? (isSuccess ? '#00b42a' : '#f53f3f') : 'inherit',
-                              border: 'none'
-                            }}
-                            onClick={() => {
-                              testChannel(currentTestChannel, model);
-                            }}
-                          >
-                            <div style={{ lineHeight: '1.2' }}>
-                              <div>{model}</div>
-                              {statusDesc && (
-                                <div style={{ 
-                                  fontSize: '10px', 
-                                  opacity: 0.8,
-                                  marginTop: '2px' 
-                                }}>
-                                  {statusDesc}
-                                </div>
-                              )}
-                            </div>
-                          </Button>
-                          <Button
-                            theme='light'
-                            type='tertiary'
-                            style={{
-                              height: '100%',
-                              padding: '10px 12px',
-                              borderRadius: '6px',
-                            }}
-                            icon={<IconCopy />}
-                            onClick={() => {
-                              navigator.clipboard
-                                .writeText(model)
-                                .then(() => showSuccess(t('模型名称已复制')))
-                                .catch(() => showError(t('复制失败')));
-                            }}
-                          />
-                          {/* 单个模型重试按钮（仅在测试失败且可重试时显示） */}
-                          {isFailed && isRetryable && (
-                            <Button
-                              type='secondary'
-                              size='small'
-                              loading={isTesting}
-                              style={{
-                                height: '100%',
-                                padding: '10px 8px',
-                                borderRadius: '6px',
-                                backgroundColor: '#ffa940',
-                                borderColor: '#ffa940',
-                                color: '#fff'
-                              }}
-                              icon={<IconRefresh />}
-                              onClick={async () => {
-                                try {
-                                  setCurrentTestingModel(`重试 ${model.trim()}...`);
-                                  const controller = new AbortController();
-                                  const result = await testSingleModel(model.trim(), controller, 1);
-                                  
-                                  // 更新单个模型的测试结果
-                                  setBatchTestResults(prev => 
-                                    prev.map(r => r.model === model.trim() ? result : r)
-                                  );
-                                  
-                                  if (result.success) {
-                                    showSuccess(t(`模型 ${model.trim()} 重试成功`));
-                                  } else {
-                                    showError(t(`模型 ${model.trim()} 重试失败：${result.message}`));
-                                  }
-                                } catch (error) {
-                                  showError(t(`重试失败：${error.message}`));
-                                } finally {
-                                  setCurrentTestingModel('');
-                                }
-                              }}
-                            />
-                          )}
-                          {/* 单个模型删除按钮（仅在测试失败时显示） */}
-                          {isFailed && (
-                            <Button
-                              type='danger'
-                              size='small'
-                              style={{
-                                height: '100%',
-                                padding: '10px 8px',
-                                borderRadius: '6px',
-                              }}
-                              icon={<IconClose />}
-                              onClick={() => {
-                                // 检查删除后是否还有模型剩余
-                                const currentModels = currentTestChannel.models.split(',').map(m => m.trim());
-                                const newModels = currentModels.filter(m => m !== model.trim());
-                                
-                                if (newModels.length === 0) {
-                                  Modal.warning({
-                                    title: t('无法删除模型'),
-                                    content: t('删除模型 "${model}" 会导致渠道没有任何可用模型，这将使渠道无法正常工作。请先添加其他可用模型。').replace('${model}', model),
-                                  });
-                                  return;
-                                }
-                                
-                                Modal.confirm({
-                                  title: t('确认删除模型'),
-                                  content: (
-                                    <div>
-                                      <p>{t('确定要从渠道中删除模型 "${model}" 吗？此操作不可撤销。').replace('${model}', model)}</p>
-                                      <p style={{ color: '#52c41a', marginTop: '8px' }}>
-                                        {t('删除后将剩余 ${remaining} 个模型').replace('${remaining}', newModels.length)}
-                                      </p>
-                                    </div>
-                                  ),
-                                  onOk: async () => {
-                                    try {
-                                      // 使用之前计算的newModels，避免重复计算
-
-                                      // 构建正确的更新数据格式
-                                      const updateData = {
-                                        id: currentTestChannel.id,
-                                        type: currentTestChannel.type,
-                                        name: currentTestChannel.name,
-                                        key: currentTestChannel.key,
-                                        base_url: currentTestChannel.base_url || '',
-                                        other: currentTestChannel.other || '',
-                                        models: newModels.join(','), // 更新后的模型列表，转换为逗号分隔的字符串
-                                        group: currentTestChannel.group || 'default',
-                                        model_mapping: currentTestChannel.model_mapping || '',
-                                        status: currentTestChannel.status,
-                                        priority: currentTestChannel.priority ?? 0,
-                                        weight: currentTestChannel.weight ?? 0,
-                                        auto_ban: currentTestChannel.auto_ban ?? 1, // 确保是数字类型
-                                        test_model: currentTestChannel.test_model || '',
-                                        openai_organization: currentTestChannel.openai_organization || '',
-                                        status_code_mapping: currentTestChannel.status_code_mapping || '',
-                                        tag: currentTestChannel.tag || '',
-                                        setting: currentTestChannel.setting || '',
-                                        param_override: currentTestChannel.param_override || '',
-                                        model_prefix: currentTestChannel.model_prefix || '',
-                                        system_prompt: currentTestChannel.system_prompt || ''
-                                      };
-
-                                      const res = await API.put('/api/channel/', updateData);
-                                      if (res.data.success) {
-                                        // 更新本地状态
-                                        updateChannelProperty(currentTestChannel.id, (channel) => {
-                                          channel.models = newModels.join(',');
-                                        });
-                                        setCurrentTestChannel({
-                                          ...currentTestChannel,
-                                          models: newModels.join(',')
-                                        });
-
-                                        // 从测试结果中移除该模型
-                                        setBatchTestResults(prev => prev.filter(r => r.model !== model.trim()));
-
-                                        // 刷新数据以确保与服务器同步
-                                        await refresh();
-
-                                        showSuccess(t('模型 "${model}" 已删除').replace('${model}', model));
-                                      } else {
-                                        showError(res.data.message || t('删除失败'));
-                                      }
-                                    } catch (error) {
-                                      showError(error.message || t('删除失败'));
-                                    }
-                                  }
-                                });
-                              }}
-                            />
-                          )}
-                        </Space>
-
-                        {/* 测试结果信息 */}
-                        {testResult && (
-                          <div style={{
-                            marginTop: '4px',
-                            fontSize: '11px',
-                            color: isSuccess ? '#00b42a' : '#f53f3f',
-                            textAlign: 'center'
-                          }}>
-                            {testResult.message}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-              </div>
-
-              {/* 显示搜索结果数量 */}
-              {modelSearchKeyword && (
-                <Typography.Text type='secondary' style={{ display: 'block' }}>
-                  {t('找到')}{' '}
-                  {
-                    currentTestChannel.models
-                      .split(',')
-                      .filter((model) =>
-                        model
-                          .toLowerCase()
-                          .includes(modelSearchKeyword.toLowerCase()),
-                      ).length
-                  }{' '}
-                  {t('个模型')}
-                </Typography.Text>
-              )}
-            </div>
+            <ModelTestContent
+              channel={currentTestChannel}
+              isBatchTesting={isBatchTesting}
+              concurrentLimit={concurrentLimit}
+              setConcurrentLimit={setConcurrentLimit}
+              testAllModels={testAllModels}
+              modelSearchKeyword={modelSearchKeyword}
+              setModelSearchKeyword={setModelSearchKeyword}
+              batchTestResults={batchTestResults}
+              retryFailedModels={retryFailedModels}
+              handleDeleteFailedModels={handleDeleteFailedModels}
+              testProgress={testProgress}
+              currentTestingModel={currentTestingModel}
+              testChannel={testChannel}
+              showSuccess={showSuccess}
+              showError={showError}
+              t={t}
+            />
           )}
         </div>
       </Modal>
