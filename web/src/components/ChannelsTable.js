@@ -79,9 +79,17 @@ function renderTimestamp(timestamp) {
 }
 
 // 辅助函数：获取失败的模型统计
-const getFailedModelsStats = (batchTestResults) => {
+const getFailedModelsStats = (batchTestResults, currentModels = null) => {
+  // 如果提供了当前模型列表，只统计当前模型中的失败情况
+  const currentModelSet = currentModels ? new Set(currentModels.split(',').map(m => m.trim()).filter(m => m)) : null;
+  
+  // 过滤测试结果：只保留当前模型中的结果
+  const relevantResults = currentModelSet 
+    ? batchTestResults.filter(r => currentModelSet.has(r.model))
+    : batchTestResults;
+  
   // 优化性能：只遍历一次，先获取所有失败的模型
-  const failedModels = batchTestResults.filter(r => !r.success);
+  const failedModels = relevantResults.filter(r => !r.success);
   // 然后从失败模型中过滤出可重试的，避免第二次完整遍历
   const retryableFailedModels = failedModels.filter(r => r.isRetryable);
   
@@ -146,7 +154,7 @@ const ModelTestContent = ({
   showError,
   t 
 }) => {
-  const failedStats = getFailedModelsStats(batchTestResults);
+  const failedStats = getFailedModelsStats(batchTestResults, channel.models);
   
   // 追踪单个模型测试状态
   const [testingModels, setTestingModels] = React.useState(() => new Set());
@@ -1785,8 +1793,10 @@ const ChannelsTable = () => {
       setBatchTestResults(updatedResults);
       
       const newSuccessCount = retryResults.filter(r => r.success).length;
-      showInfo(t(`重试完成：成功 ${newSuccessCount} 个，失败 ${failedModelNames.length - newSuccessCount} 个`));
-      
+      showInfo(t('重试完成：成功 {{successCount}} 个，失败 {{failCount}} 个', { 
+        successCount: newSuccessCount, 
+        failCount: failedModelNames.length - newSuccessCount 
+      }));
     } catch (error) {
       if (isCancellationError(error)) {
         showInfo(t('重试已取消'));
@@ -1929,7 +1939,10 @@ const ChannelsTable = () => {
       // 保存测试结果到缓存
       saveTestResultsCache(currentTestChannel.id, results);
 
-      showInfo(t(`批量测试完成：成功 ${successCount} 个，失败 ${failCount} 个`));
+      showInfo(t('批量测试完成：成功 {{successCount}} 个，失败 {{failCount}} 个', { 
+        successCount, 
+        failCount 
+      }));
     } catch (error) {
       if (isCancellationError(error) || error.message.includes('取消')) {
         showInfo(t('测试已取消'));
@@ -1953,7 +1966,7 @@ const ChannelsTable = () => {
         channel.balance_updated_time = Date.now() / 1000;
       });
       showInfo(
-        t('通道 ${name} 余额更新成功！').replace('${name}', record.name),
+        t('通道 {{name}} 余额更新成功！', { name: record.name }),
       );
     } else {
       showError(message);
@@ -1975,7 +1988,7 @@ const ChannelsTable = () => {
     const { success, message, data } = res.data;
     if (success) {
       showSuccess(
-        t('已删除所有禁用渠道，共计 ${data} 个').replace('${data}', data),
+        t('已删除所有禁用渠道，共计 {{count}} 个', { count: data }),
       );
       await refresh();
     } else {
@@ -2008,7 +2021,7 @@ const ChannelsTable = () => {
     const res = await API.post(`/api/channel/batch`, { ids: ids });
     const { success, message, data } = res.data;
     if (success) {
-      showSuccess(t('已删除 ${data} 个通道！').replace('${data}', data));
+      showSuccess(t('已删除 {{count}} 个通道！', { count: data }));
       await refresh();
     } else {
       showError(message);
@@ -2020,7 +2033,7 @@ const ChannelsTable = () => {
     const res = await API.post(`/api/channel/fix`);
     const { success, message, data } = res.data;
     if (success) {
-      showSuccess(t('已修复 ${data} 个通道！').replace('${data}', data));
+      showSuccess(t('已修复 {{count}} 个通道！', { count: data }));
       await refresh();
     } else {
       showError(message);
@@ -2074,7 +2087,7 @@ const ChannelsTable = () => {
     switch (type) {
       case 'priority':
         if (data.priority === undefined || data.priority === '') {
-          showInfo('优先级必须是整数！');
+            showError(t('优先级必须是整数！'));
           return;
         }
         data.priority = parseInt(data.priority);
@@ -2085,7 +2098,7 @@ const ChannelsTable = () => {
           data.weight < 0 ||
           data.weight === ''
         ) {
-          showInfo('权重必须是非负整数！');
+          showInfo(t('权重必须是非负整数！'));
           return;
         }
         data.weight = parseInt(data.weight);
@@ -2095,7 +2108,7 @@ const ChannelsTable = () => {
     try {
       const res = await API.put('/api/channel/tag', data);
       if (res?.data?.success) {
-        showSuccess('更新成功！');
+        showSuccess(t('更新成功！'));
         await refresh();
       }
     } catch (error) {
@@ -2135,7 +2148,7 @@ const ChannelsTable = () => {
     });
     if (res.data.success) {
       showSuccess(
-        t('已为 ${count} 个渠道设置标签！').replace('${count}', res.data.data),
+        t('已为 {{count}} 个渠道设置标签！', { count: res.data.data }),
       );
       await refresh();
       setShowBatchSetTag(false);
@@ -2582,10 +2595,7 @@ const ChannelsTable = () => {
         />
         <div style={{ marginTop: 16 }}>
           <Typography.Text type='secondary'>
-            {t('已选择 ${count} 个渠道').replace(
-              '${count}',
-              selectedChannels.length,
-            )}
+            {t('已选择 {{count}} 个渠道', { count: selectedChannels.length })}
           </Typography.Text>
         </div>
       </Modal>
