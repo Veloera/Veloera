@@ -56,16 +56,33 @@ func GetAllEnableAbilities() []Ability {
 	return abilities
 }
 
+// getModelCondition returns the appropriate model condition string for case-sensitive comparison
+func getModelCondition() string {
+	if common.UsingMySQL {
+		// MySQL: Use BINARY for case-sensitive comparison
+		return "BINARY model = ?"
+	} else if common.UsingPostgreSQL {
+		// PostgreSQL: Default is case-sensitive, but explicitly use COLLATE "C" for consistency
+		return "model COLLATE \"C\" = ?"
+	} else if common.UsingSQLite {
+		// SQLite: Default BINARY collation is case-sensitive, but make it explicit
+		return "model COLLATE BINARY = ?"
+	}
+	return "model = ?"
+}
+
 func getPriority(group string, model string, retry int) (int, error) {
 	trueVal := "1"
 	if common.UsingPostgreSQL {
 		trueVal = "true"
 	}
 
+	modelCondition := getModelCondition()
+
 	var priorities []int
 	err := DB.Model(&Ability{}).
 		Select("DISTINCT(priority)").
-		Where(groupCol+" = ? and model = ? and enabled = "+trueVal, group, model).
+		Where(groupCol+" = ? and "+modelCondition+" and enabled = "+trueVal, group, model).
 		Order("priority DESC").              // 按优先级降序排序
 		Pluck("priority", &priorities).Error // Pluck用于将查询的结果直接扫描到一个切片中
 
@@ -95,14 +112,17 @@ func getChannelQuery(group string, model string, retry int) *gorm.DB {
 	if common.UsingPostgreSQL {
 		trueVal = "true"
 	}
-	maxPrioritySubQuery := DB.Model(&Ability{}).Select("MAX(priority)").Where(groupCol+" = ? and model = ? and enabled = "+trueVal, group, model)
-	channelQuery := DB.Where(groupCol+" = ? and model = ? and enabled = "+trueVal+" and priority = (?)", group, model, maxPrioritySubQuery)
+
+	modelCondition := getModelCondition()
+
+	maxPrioritySubQuery := DB.Model(&Ability{}).Select("MAX(priority)").Where(groupCol+" = ? and "+modelCondition+" and enabled = "+trueVal, group, model)
+	channelQuery := DB.Where(groupCol+" = ? and "+modelCondition+" and enabled = "+trueVal+" and priority = (?)", group, model, maxPrioritySubQuery)
 	if retry != 0 {
 		priority, err := getPriority(group, model, retry)
 		if err != nil {
 			common.SysError(fmt.Sprintf("Get priority failed: %s", err.Error()))
 		} else {
-			channelQuery = DB.Where(groupCol+" = ? and model = ? and enabled = "+trueVal+" and priority = ?", group, model, priority)
+			channelQuery = DB.Where(groupCol+" = ? and "+modelCondition+" and enabled = "+trueVal+" and priority = ?", group, model, priority)
 		}
 	}
 

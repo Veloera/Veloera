@@ -107,7 +107,7 @@ func ClaudeToOpenAIRequest(claudeRequest dto.ClaudeRequest, info *relaycommon.Re
 			}
 			contents := content
 			var toolCalls []dto.ToolCallRequest
-			mediaMessages := make([]dto.MediaContent, 0, len(contents))
+			mediaMessages := make([]dto.MediaContent, 0)
 
 			for _, mediaMsg := range contents {
 				switch mediaMsg.Type {
@@ -144,9 +144,14 @@ func ClaudeToOpenAIRequest(claudeRequest dto.ClaudeRequest, info *relaycommon.Re
 						toolCallId = fmt.Sprintf("call_%s", common.GetUUID())
 					}
 
+					toolCallId := mediaMsg.ToolUseId
+					if toolCallId == "" {
+						// Generate a tool call ID if missing
+						toolCallId = fmt.Sprintf("call_%s", common.GetUUID())
+					}
+
 					oaiToolMessage := dto.Message{
 						Role:       "tool",
-						Name:       &mediaMsg.Name,
 						ToolCallId: toolCallId,
 					}
 					//oaiToolMessage.SetStringContent(*mediaMsg.GetMediaContent().Text)
@@ -165,7 +170,7 @@ func ClaudeToOpenAIRequest(claudeRequest dto.ClaudeRequest, info *relaycommon.Re
 				openAIMessage.SetToolCalls(toolCalls)
 			}
 
-			if len(mediaMessages) > 0 && len(toolCalls) == 0 {
+			if len(mediaMessages) > 0 {
 				openAIMessage.SetMediaContent(mediaMessages)
 			}
 		}
@@ -175,6 +180,11 @@ func ClaudeToOpenAIRequest(claudeRequest dto.ClaudeRequest, info *relaycommon.Re
 	}
 
 	openAIRequest.Messages = openAIMessages
+
+	// Convert message content arrays to strings if they only contain text content
+	for i := range openAIRequest.Messages {
+		openAIRequest.Messages[i].ConvertArrayContentToString()
+	}
 
 	// Convert message content arrays to strings if they only contain text content
 	for i := range openAIRequest.Messages {
@@ -269,6 +279,30 @@ func StreamResponseOpenAI2Claude(openAIResponse *dto.ChatCompletionsStreamRespon
 		if chosenChoice.FinishReason != nil && *chosenChoice.FinishReason != "" {
 			// should be done
 			info.FinishReason = *chosenChoice.FinishReason
+			info.Done = true
+
+			// Handle tool call completion
+if *chosenChoice.FinishReason == constant.FinishReasonToolCalls || *chosenChoice.FinishReason == constant.FinishReasonFunctionCall {
+				// Send content_block_stop for tool call
+				claudeResponses = append(claudeResponses, generateStopBlock(info.ClaudeConvertInfo.Index))
+
+				// Send message_delta with stop_reason
+				claudeResponses = append(claudeResponses, &dto.ClaudeResponse{
+					Type: "message_delta",
+					Usage: &dto.ClaudeUsage{
+						InputTokens:  info.PromptTokens,
+						OutputTokens: 0, // Will be updated later
+					},
+					Delta: &dto.ClaudeMediaMessage{
+						StopReason: common.GetPointer[string]("tool_use"),
+					},
+				})
+
+				// Send message_stop
+				claudeResponses = append(claudeResponses, &dto.ClaudeResponse{
+					Type: "message_stop",
+				})
+			}
 			return claudeResponses
 		}
 		if info.Done {

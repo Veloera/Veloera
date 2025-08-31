@@ -42,6 +42,8 @@ import {
 } from '@douyinfe/semi-ui';
 import Title from '@douyinfe/semi-ui/lib/es/typography/title';
 import { useTranslation } from 'react-i18next';
+import { useTurnstile } from '../../hooks/useTurnstile';
+import TurnstileWrapper from '../../components/shared/TurnstileWrapper';
 
 const TopUp = () => {
   const { t } = useTranslation();
@@ -62,6 +64,15 @@ const TopUp = () => {
 
   // --- 新增：标记 code 是否来源于 URL 且尚未重置 ---
   const [useUrlCode, setUseUrlCode] = useState(false);
+
+  // Turnstile hook
+  const {
+    turnstileEnabled,
+    turnstileSiteKey,
+    turnstileToken,
+    setTurnstileToken,
+    validateTurnstile,
+  } = useTurnstile();
 
   // 从 URL 读取 code、以及初始化管理员配置 & 用户余额
   useEffect(() => {
@@ -118,9 +129,13 @@ const TopUp = () => {
       showInfo(t('请输入兑换码！'));
       return;
     }
+    if (!validateTurnstile()) {
+      showInfo(t('请完成人机验证！'));
+      return;
+    }
     setIsSubmitting(true);
     try {
-      const res = await API.post('/api/user/topup', {
+      const res = await API.post(`/api/user/topup?turnstile=${turnstileToken}`, {
         key: redemptionCode,
       });
       const { success, message, data } = res.data;
@@ -316,6 +331,12 @@ const TopUp = () => {
                     onChange={(value) => setRedemptionCode(value)}
                   />
                 )}
+
+                <TurnstileWrapper
+                  enabled={turnstileEnabled}
+                  siteKey={turnstileSiteKey}
+                  onVerify={setTurnstileToken}
+                />
 
                 <Space style={{ marginTop: 8 }}>
                   {topUpLink && (

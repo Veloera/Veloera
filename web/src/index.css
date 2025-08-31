@@ -396,7 +396,6 @@ code {
   z-index: 10 !important;
   flex-shrink: 0 !important;
   margin-top: auto !important;
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1) !important; /* 上阴影 */
 }
 
 /* 聊天菜单子项样式 */
