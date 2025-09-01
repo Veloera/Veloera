@@ -145,12 +145,6 @@ func ClaudeToOpenAIRequest(claudeRequest dto.ClaudeRequest, info *relaycommon.Re
 						toolCallId = fmt.Sprintf("call_%s", common.GetUUID())
 					}
 
-					toolCallId := mediaMsg.ToolUseId
-					if toolCallId == "" {
-						// Generate a tool call ID if missing
-						toolCallId = fmt.Sprintf("call_%s", common.GetUUID())
-					}
-
 					oaiToolMessage := dto.Message{
 						Role:       "tool",
 						ToolCallId: toolCallId,
