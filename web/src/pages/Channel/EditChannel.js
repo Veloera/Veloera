@@ -697,12 +697,6 @@ const EditChannel = (props) => {
           hasChanges = true;
         }
 
-        // 移除原始名称，用显示名称代替
-        if (updatedModels.has(originalNameTrimmed) && originalNameTrimmed !== displayNameTrimmed) {
-          updatedModels.delete(originalNameTrimmed);
-          hasChanges = true;
-        }
-
         // 建立映射关系：displayName -> originalName
         newMapping[displayNameTrimmed] = originalNameTrimmed;
       }
