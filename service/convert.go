@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"strings"
 	"veloera/common"
+	"veloera/constant"
 	"veloera/dto"
 	relaycommon "veloera/relay/common"
 )
@@ -302,10 +303,13 @@ if *chosenChoice.FinishReason == constant.FinishReasonToolCalls || *chosenChoice
 				claudeResponses = append(claudeResponses, &dto.ClaudeResponse{
 					Type: "message_stop",
 				})
+				
+				// Mark that we've already emitted stop events to avoid duplicates
+				info.ClaudeConvertInfo.Done = true
 			}
 			return claudeResponses
 		}
-		if info.Done {
+		if info.Done && !info.ClaudeConvertInfo.Done {
 			claudeResponses = append(claudeResponses, generateStopBlock(info.ClaudeConvertInfo.Index))
 			if info.ClaudeConvertInfo.Usage != nil {
 				claudeResponses = append(claudeResponses, &dto.ClaudeResponse{
@@ -322,6 +326,7 @@ if *chosenChoice.FinishReason == constant.FinishReasonToolCalls || *chosenChoice
 			claudeResponses = append(claudeResponses, &dto.ClaudeResponse{
 				Type: "message_stop",
 			})
+			info.ClaudeConvertInfo.Done = true
 		} else {
 			var claudeResponse dto.ClaudeResponse
 			var isEmpty bool
