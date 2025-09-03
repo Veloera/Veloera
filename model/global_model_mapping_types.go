@@ -24,6 +24,9 @@ import (
 	"time"
 )
 
+// 创建一个包级别的随机数生成器实例，避免全局 rand 包的并发问题
+var localRand = rand.New(rand.NewSource(time.Now().UnixNano()))
+
 // ModelMappingItem 模型映射项
 type ModelMappingItem struct {
 	Model      string `json:"model" binding:"required"`   // 实际模型名
@@ -109,8 +112,7 @@ func selectModelByWeight(items []ModelMappingItem) (string, error) {
 	}
 
 	// 生成随机数
-	rand.Seed(time.Now().UnixNano())
-	randomWeight := rand.Intn(totalWeight)
+	randomWeight := localRand.Intn(totalWeight)
 
 	// 根据权重选择模型
 	currentWeight := 0
