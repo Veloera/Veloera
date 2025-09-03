@@ -28,8 +28,8 @@ import (
 // 全局变量
 var (
 	globalModelMapping *GlobalModelMapping
-	roundRobinCounter  *RoundRobinCounter
-	ModelMappingMutex  sync.RWMutex
+	// roundRobinCounter  *RoundRobinCounter // 移除轮询计数器，因为现在使用权重随机选择
+	ModelMappingMutex sync.RWMutex
 )
 
 // init 包初始化函数
@@ -38,7 +38,7 @@ func init() {
 	globalModelMapping = &GlobalModelMapping{
 		Mapping: make(map[string][]ModelMappingItem),
 	}
-	roundRobinCounter = NewRoundRobinCounter()
+	// roundRobinCounter = NewRoundRobinCounter() // 移除轮询计数器初始化
 }
 
 // LoadModelMappingConfig 从数据库加载配置
@@ -162,8 +162,8 @@ func UpdateGlobalModelMapping(mapping *GlobalModelMapping) error {
 
 	globalModelMapping = mapping
 
-	// 重置轮询计数器
-	roundRobinCounter.ClearAllCounters()
+	// 重置轮询计数器 (已移除，无需操作)
+	// roundRobinCounter.ClearAllCounters()
 
 	common.SysLog("Global model mapping configuration updated successfully")
 	return nil
@@ -174,8 +174,8 @@ func InitializeModelMapping() error {
 	ModelMappingMutex.Lock()
 	defer ModelMappingMutex.Unlock()
 
-	// 初始化轮询计数器
-	roundRobinCounter = NewRoundRobinCounter()
+	// 初始化轮询计数器 (已移除，无需操作)
+	// roundRobinCounter = NewRoundRobinCounter()
 
 	// 直接调用内部加载逻辑，避免重复加锁
 	if err := loadModelMappingConfigUnsafe(); err != nil {
@@ -198,8 +198,8 @@ func ReloadModelMapping() error {
 		return err
 	}
 
-	// 重置轮询计数器
-	roundRobinCounter.ClearAllCounters()
+	// 重置轮询计数器 (已移除，无需操作)
+	// roundRobinCounter.ClearAllCounters()
 
 	common.SysLog("Model mapping configuration reload successful")
 	return nil

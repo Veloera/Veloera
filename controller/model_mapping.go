@@ -29,7 +29,7 @@ import (
 // GetGlobalModelMapping 获取当前全局模型映射配置
 func GetGlobalModelMapping(c *gin.Context) {
 	mapping := service.GetGlobalModelMapping()
-	
+
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "",
@@ -40,7 +40,7 @@ func GetGlobalModelMapping(c *gin.Context) {
 // UpdateGlobalModelMapping 更新全局模型映射配置
 func UpdateGlobalModelMapping(c *gin.Context) {
 	var mapping model.GlobalModelMapping
-	
+
 	if err := c.ShouldBindJSON(&mapping); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
@@ -48,27 +48,27 @@ func UpdateGlobalModelMapping(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	if err := service.UpdateGlobalModelMapping(&mapping); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+		// 将StatusInternalServerError改为StatusBadRequest，并更新错误信息
+		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
 			"message": "更新全局模型映射配置失败: " + err.Error(),
 		})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
-		"message": "全局模型映射配置更新成功",
+		"message": "全局模型映射配置更新成功", // 更新成功消息
+		"data":    mapping,        // 返回更新后的配置
 	})
 }
-
-
 
 // GetModelMappingConfig 获取模型映射配置的JSON字符串形式
 func GetModelMappingConfig(c *gin.Context) {
 	configStr := service.GlobalModelMappingToJSONString()
-	
+
 	// 尝试解析JSON字符串以验证格式
 	var config map[string]interface{}
 	if err := json.Unmarshal([]byte(configStr), &config); err != nil {
@@ -78,7 +78,7 @@ func GetModelMappingConfig(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "",
@@ -97,12 +97,12 @@ func UpdateModelMappingConfig(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	// 如果请求体为空，设置为空字符串
 	if len(jsonStr) == 0 {
 		jsonStr = []byte("{}")
 	}
-	
+
 	// 更新配置
 	if err := service.UpdateGlobalModelMappingFromJSONString(string(jsonStr)); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -111,13 +111,12 @@ func UpdateModelMappingConfig(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "全局模型映射配置更新成功",
 	})
 }
-
 
 // ReloadModelMapping 重新加载模型映射配置
 func ReloadModelMapping(c *gin.Context) {
@@ -128,7 +127,7 @@ func ReloadModelMapping(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "模型映射配置重新加载成功",

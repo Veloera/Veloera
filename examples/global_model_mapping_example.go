@@ -36,17 +36,17 @@ func main() {
 	exampleMapping := &model.GlobalModelMapping{
 		Mapping: map[string][]model.ModelMappingItem{
 			"gpt-3.5-turbo": {
-				{Model: "gpt-3.5-turbo-0613", Priorities: 10},
-				{Model: "gpt-3.5-turbo-0301", Priorities: 10},
-				{Model: "gpt-3.5-turbo-16k", Priorities: 5},
+				{Model: "gpt-3.5-turbo-0613", Priorities: 10, Weight: 30},
+				{Model: "gpt-3.5-turbo-0301", Priorities: 10, Weight: 20},
+				{Model: "gpt-3.5-turbo-16k", Priorities: 5, Weight: 10},
 			},
 			"gpt-4": {
-				{Model: "gpt-4-0613", Priorities: 10},
-				{Model: "gpt-4-0314", Priorities: 8},
+				{Model: "gpt-4-0613", Priorities: 10, Weight: 40},
+				{Model: "gpt-4-0314", Priorities: 8, Weight: 20},
 			},
 			"claude-instant": {
-				{Model: "claude-instant-1.2", Priorities: 10},
-				{Model: "claude-instant-1.1", Priorities: 5},
+				{Model: "claude-instant-1.2", Priorities: 10, Weight: 30},
+				{Model: "claude-instant-1.1", Priorities: 5, Weight: 15},
 			},
 		},
 	}

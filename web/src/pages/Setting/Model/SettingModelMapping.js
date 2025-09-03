@@ -45,12 +45,12 @@ const { Title, Text } = Typography;
 
 export default function SettingModelMapping() {
   const { t } = useTranslation();
-  
+
   const [loading, setLoading] = useState(false);
   const [mappings, setMappings] = useState({});
   const [modalVisible, setModalVisible] = useState(false);
   const [editingMapping, setEditingMapping] = useState(null);
-  const [models, setModels] = useState([{ model: '', priorities: 0 }]);
+  const [models, setModels] = useState([{ model: '', priorities: 0, weight: 0 }]); // 初始化添加权重字段
   const [virtualModelError, setVirtualModelError] = useState('');
   const [modelErrors, setModelErrors] = useState([]);
   const formApiRef = useRef();
@@ -88,7 +88,7 @@ export default function SettingModelMapping() {
       setVirtualModelError('');
       return;
     }
-    
+
     if (!editingMapping && mappings[trimmedValue]) {
       setVirtualModelError(`虚拟模型名 '${trimmedValue}' 已存在`);
     } else if (editingMapping && editingMapping !== trimmedValue && mappings[trimmedValue]) {
@@ -103,7 +103,7 @@ export default function SettingModelMapping() {
     const errors = [];
     const modelNames = new Set();
     const duplicates = new Set();
-    
+
     models.forEach((model, index) => {
       const trimmedModel = model.model.trim();
       if (trimmedModel) {
@@ -118,7 +118,7 @@ export default function SettingModelMapping() {
         errors[index] = '';
       }
     });
-    
+
     // 为重复的模型设置错误信息
     models.forEach((model, index) => {
       const trimmedModel = model.model.trim();
@@ -126,7 +126,7 @@ export default function SettingModelMapping() {
         errors[index] = `模型名重复: ${trimmedModel}`;
       }
     });
-    
+
     setModelErrors(errors);
   };
 
@@ -150,6 +150,7 @@ export default function SettingModelMapping() {
         .map((model) => ({
           model: model.model.trim(),
           priorities: parseInt(model.priorities) || 0,
+          weight: parseInt(model.weight) || 0,  // 添加权重字段
         }))
         .filter((model) => model.model); // 过滤空模型
 
@@ -159,7 +160,7 @@ export default function SettingModelMapping() {
         showError(`虚拟模型名 '${trimmedVirtualModel}' 已存在，请使用不同的名称`);
         return;
       }
-      
+
       // 如果是编辑模式但虚拟模型名已存在且不是当前编辑的项目
       if (editingMapping && editingMapping !== trimmedVirtualModel && mappings[trimmedVirtualModel]) {
         showError(`虚拟模型名 '${trimmedVirtualModel}' 已存在，请使用不同的名称`);
@@ -169,7 +170,7 @@ export default function SettingModelMapping() {
       // 前端验证：检查同一虚拟模型内实际模型名是否重复
       const modelNames = new Set();
       const duplicateModels = [];
-      
+
       for (let i = 0; i < processedModels.length; i++) {
         const modelName = processedModels[i].model;
         if (modelNames.has(modelName)) {
@@ -178,7 +179,7 @@ export default function SettingModelMapping() {
           modelNames.add(modelName);
         }
       }
-      
+
       if (duplicateModels.length > 0) {
         showError(`实际模型名重复: ${duplicateModels.join(', ')}`);
         return;
@@ -210,7 +211,7 @@ export default function SettingModelMapping() {
           formApiRef.current.reset();
         }
         setEditingMapping(null);
-        setModels([{ model: '', priorities: 0 }]);
+        setModels([{ model: '', priorities: 0, weight: 0 }]); // 重置时添加权重字段
         setVirtualModelError('');
         setModelErrors([]);
       } else {
@@ -274,10 +275,10 @@ export default function SettingModelMapping() {
           formApiRef.current.setValues({
             virtualModel,
           });
-          setModels(mappings[virtualModel] || [{ model: '', priorities: 0 }]);
+          setModels(mappings[virtualModel] || [{ model: '', priorities: 0, weight: 0 }]);
         } else {
           formApiRef.current.reset();
-          setModels([{ model: '', priorities: 0 }]);
+          setModels([{ model: '', priorities: 0, weight: 0 }]); // 新增时添加权重字段
         }
       }
     }, 100);
@@ -285,7 +286,7 @@ export default function SettingModelMapping() {
 
   // 添加模型
   const addModel = () => {
-    setModels([...models, { model: '', priorities: 0 }]);
+    setModels([...models, { model: '', priorities: 0, weight: 0 }]); // 添加权重字段
   };
 
   // 删除模型
@@ -365,13 +366,13 @@ export default function SettingModelMapping() {
       render: (models) => {
         // 找到最高优先级的值
         const maxPriority = Math.max(...models.map(model => model.priorities));
-        
+
         return (
           <Space wrap>
             {models.map((model, index) => {
               // 判断是否为最高优先级
               const isHighestPriority = model.priorities === maxPriority;
-              
+
               return (
                 <Tag
                   key={index}
@@ -390,7 +391,7 @@ export default function SettingModelMapping() {
                       : {}
                   }
                 >
-                  {model.model} (优先级: {model.priorities})
+                  {model.model} (优先级: {model.priorities}, 权重: {model.weight || 0}) {/* 显示权重信息 */}
                 </Tag>
               );
             })}
@@ -474,7 +475,7 @@ export default function SettingModelMapping() {
         onCancel={() => {
           setModalVisible(false);
           setEditingMapping(null);
-          setModels([{ model: '', priorities: 0 }]);
+          setModels([{ model: '', priorities: 0, weight: 0 }]);  // 关闭时重置权重字段
           setVirtualModelError('');
           setModelErrors([]);
           if (formApiRef.current) {
@@ -496,13 +497,16 @@ export default function SettingModelMapping() {
               { required: true, message: '请输入虚拟模型名' },
               { type: 'string', message: '虚拟模型名必须是字符串' },
             ]}
-            disabled={false}
+            disabled={!!editingMapping}  // 编辑模式下禁用
             onChange={validateVirtualModel}
             validateStatus={virtualModelError ? 'error' : ''}
             helpText={virtualModelError}
           />
           <div style={{ marginBottom: 16 }}>
             <Text strong>实际模型列表:</Text>
+            <Text type="secondary" style={{ marginLeft: 8 }}>
+              (优先级决定模型选择顺序，权重决定同优先级模型的选择概率) {/* 添加说明 */}
+            </Text>
             {models.map((model, index) => (
               <div
                 key={index}
@@ -517,16 +521,16 @@ export default function SettingModelMapping() {
                   <Input
                     value={model.model}
                     placeholder='实际模型名'
-                    style={{ 
+                    style={{
                       width: 300,
                       borderColor: modelErrors[index] ? '#ff4d4f' : undefined
                     }}
                     onChange={(value) => updateModel(index, 'model', value)}
                   />
                   {modelErrors[index] && (
-                    <Text 
-                      type="danger" 
-                      size="small" 
+                    <Text
+                      type="danger"
+                      size="small"
                       style={{ fontSize: '12px', marginTop: '2px' }}
                     >
                       {modelErrors[index]}
@@ -539,6 +543,13 @@ export default function SettingModelMapping() {
                   min={0}
                   style={{ width: 100, marginRight: 8, alignSelf: 'flex-start' }}
                   onChange={(value) => updateModel(index, 'priorities', value)}
+                />
+                <InputNumber
+                  value={model.weight || 0} // 添加权重输入框
+                  placeholder='权重'
+                  min={0}
+                  style={{ width: 100, marginRight: 8, alignSelf: 'flex-start' }}
+                  onChange={(value) => updateModel(index, 'weight', value)}
                 />
                 <Button
                   type='danger'
