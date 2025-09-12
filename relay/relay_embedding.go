@@ -69,6 +69,15 @@ func EmbeddingHelper(c *gin.Context) (openaiErr *dto.OpenAIErrorWithStatusCode) 
 		return service.OpenAIErrorWrapperLocal(err, "model_mapped_error", http.StatusInternalServerError)
 	}
 
+	// Store embedding input for potential token counting fallback
+	if relayInfo.Other == nil {
+		relayInfo.Other = make(map[string]interface{})
+	}
+	if inputStrings := embeddingRequest.ParseInput(); len(inputStrings) > 0 {
+		// Store all input strings for accurate token counting fallback
+		relayInfo.Other[relayconstant.KeyEmbeddingInput] = inputStrings
+	}
+
 	embeddingRequest.Model = relayInfo.UpstreamModelName
 
 	promptToken := getEmbeddingPromptToken(*embeddingRequest)

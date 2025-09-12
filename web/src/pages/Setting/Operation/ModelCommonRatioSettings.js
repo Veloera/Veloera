@@ -78,6 +78,14 @@ export default function ModelCommonRatioSettings(props) {
         setInputs(newInputs);
         // Auto-save redirect billing setting
         saveRedirectBillingSetting(value);
+      } else if (fieldName === 'fallback_pricing_enabled') {
+        const newInputs = {
+          ...inputs,
+          [fieldName]: value
+        };
+        setInputs(newInputs);
+        // Auto-save fallback pricing enabled setting
+        saveFallbackPricingEnabled(value);
       } else {
         setInputs((inputs) => ({
           ...inputs,
@@ -333,6 +341,29 @@ export default function ModelCommonRatioSettings(props) {
       props.refresh();
     } catch (error) {
       console.error('保存重定向计费设置失败:', error);
+      showError(t('保存失败，请重试'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveFallbackPricingEnabled = async (enabled) => {
+    try {
+      setLoading(true);
+      const res = await API.put('/api/option/', {
+        key: 'fallback_pricing_enabled',
+        value: String(enabled)
+      });
+      
+      if (!res.data.success) {
+        showError(res.data.message);
+        return;
+      }
+      
+      showSuccess(t('启用兜底倍率设置保存成功'));
+      props.refresh();
+    } catch (error) {
+      console.error('保存启用兜底倍率设置失败:', error);
       showError(t('保存失败，请重试'));
     } finally {
       setLoading(false);

@@ -71,6 +71,13 @@ export class ModelMappingUtils {
           hasChanges = true;
         }
 
+        // 移除原始名称，用显示名称代替
+        if (originalNameTrimmed !== displayNameTrimmed) {
+          if (updatedModels.delete(originalNameTrimmed)) {
+            hasChanges = true;
+          }
+        }
+
         // 建立映射关系：displayName -> originalName
         newMapping[displayNameTrimmed] = originalNameTrimmed;
       }

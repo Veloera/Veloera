@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"time"
 	"veloera/common"
 
 	"github.com/gin-gonic/gin"
@@ -115,14 +114,14 @@ func RecordErrorLog(c *gin.Context, userId int, channelId int, modelName string,
 	common.LogInfo(c, fmt.Sprintf("record error log: userId=%d, channelId=%d, modelName=%s, tokenName=%s, content=%s", userId, channelId, modelName, tokenName, content))
 	username := c.GetString("username")
 	otherStr := common.MapToJsonStr(other)
-	
+
 	// Check if user has enabled IP logging
 	var clientIP string
 	user, err := GetUserById(userId, false)
 	if err == nil && user != nil && user.GetShowIPInLogs() {
 		clientIP = common.GetClientIP(c)
 	}
-	
+
 	log := &Log{
 		UserId:           userId,
 		Username:         username,
@@ -157,14 +156,14 @@ func RecordConsumeLog(c *gin.Context, userId int, channelId int, promptTokens in
 	}
 	username := c.GetString("username")
 	otherStr := common.MapToJsonStr(other)
-	
+
 	// Check if user has enabled IP logging
 	var clientIP string
 	user, err := GetUserById(userId, false)
 	if err == nil && user != nil && user.GetShowIPInLogs() {
 		clientIP = common.GetClientIP(c)
 	}
-	
+
 	log := &Log{
 		UserId:           userId,
 		Username:         username,
@@ -328,9 +327,11 @@ func SumUsedQuota(logType int, startTimestamp int64, endTimestamp int64, modelNa
 	}
 	if startTimestamp != 0 {
 		tx = tx.Where("created_at >= ?", startTimestamp)
+		rpmTpmQuery = rpmTpmQuery.Where("created_at >= ?", startTimestamp)
 	}
 	if endTimestamp != 0 {
 		tx = tx.Where("created_at <= ?", endTimestamp)
+		rpmTpmQuery = rpmTpmQuery.Where("created_at <= ?", endTimestamp)
 	}
 	if modelName != "" {
 		tx = tx.Where("model_name like ?", modelName)
@@ -347,9 +348,6 @@ func SumUsedQuota(logType int, startTimestamp int64, endTimestamp int64, modelNa
 
 	tx = tx.Where("type = ?", LogTypeConsume)
 	rpmTpmQuery = rpmTpmQuery.Where("type = ?", LogTypeConsume)
-
-	// 只统计最近60秒的rpm和tpm
-	rpmTpmQuery = rpmTpmQuery.Where("created_at >= ?", time.Now().Add(-60*time.Second).Unix())
 
 	// 执行查询
 	tx.Scan(&stat)

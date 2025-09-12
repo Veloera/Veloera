@@ -310,6 +310,7 @@ const LogsTable = () => {
     COST: 'cost',
     RETRY: 'retry',
     DETAILS: 'details',
+    IP: 'ip', // Add IP column key
   };
 
   // State for column visibility
@@ -351,6 +352,7 @@ const LogsTable = () => {
       [COLUMN_KEYS.COST]: true,
       [COLUMN_KEYS.RETRY]: isAdminUser,
       [COLUMN_KEYS.DETAILS]: true,
+      [COLUMN_KEYS.IP]: true, // IP column visible by default for all users
     };
   };
 
@@ -620,6 +622,37 @@ const LogsTable = () => {
       },
     },
     {
+      key: COLUMN_KEYS.IP,
+      title: t('IP地址'),
+      dataIndex: 'client_ip',
+      className: 'tableShow', // Always show the column, visibility controlled by column selector
+      render: (text, record, index) => {
+        const isSupportedType = record.type === 2 || record.type === 6;
+        const hasIp = text && text.trim() !== '';
+
+        if (!isSupportedType || !hasIp) {
+          return <></>;
+        }
+        
+        // Display IP with copy functionality
+        return (
+          <Tag
+            color='blue'
+            size='large'
+            onClick={(event) => {
+              copyText(event, text);
+            }}
+            style={{ 
+              fontFamily: 'monospace',
+              cursor: 'pointer'
+            }}
+          >
+            {text}
+          </Tag>
+        );
+      },
+    },
+    {
       key: COLUMN_KEYS.DETAILS,
       title: t('详情'),
       dataIndex: 'content',
@@ -798,6 +831,11 @@ const LogsTable = () => {
   const [stat, setStat] = useState({
     quota: 0,
     token: 0,
+    token_total: 0,
+    token_input: 0,
+    token_output: 0,
+    rpm: 0,
+    tpm: 0
   });
 
   const handleInputChange = (value, name) => {
@@ -812,7 +850,13 @@ const LogsTable = () => {
     let res = await API.get(url);
     const { success, message, data } = res.data;
     if (success) {
-      setStat(data);
+      // 保留现有的token统计信息，只更新API返回的数据
+      setStat(prevStat => ({
+        ...prevStat,
+        quota: data.quota || 0,
+        rpm: data.rpm || 0,
+        tpm: data.tpm || 0
+      }));
     } else {
       showError(message);
     }
@@ -826,7 +870,13 @@ const LogsTable = () => {
     let res = await API.get(url);
     const { success, message, data } = res.data;
     if (success) {
-      setStat(data);
+      // 保留现有的token统计信息，只更新API返回的数据
+      setStat(prevStat => ({
+        ...prevStat,
+        quota: data.quota || 0,
+        rpm: data.rpm || 0,
+        tpm: data.tpm || 0
+      }));
     } else {
       showError(message);
     }

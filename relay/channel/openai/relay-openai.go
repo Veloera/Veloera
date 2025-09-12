@@ -30,6 +30,7 @@ import (
 	"veloera/constant"
 	"veloera/dto"
 	relaycommon "veloera/relay/common"
+	relayconstant "veloera/relay/constant"
 	"veloera/relay/helper"
 	"veloera/service"
 
@@ -432,16 +433,23 @@ func OpenaiHandler(c *gin.Context, resp *http.Response, info *relaycommon.RelayI
 		return nil, zeroUsage
 	}
 
-	if simpleResponse.Usage.TotalTokens == 0 || (simpleResponse.Usage.PromptTokens == 0 && simpleResponse.Usage.CompletionTokens == 0) {
-		completionTokens := 0
-		for _, choice := range simpleResponse.Choices {
-			ctkm, _ := service.CountTextToken(choice.Message.StringContent()+choice.Message.ReasoningContent+choice.Message.Reasoning, info.UpstreamModelName)
-			completionTokens += ctkm
-		}
-		simpleResponse.Usage = dto.Usage{
-			PromptTokens:     info.PromptTokens,
-			CompletionTokens: completionTokens,
-			TotalTokens:      info.PromptTokens + completionTokens,
+	// Handle usage calculation based on request type
+	if info.RelayMode == relayconstant.RelayModeEmbeddings {
+		usage := fillEmbeddingUsage(info, &simpleResponse)
+		simpleResponse.Usage = usage
+	} else {
+		// For other request types, use existing logic
+		if simpleResponse.Usage.TotalTokens == 0 || (simpleResponse.Usage.PromptTokens == 0 && simpleResponse.Usage.CompletionTokens == 0) {
+			completionTokens := 0
+			for _, choice := range simpleResponse.Choices {
+				ctkm, _ := service.CountTextToken(choice.Message.StringContent()+choice.Message.ReasoningContent+choice.Message.Reasoning, info.UpstreamModelName)
+				completionTokens += ctkm
+			}
+			simpleResponse.Usage = dto.Usage{
+				PromptTokens:     info.PromptTokens,
+				CompletionTokens: completionTokens,
+				TotalTokens:      info.PromptTokens + completionTokens,
+			}
 		}
 	}
 	return nil, &simpleResponse.Usage
@@ -966,4 +974,69 @@ func BuildStreamChunkFromTextResponse(simpleResponse *dto.OpenAITextResponse) dt
 		streamResp.Choices[i] = choice
 	}
 	return streamResp
+}
+
+// fillEmbeddingUsage calculates usage for embedding requests with proper fallback logic
+func fillEmbeddingUsage(info *relaycommon.RelayInfo, simpleResponse *dto.OpenAITextResponse) dto.Usage {
+	// Priority 1: Use upstream total_tokens if available
+	if simpleResponse.Usage.TotalTokens > 0 {
+		return simpleResponse.Usage
+	}
+
+	// Priority 2: Use upstream prompt_tokens if available
+	if simpleResponse.Usage.PromptTokens > 0 {
+		return dto.Usage{
+			PromptTokens:     simpleResponse.Usage.PromptTokens,
+			CompletionTokens: 0, // Embeddings don't have completion tokens
+			TotalTokens:      simpleResponse.Usage.PromptTokens,
+		}
+	}
+
+	// Priority 3: Use pre-calculated tokens from info if available
+	if info.PromptTokens > 0 {
+		return dto.Usage{
+			PromptTokens:     info.PromptTokens,
+			CompletionTokens: 0,
+			TotalTokens:      info.PromptTokens,
+		}
+	}
+
+	// Priority 4: Last resort - calculate from input data
+	if embeddingInput := info.Other[relayconstant.KeyEmbeddingInput]; embeddingInput != nil {
+		// Handle multiple input strings
+		if embeddingInputs, ok := embeddingInput.([]string); ok && len(embeddingInputs) > 0 {
+			totalTokens := 0
+			for _, inputStr := range embeddingInputs {
+				if inputStr != "" {
+					if tokens, err := service.CountTextToken(inputStr, info.UpstreamModelName); err == nil {
+						totalTokens += tokens
+					}
+				}
+			}
+			if totalTokens > 0 {
+				return dto.Usage{
+					PromptTokens:     totalTokens,
+					CompletionTokens: 0,
+					TotalTokens:      totalTokens,
+				}
+			}
+		}
+		// Handle single input string (backward compatibility)
+		if inputStr, ok := embeddingInput.(string); ok && inputStr != "" {
+			if tokens, err := service.CountTextToken(inputStr, info.UpstreamModelName); err == nil && tokens > 0 {
+				return dto.Usage{
+					PromptTokens:     tokens,
+					CompletionTokens: 0,
+					TotalTokens:      tokens,
+				}
+			}
+		}
+	}
+
+	// Fallback to zero usage - should rarely happen
+	return dto.Usage{
+		PromptTokens:     0,
+		CompletionTokens: 0,
+		TotalTokens:      0,
+	}
 }

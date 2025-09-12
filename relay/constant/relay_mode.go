@@ -62,6 +62,11 @@ const (
 	RelayModeTokenCount
 )
 
+// Keys for relayInfo.Other map
+const (
+	KeyEmbeddingInput = "embedding_input"
+)
+
 func Path2RelayMode(path string) int {
 	relayMode := RelayModeUnknown
 	if strings.HasPrefix(path, "/v1/chat/completions") || strings.HasPrefix(path, "/pg/chat/completions") {

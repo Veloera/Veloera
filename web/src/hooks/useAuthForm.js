@@ -36,13 +36,38 @@ export const useAuthForm = (initialInputs = {}) => {
     setInputs((inputs) => ({ ...inputs, [name]: value }));
   };
 
-  // Load status from localStorage
+  // Load status from localStorage and listen for updates
   useEffect(() => {
-    let status = localStorage.getItem('status');
-    if (status) {
-      status = JSON.parse(status);
-      setStatus(status);
-    }
+    const updateStatus = () => {
+      let status = localStorage.getItem('status');
+      if (status) {
+        status = JSON.parse(status);
+        setStatus(status);
+      }
+    };
+
+    // Initial status load
+    updateStatus();
+
+    // Listen for storage changes to handle async status loading
+    const handleStorageChange = (e) => {
+      if (e.key === 'status') {
+        updateStatus();
+      }
+    };
+
+    // Listen for custom status update events
+    const handleStatusUpdate = () => {
+      updateStatus();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('statusUpdated', handleStatusUpdate);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('statusUpdated', handleStatusUpdate);
+    };
   }, []);
 
   // Handle AFF code processing
@@ -60,6 +85,11 @@ export const useAuthForm = (initialInputs = {}) => {
     }
     return affCode;
   };
+
+  // Re-process AFF code when status changes
+  useEffect(() => {
+    processAffCode();
+  }, [status]);
 
   // WeChat login handlers
   const onWeChatLoginClicked = () => {

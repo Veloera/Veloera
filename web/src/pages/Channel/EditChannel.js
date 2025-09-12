@@ -78,9 +78,12 @@ const ModelSelector = ({ channelId, type, apiKey, baseUrl, isEdit, selectedModel
     option.label.toLowerCase().includes(search.toLowerCase())
   );
 
+  // Create memoized Set for selected models to optimize lookup performance
+  const selectedModelsSet = useMemo(() => new Set(localSelectedModels), [localSelectedModels]);
+
   // Handle check/uncheck of individual model
   const handleCheckboxChange = (value) => {
-    if (localSelectedModels.includes(value)) {
+    if (selectedModelsSet.has(value)) {
       setLocalSelectedModels(localSelectedModels.filter(model => model !== value));
     } else {
       setLocalSelectedModels([...localSelectedModels, value]);
@@ -109,14 +112,31 @@ const ModelSelector = ({ channelId, type, apiKey, baseUrl, isEdit, selectedModel
         newSelection.push(value);
       } else {
         // If selected, remove it
-        newSelection.splice(index, index + 1); // Use index + 1 for correct splice
+        newSelection.splice(index, 1); // Fix splice error: remove 1 element at found index
       }
     });
 
     setLocalSelectedModels(newSelection);
-  };
+   };
 
-  // Fetch models from API - using the same logic as fetchUpstreamModelList
+   // Copy selected models to clipboard
+   const handleCopySelected = async () => {
+     if (localSelectedModels.length === 0) {
+       showWarning(t('没有选择的模型！'));
+       return;
+     }
+
+     try {
+       const modelsText = localSelectedModels.join('\n');
+       await navigator.clipboard.writeText(modelsText);
+       showSuccess(t('已复制选择的模型到剪贴板'));
+     } catch (error) {
+       console.error('Failed to copy to clipboard:', error);
+       showError(t('复制失败'));
+     }
+   };
+
+   // Fetch models from API - using the same logic as fetchUpstreamModelList
   const fetchModels = async () => {
     try {
       setLoading(true);
@@ -182,55 +202,174 @@ const ModelSelector = ({ channelId, type, apiKey, baseUrl, isEdit, selectedModel
     fetchModels();
   }, []);
 
+  // Responsive grid calculation
+  const getGridSpan = () => {
+    return 8
+  };
+
   return (
-    <div>
-      <div style={{ display: 'flex', marginBottom: 16, alignItems: 'center' }}>
-        <Input
-          placeholder={t('搜索模型')}
-          value={search}
-          onChange={setSearch}
-          style={{ flex: 1 }}
-          showClear
-        />
-        <Button
-          icon={<IconRefresh />}
-          onClick={fetchModels}
-          loading={loading}
-          style={{ marginLeft: 8 }}
-        />
-        <Button onClick={handleSelectAll} style={{ marginLeft: 8 }}>{t('全选')}</Button>
-        <Button onClick={handleDeselectAll} style={{ marginLeft: 8 }}>{t('反选')}</Button>
-      </div>
-
-      <div style={{ maxHeight: '350px', overflowY: 'auto', border: '1px solid var(--semi-color-border)', padding: 8 }}>
-        <Row>
-          {filteredOptions.map((option) => (
-            <Col span={6} key={option.value} style={{ marginBottom: 8 }}>
-              <SemiCheckbox
-                checked={localSelectedModels.includes(option.value)}
-                onChange={() => handleCheckboxChange(option.value)}
-                style={{ width: '100%' }}
+    <div style={{ width: '100%', maxWidth: '1000px' }}>
+      {/* Enhanced Search and Control Area */}
+      <div style={{
+        backgroundColor: 'var(--semi-color-fill-0)',
+        borderRadius: '8px',
+        padding: '16px',
+        marginBottom: '16px',
+      }}>
+        <Space wrap align="center" style={{ width: '100%' }}>
+          <Input
+            placeholder={t('搜索模型')}
+            value={search}
+            onChange={setSearch}
+            style={{ minWidth: '200px', flex: '1' }}
+            showClear
+          />
+          <Space wrap>
+            <Tooltip content={t('刷新模型列表')}>
+              <Button
+                icon={<IconRefresh />}
+                onClick={fetchModels}
+                loading={loading}
+                shape="round"
+              />
+            </Tooltip>
+            <Tooltip content={t('全选可见模型')}>
+              <Button onClick={handleSelectAll} shape="round" type="secondary">
+                {t('全选')}
+              </Button>
+            </Tooltip>
+            <Tooltip content={t('反选可见模型')}>
+              <Button onClick={handleDeselectAll} shape="round" type="tertiary">
+                {t('反选')}
+              </Button>
+            </Tooltip>
+            <Tooltip content={t('复制已选模型')}>
+              <Button
+                onClick={handleCopySelected}
+                disabled={localSelectedModels.length === 0}
+                shape="round"
+                type="primary"
+                theme="light"
+                style={{ color: '#1890ff' }}
               >
-                <Typography.Text
-                  ellipsis={{ showTooltip: true }}
-                  style={{
-                    maxWidth: '100%',
-                    wordBreak: 'break-word',
-                    whiteSpace: 'normal',
-                    lineHeight: '1.2'
-                  }}
-                >
-                  {option.label}
-                </Typography.Text>
-              </SemiCheckbox>
-            </Col>
-          ))}
-        </Row>
+                {t('复制已选')}
+              </Button>
+            </Tooltip>
+          </Space>
+        </Space>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16, marginBottom: 8 }}>
-        <Button type='primary' onClick={applySelection}>{t('确定')}</Button>
-        <Button style={{ marginLeft: 8 }} onClick={() => Modal.destroyAll()}>{t('取消')}</Button>
+      {/* Enhanced Model List Container */}
+      <div style={{
+        height: '400px',
+        overflowY: 'auto',
+        border: '1px solid var(--semi-color-border)',
+        borderRadius: '8px',
+        padding: '16px',
+        backgroundColor: 'var(--semi-color-bg-0)',
+        scrollbarWidth: 'thin',
+        scrollbarColor: 'var(--semi-color-border) transparent'
+      }}>
+        {loading ? (
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '100%',
+            flexDirection: 'column'
+          }}>
+            <Spin size="large" />
+            <Typography.Text type="secondary" style={{ marginTop: 12 }}>
+              {t('正在获取模型列表...')}
+            </Typography.Text>
+          </div>
+        ) : filteredOptions.length === 0 ? (
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '100%',
+            flexDirection: 'column'
+          }}>
+            <Typography.Text type="tertiary">
+              {search ? t('没有找到匹配的模型') : t('暂无可用模型')}
+            </Typography.Text>
+          </div>
+        ) : (
+          <>
+            <Row gutter={[12, 12]}>
+              {filteredOptions.map((option) => {
+                const isSelected = selectedModelsSet.has(option.value);
+                return (
+                  <Col span={getGridSpan()} key={option.value}>
+                    <div
+                      style={{
+                        border: `1px solid ${isSelected ? 'var(--semi-color-primary)' : 'var(--semi-color-border)'}`,
+                        borderRadius: '6px',
+                        padding: '8px 12px',
+                        backgroundColor: isSelected ? 'var(--semi-color-primary-light-default)' : 'var(--semi-color-bg-1)',
+                        transition: 'all 0.2s ease',
+                        cursor: 'pointer',
+                        height: '100%',
+                        display: 'flex',
+                        alignItems: 'center'
+                      }}
+                      onClick={() => handleCheckboxChange(option.value)}
+                    >
+                      <SemiCheckbox
+                        checked={isSelected}
+                        onChange={(e) => { e.stopPropagation(); handleCheckboxChange(option.value); }}
+                        style={{ flexShrink: 0 }}
+                      />
+                      <Typography.Text
+                        ellipsis={{ showTooltip: true }}
+                        style={{
+                          marginLeft: '8px',
+                          fontSize: '13px',
+                          lineHeight: '1.3',
+                          wordBreak: 'break-word',
+                          flex: 1,
+                          color: isSelected ? 'var(--semi-color-primary)' : 'var(--semi-color-text-0)'
+                        }}
+                        strong={isSelected}
+                      >
+                        {option.label}
+                      </Typography.Text>
+                    </div>
+                  </Col>
+                );
+              })}
+            </Row>
+          </>
+        )}
+      </div>
+
+      {/* Enhanced Footer */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: '16px',
+        padding: '12px 16px',
+        backgroundColor: 'var(--semi-color-fill-0)',
+        borderRadius: '8px',
+        marginBottom: '20px'
+      }}>
+        <Typography.Text type="secondary" style={{ fontSize: '13px' }}>
+          {t('共 {{total}} 个模型，已选择 {{selected}} 个',{ total: filteredOptions.length, selected: localSelectedModels.length })}
+        </Typography.Text>
+        <Space>
+          <Button onClick={() => Modal.destroyAll()} type="tertiary">
+            {t('取消')}
+          </Button>
+          <Button
+            type='primary'
+            onClick={applySelection}
+            disabled={loading}
+          >
+            {t('确定 ({{count}})', { count: localSelectedModels.length })}
+          </Button>
+        </Space>
       </div>
     </div>
   );
@@ -342,9 +481,9 @@ const EditChannel = (props) => {
   };
 
   // 更新模型列表的回调函数
-  const updateModelsCallback = useCallback((newModels) => {
-    setInputs((prevInputs) => ({ ...prevInputs, models: newModels }));
-  }, []);
+const updateModelsCallback = useCallback((newModels) => {
+  setInputs((prevInputs) => ({ ...prevInputs, models: newModels }));
+}, []);
 
   // 包装后的同步函数，传入当前模型和更新回调
   const handleSyncModelMapping = useCallback((mappingValue) => {
@@ -939,8 +1078,9 @@ const EditChannel = (props) => {
   // Toggle multi-key view disable state
   const switchToSingleKeyMode = () => {
     setUseKeyListMode(false);
-    // When switching back to single mode, combine existing keys back into one string
-    const combinedKey = keyList.join(',');
+    // When switching back to single mode, filter out empty keys before joining
+    const filteredKeyList = keyList.filter(key => key && key.trim().length > 0);
+    const combinedKey = filteredKeyList.join(',');
     setInputs(inputs => ({ ...inputs, key: combinedKey }));
     setKeyList([]); // Clear key list state
   };
@@ -1672,6 +1812,7 @@ const EditChannel = (props) => {
                   // Using Modal.info for better customization
                   Modal.info({
                     title: t('高级模型选择'),
+                    icon: null,
                     content: (
                       <div>
                         <ModelSelector
@@ -1990,3 +2131,4 @@ const EditChannel = (props) => {
 };
 
 export default EditChannel;
+

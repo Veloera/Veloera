@@ -52,6 +52,8 @@ const PageLayout = () => {
       if (success) {
         statusDispatch({ type: 'set', payload: data });
         setStatusData(data);
+        // Notify other components that status has been updated
+        window.dispatchEvent(new Event('statusUpdated'));
       } else {
         showError('Unable to connect to server');
       }
