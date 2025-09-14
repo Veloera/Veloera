@@ -27,8 +27,8 @@ importers:
         specifier: ~1.8.8
         version: 1.8.8(@visactor/vchart@1.13.13)
       axios:
-        specifier: ^1.4.0
-        version: 1.11.0
+        specifier: ^1.12.0
+        version: 1.12.0
       dayjs:
         specifier: ^1.11.11
         version: 1.11.13
@@ -82,7 +82,7 @@ importers:
         version: 2.1.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       sse:
         specifier: https://github.com/mpetazzoni/sse.js
-        version: sse.js@https://codeload.github.com/mpetazzoni/sse.js/tar.gz/cf8dcab4ceeafdd0eebd42445a8f9a804361973b
+        version: sse.js@https://codeload.github.com/mpetazzoni/sse.js/tar.gz/72cea4849a6da65f526b693b4145fdaec866720f
       vite-plugin-semi-theme:
         specifier: ^0.6.0
         version: 0.6.0
@@ -891,8 +891,8 @@ packages:
     resolution: {integrity: sha512-KbWgR8wOYRAPekEmMXrYYdc7BRyhn2Ftk7KWfMUnQ43hFdojWEFRxhhRUm3/OFEdPa1r0KAvTTg9YQK57xTe0g==}
     engines: {node: '>=0.8'}
 
-  axios@1.11.0:
-    resolution: {integrity: sha512-1Lx3WLFQWm3ooKDYZD1eXmoGO9fxYQjrycfHFC8P0sCfQVXyROp0p9PFWBehewBOdCwHc+f/b8I0fMto5eSfwA==}
+  axios@1.12.0:
+    resolution: {integrity: sha512-oXTDccv8PcfjZmPGlWsPSwtOJCZ/b6W5jAMCNcfwJbCzDckwG0jrYJFaWH1yvivfCXjVzV/SPDEhMB3Q+DSurg==}
 
   bail@2.0.2:
     resolution: {integrity: sha512-0xO6mYd7JB2YesxDKplafRpsiOzPt9V02ddPCLbY1xYGPOX24NTyN50qnUxgCPcSoYMhKpAuBTjQoRZCAkUDRw==}
@@ -1162,8 +1162,8 @@ packages:
     resolution: {integrity: sha512-YsGpe3WHLK8ZYi4tWDg2Jy3ebRz2rXowDxnld4bkQB00cc/1Zw9AWnC0i9ztDJitivtQvaI9KaLyKrc+hBW0yg==}
     engines: {node: '>=8'}
 
-  follow-redirects@1.15.9:
-    resolution: {integrity: sha512-gew4GsXizNgdoRyqmyfMHyAmXsZDk6mHkSxZFCzW9gwlbtOW44CDtYavM+y+72qD/Vq2l550kMF52DT8fOLJqQ==}
+  follow-redirects@1.15.11:
+    resolution: {integrity: sha512-deG2P0JfjrTxl50XGCDyfI97ZGVCxIpfKYmfyrQ54n5FO/0gfIES8C/Psl6kWVDolizcaaxZJnTS0QSMxvnsBQ==}
     engines: {node: '>=4.0'}
     peerDependencies:
       debug: '*'
@@ -2066,9 +2066,9 @@ packages:
   space-separated-tokens@2.0.2:
     resolution: {integrity: sha512-PEGlAwrG8yXGXRjW32fGbg66JAlOAwbObuqVoJpv/mRgoWDQfgH1wDPvtzWyUSNAXBGSk8h755YDbbcEy3SH2Q==}
 
-  sse.js@https://codeload.github.com/mpetazzoni/sse.js/tar.gz/cf8dcab4ceeafdd0eebd42445a8f9a804361973b:
-    resolution: {tarball: https://codeload.github.com/mpetazzoni/sse.js/tar.gz/cf8dcab4ceeafdd0eebd42445a8f9a804361973b}
-    version: 2.6.0
+  sse.js@https://codeload.github.com/mpetazzoni/sse.js/tar.gz/72cea4849a6da65f526b693b4145fdaec866720f:
+    resolution: {tarball: https://codeload.github.com/mpetazzoni/sse.js/tar.gz/72cea4849a6da65f526b693b4145fdaec866720f}
+    version: 2.7.1
 
   stream-source@0.3.5:
     resolution: {integrity: sha512-ZuEDP9sgjiAwUVoDModftG0JtYiLUV8K4ljYD1VyUMRWtbVf92474o4kuuul43iZ8t/hRuiDAx1dIJSvirrK/g==}
@@ -3078,9 +3078,9 @@ snapshots:
 
   author-regex@1.0.0: {}
 
-  axios@1.11.0:
+  axios@1.12.0:
     dependencies:
-      follow-redirects: 1.15.9
+      follow-redirects: 1.15.11
       form-data: 4.0.4
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
@@ -3363,7 +3363,7 @@ snapshots:
       to-regex-range: 5.0.1
     optional: true
 
-  follow-redirects@1.15.9: {}
+  follow-redirects@1.15.11: {}
 
   form-data@4.0.4:
     dependencies:
@@ -4614,7 +4614,7 @@ snapshots:
 
   space-separated-tokens@2.0.2: {}
 
-  sse.js@https://codeload.github.com/mpetazzoni/sse.js/tar.gz/cf8dcab4ceeafdd0eebd42445a8f9a804361973b: {}
+  sse.js@https://codeload.github.com/mpetazzoni/sse.js/tar.gz/72cea4849a6da65f526b693b4145fdaec866720f: {}
 
   stream-source@0.3.5: {}
 
