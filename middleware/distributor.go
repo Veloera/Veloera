@@ -423,6 +423,16 @@ func getModelRequest(c *gin.Context) (*ModelRequest, bool, error) {
 		c.Set("relay_mode", relayMode)
 	}
 
+	if modelRequest.Model == "" {
+		pathModel := c.Param("model")
+		if pathModel != "" {
+			if idx := strings.Index(pathModel, ":"); idx >= 0 {
+				pathModel = pathModel[:idx]
+			}
+			modelRequest.Model = pathModel
+		}
+	}
+
 	// Check if the model name has a prefix that needs to be used for routing
 	// We save both the original model name (with prefix) and the model name without prefix
 	if modelRequest.Model != "" {

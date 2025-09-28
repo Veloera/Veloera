@@ -925,6 +925,13 @@ func GeminiChatStreamHandler(c *gin.Context, resp *http.Response, info *relaycom
 		err := common.DecodeJsonStr(data, &geminiResponse)
 		if err != nil {
 			common.LogError(c, "error unmarshalling stream response: "+err.Error())
+			if info.RelayFormat == relaycommon.RelayFormatGemini {
+				if writeErr := helper.StringData(c, data); writeErr != nil {
+					common.LogError(c, "error writing gemini stream chunk: "+writeErr.Error())
+					return false
+				}
+				return true
+			}
 			return false
 		}
 
@@ -978,6 +985,20 @@ func GeminiChatStreamHandler(c *gin.Context, resp *http.Response, info *relaycom
 			}
 		}
 
+		if geminiResponse.UsageMetadata.TotalTokenCount != 0 {
+			usage.PromptTokens = geminiResponse.UsageMetadata.PromptTokenCount
+			usage.CompletionTokens = geminiResponse.UsageMetadata.CandidatesTokenCount
+			usage.CompletionTokenDetails.ReasoningTokens = geminiResponse.UsageMetadata.ThoughtsTokenCount
+		}
+
+		if info.RelayFormat == relaycommon.RelayFormatGemini {
+			if err := helper.StringData(c, data); err != nil {
+				common.LogError(c, "error writing gemini stream chunk: "+err.Error())
+				return false
+			}
+			return true
+		}
+
 		response, isStop, hasImage := streamResponseGeminiChat2OpenAI(&geminiResponse)
 		if hasImage {
 			imageCount++
@@ -985,11 +1006,6 @@ func GeminiChatStreamHandler(c *gin.Context, resp *http.Response, info *relaycom
 		response.Id = id
 		response.Created = createAt
 		response.Model = info.UpstreamModelName
-		if geminiResponse.UsageMetadata.TotalTokenCount != 0 {
-			usage.PromptTokens = geminiResponse.UsageMetadata.PromptTokenCount
-			usage.CompletionTokens = geminiResponse.UsageMetadata.CandidatesTokenCount
-			usage.CompletionTokenDetails.ReasoningTokens = geminiResponse.UsageMetadata.ThoughtsTokenCount
-		}
 		err = helper.ObjectData(c, response)
 		if err != nil {
 			common.LogError(c, err.Error())
@@ -1005,23 +1021,26 @@ func GeminiChatStreamHandler(c *gin.Context, resp *http.Response, info *relaycom
 
 	var response *dto.ChatCompletionsStreamResponse
 
-	if imageCount != 0 {
-		if usage.CompletionTokens == 0 {
-			usage.CompletionTokens = imageCount * 258
-		}
-	}
-
 	usage.TotalTokens = usage.PromptTokens + usage.CompletionTokens
 	usage.PromptTokensDetails.TextTokens = usage.PromptTokens
 	//usage.CompletionTokenDetails.TextTokens = usage.CompletionTokens
 
-	if info.ShouldIncludeUsage {
-		response = helper.GenerateFinalUsageResponse(id, createAt, info.UpstreamModelName, *usage)
-		err := helper.ObjectData(c, response)
-		if err != nil {
-			common.SysError("send final response failed: " + err.Error())
+	if info.RelayFormat != relaycommon.RelayFormatGemini {
+		if imageCount != 0 {
+			if usage.CompletionTokens == 0 {
+				usage.CompletionTokens = imageCount * 258
+			}
+		}
+
+		if info.ShouldIncludeUsage {
+			response = helper.GenerateFinalUsageResponse(id, createAt, info.UpstreamModelName, *usage)
+			err := helper.ObjectData(c, response)
+			if err != nil {
+				common.SysError("send final response failed: " + err.Error())
+			}
 		}
 	}
+
 	helper.Done(c)
 	//resp.Body.Close()
 	return nil, usage
@@ -1056,17 +1075,23 @@ func GeminiChatHandler(c *gin.Context, resp *http.Response, info *relaycommon.Re
 	}
 
 	extractGeminiOutputContent(info, &geminiResponse)
+	usage := buildGeminiUsage(&geminiResponse)
+
+	if info.RelayFormat == relaycommon.RelayFormatGemini {
+		responseBytes, err := json.Marshal(geminiResponse)
+		if err != nil {
+			return service.OpenAIErrorWrapper(err, "marshal_response_body_failed", http.StatusInternalServerError), nil
+		}
+		c.Writer.Header().Set("Content-Type", "application/json")
+		c.Writer.WriteHeader(resp.StatusCode)
+		if _, writeErr := c.Writer.Write(responseBytes); writeErr != nil {
+			common.SysError("error writing gemini response body: " + writeErr.Error())
+		}
+		return nil, usage
+	}
 
 	fullTextResponse := responseGeminiChat2OpenAI(&geminiResponse)
 	fullTextResponse.Model = info.UpstreamModelName
-	usage := &dto.Usage{
-		PromptTokens:     geminiResponse.UsageMetadata.PromptTokenCount,
-		CompletionTokens: geminiResponse.UsageMetadata.CandidatesTokenCount,
-		TotalTokens:      geminiResponse.UsageMetadata.TotalTokenCount,
-	}
-	if geminiResponse.UsageMetadata.ThoughtsTokenCount > 0 {
-		usage.CompletionTokenDetails.ReasoningTokens = geminiResponse.UsageMetadata.ThoughtsTokenCount
-	}
 	fullTextResponse.Usage = *usage
 	jsonResponse, err := json.Marshal(fullTextResponse)
 	if err != nil {
@@ -1140,6 +1165,22 @@ func GeminiChatPseudoStreamHandler(c *gin.Context, resp *http.Response, info *re
 	fullTextResponse := responseGeminiChat2OpenAI(geminiResp)
 	fullTextResponse.Model = info.UpstreamModelName
 	usage := buildGeminiUsage(geminiResp)
+
+	if info.RelayFormat == relaycommon.RelayFormatGemini {
+		helper.SetEventStreamHeaders(c)
+		info.SetFirstResponseTime()
+		data, err := json.Marshal(geminiResp)
+		if err != nil {
+			return service.OpenAIErrorWrapper(err, "marshal_response_body_failed", http.StatusInternalServerError), nil
+		}
+		if err := helper.StringData(c, string(data)); err != nil {
+			common.LogError(c, "error writing gemini pseudo stream: "+err.Error())
+			return service.OpenAIErrorWrapper(err, "write_response_body_failed", http.StatusInternalServerError), nil
+		}
+		helper.Done(c)
+		return nil, usage
+	}
+
 	fullTextResponse.Usage = *usage
 
 	helper.SetEventStreamHeaders(c)

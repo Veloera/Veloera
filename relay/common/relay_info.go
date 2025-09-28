@@ -52,6 +52,7 @@ type ClaudeConvertInfo struct {
 const (
 	RelayFormatOpenAI = "openai"
 	RelayFormatClaude = "claude"
+	RelayFormatGemini = "gemini"
 )
 
 type RerankerInfo struct {
@@ -232,6 +233,12 @@ func GenRelayInfo(c *gin.Context) *RelayInfo {
 			IsFirstThinkingContent:  true,
 			SendLastThinkingContent: false,
 		},
+	}
+
+	if format, exists := c.Get("relay_format"); exists {
+		if relayFormat, ok := format.(string); ok && relayFormat != "" {
+			info.RelayFormat = relayFormat
+		}
 	}
 	if strings.HasPrefix(c.Request.URL.Path, "/pg") {
 		info.IsPlayground = true

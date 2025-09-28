@@ -79,6 +79,20 @@ func SetRelayRouter(router *gin.Engine) {
 	modelsRouter.Use(middleware.TokenAuth())
 	setupModelsRouter(modelsRouter)
 
+	// 设置 /v1beta/models 路由 (Gemini 兼容)
+	geminiModelsRouter := router.Group("/v1beta/models")
+	geminiModelsRouter.Use(middleware.TokenAuth())
+	{
+		geminiModelsRouter.GET("", controller.ListGeminiModels)
+		geminiModelsRouter.GET("/:model", controller.RetrieveGeminiModel)
+	}
+
+	geminiActionRouter := router.Group("/v1beta/models")
+	geminiActionRouter.Use(middleware.TokenAuth(), middleware.TokenRateLimit(), middleware.ModelRequestRateLimit(), middleware.Distribute())
+	{
+		geminiActionRouter.POST("/:model", controller.RelayGemini)
+	}
+
 	// 设置 /hf/v1/models 路由
 	hfModelsRouter := router.Group("/hf/v1/models")
 	hfModelsRouter.Use(middleware.TokenAuth())

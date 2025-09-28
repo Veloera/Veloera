@@ -30,6 +30,7 @@ import (
 	"veloera/middleware"
 	"veloera/model"
 	"veloera/relay"
+	relaycommon "veloera/relay/common"
 	"veloera/relay/constant"
 	relayconstant "veloera/relay/constant"
 	"veloera/relay/helper"
@@ -158,9 +159,14 @@ func Relay(c *gin.Context) {
 			openaiErr.Error.Message = "当前分组上游负载已饱和，请稍后再试"
 		}
 		openaiErr.Error.Message = common.MessageWithRequestId(openaiErr.Error.Message, requestId)
-		c.JSON(openaiErr.StatusCode, gin.H{
-			"error": openaiErr.Error,
-		})
+		if c.GetString("relay_format") == relaycommon.RelayFormatGemini {
+			geminiErr := service.OpenAIErrorToGeminiResponse(openaiErr)
+			c.JSON(openaiErr.StatusCode, geminiErr)
+		} else {
+			c.JSON(openaiErr.StatusCode, gin.H{
+				"error": openaiErr.Error,
+			})
+		}
 	}
 }
 
