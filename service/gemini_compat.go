@@ -96,10 +96,11 @@ func ConvertGeminiCompatRequestToOpenAI(req *dto.GeminiCompatGenerateContentRequ
 			msg.SetToolCalls(toolCalls)
 		}
 
+		appendMsg := true
 		switch {
 		case len(mediaContents) == 0:
 			if len(toolCalls) == 0 {
-				continue
+				appendMsg = false
 			}
 		case len(mediaContents) == 1 && mediaContents[0].Type == dto.ContentTypeText:
 			msg.SetStringContent(mediaContents[0].Text)
@@ -107,7 +108,9 @@ func ConvertGeminiCompatRequestToOpenAI(req *dto.GeminiCompatGenerateContentRequ
 			msg.SetMediaContent(mediaContents)
 		}
 
-		messages = append(messages, msg)
+		if appendMsg {
+			messages = append(messages, msg)
+		}
 		if len(toolMessages) > 0 {
 			messages = append(messages, toolMessages...)
 		}
