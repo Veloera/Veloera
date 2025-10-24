@@ -47,6 +47,73 @@ func stopReasonClaude2OpenAI(reason string) string {
 	}
 }
 
+// extractConversationContent 提取对话内容到 info.Other，供日志记录使用
+func extractConversationContent(info *relaycommon.RelayInfo, outputContent string) {
+	if info.Other == nil {
+		info.Other = make(map[string]interface{})
+	}
+
+	// 提取输入内容（最后一条用户消息）和上下文（其他所有非system消息）
+	if messages, ok := info.PromptMessages.([]interface{}); ok && len(messages) > 0 {
+		var systemPrompt string
+		var contextMessages []interface{}
+		var userMessage interface{}
+		var lastUserMessageIndex = -1
+
+		// 先找出最后一条user消息的索引
+		for i := len(messages) - 1; i >= 0; i-- {
+			if msgMap, ok := messages[i].(map[string]interface{}); ok {
+				if role, exists := msgMap["role"]; exists && role == "user" {
+					lastUserMessageIndex = i
+					break
+				}
+			}
+		}
+
+		// 再遍历处理所有消息
+		for i, msg := range messages {
+			if msgMap, ok := msg.(map[string]interface{}); ok {
+				if role, exists := msgMap["role"]; exists {
+					if role == "system" {
+						// 如果是system消息，保存其内容
+						if content, hasContent := msgMap["content"]; hasContent && content != nil {
+							if systemPrompt == "" {
+								systemPrompt = fmt.Sprintf("%v", content)
+							} else {
+								systemPrompt += "\n" + fmt.Sprintf("%v", content)
+							}
+						}
+					} else if i == lastUserMessageIndex {
+						// 如果是最后一条user消息
+						userMessage = msgMap
+					} else {
+						// 其他非system消息作为上下文
+						contextMessages = append(contextMessages, msgMap)
+					}
+				}
+			}
+		}
+
+		// 保存处理后的数据
+		if systemPrompt != "" {
+			info.Other["system_prompt"] = systemPrompt
+		}
+		info.Other["context"] = contextMessages
+		if userMessage != nil {
+			info.Other["input_content"] = userMessage
+		} else {
+			// 如果没有找到user消息，保存最后一条消息作为输入
+			if len(messages) > 0 {
+				info.Other["input_content"] = messages[len(messages)-1]
+			}
+		}
+	} else {
+		info.Other["input_content"] = info.PromptMessages // 备用方案，保存全部输入内容
+	}
+
+	info.Other["output_content"] = outputContent // 保存输出内容
+}
+
 func RequestOpenAI2ClaudeComplete(textRequest dto.GeneralOpenAIRequest) *dto.ClaudeRequest {
 
 	claudeRequest := dto.ClaudeRequest{
@@ -643,6 +710,10 @@ func FormatClaudeResponseInfo(requestMode int, claudeResponse *dto.ClaudeRespons
 		if claudeResponse.Delta.Text != nil {
 			claudeInfo.ResponseText.WriteString(*claudeResponse.Delta.Text)
 		}
+		// 同时累积 thinking 内容
+		if claudeResponse.Delta.Thinking != "" {
+			claudeInfo.ResponseText.WriteString(claudeResponse.Delta.Thinking)
+		}
 	} else if claudeResponse.Type == "message_delta" {
 		claudeInfo.Usage.CompletionTokens = claudeResponse.Usage.OutputTokens
 		if claudeResponse.Usage.InputTokens > 0 {
@@ -785,6 +856,10 @@ func HandleStreamResponseData(c *gin.Context, info *relaycommon.RelayInfo, claud
 			claudeInfo.Usage.CompletionTokens = claudeResponse.Message.Usage.OutputTokens
 		} else if claudeResponse.Type == "content_block_delta" {
 			claudeInfo.ResponseText.WriteString(claudeResponse.Delta.GetText())
+			// 同时累积 thinking 内容
+			if claudeResponse.Delta.Thinking != "" {
+				claudeInfo.ResponseText.WriteString(claudeResponse.Delta.Thinking)
+			}
 		} else if claudeResponse.Type == "message_delta" {
 			if claudeResponse.Usage.InputTokens > 0 {
 				// 不叠加，只取最新的
@@ -834,6 +909,9 @@ func HandleStreamFinalResponse(c *gin.Context, info *relaycommon.RelayInfo, clau
 		}
 		helper.Done(c)
 	}
+
+	// 保存输入输出内容到 info 中，供日志记录使用
+	extractConversationContent(info, claudeInfo.ResponseText.String())
 }
 
 func ClaudeStreamHandler(c *gin.Context, resp *http.Response, info *relaycommon.RelayInfo, requestMode int) (*dto.OpenAIErrorWithStatusCode, *dto.Usage) {
@@ -881,6 +959,16 @@ func HandleClaudeResponseData(c *gin.Context, info *relaycommon.RelayInfo, claud
 	claudeInfo.Usage.TotalTokens = claudeResponse.Usage.InputTokens + claudeResponse.Usage.OutputTokens
 	claudeInfo.Usage.PromptTokensDetails.CachedTokens = claudeResponse.Usage.CacheReadInputTokens
 	claudeInfo.Usage.PromptTokensDetails.CachedCreationTokens = claudeResponse.Usage.CacheCreationInputTokens
+
+	// 提取输出内容
+	var outputContent string
+	for _, content := range claudeResponse.Content {
+		outputContent += content.GetText() + content.Thinking
+	}
+
+	// 保存输入输出内容到 info 中，供日志记录使用
+	extractConversationContent(info, outputContent)
+
 	var responseData []byte
 	switch info.RelayFormat {
 	case relaycommon.RelayFormatOpenAI:
