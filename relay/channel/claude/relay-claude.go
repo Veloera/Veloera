@@ -47,6 +47,19 @@ func stopReasonClaude2OpenAI(reason string) string {
 	}
 }
 
+// accumulateThinkingContent 累积 thinking 内容到 ResponseText
+func accumulateThinkingContent(claudeInfo *ClaudeResponseInfo, delta *dto.ClaudeMediaMessage) {
+	if delta.Text != nil && *delta.Text != "" {
+		claudeInfo.ResponseText.WriteString(*delta.Text)
+	}
+	// 累积 thinking 内容,添加分隔符以提高可读性
+	if delta.Thinking != "" {
+		// 注意: 流式处理中 thinking 和 text 通常在不同的 chunk 中,
+		// 分隔符会在最终文本中自然出现在 thinking 内容之前
+		claudeInfo.ResponseText.WriteString(delta.Thinking)
+	}
+}
+
 // extractConversationContent 提取对话内容到 info.Other，供日志记录使用
 func extractConversationContent(info *relaycommon.RelayInfo, outputContent string) {
 	if info.Other == nil {
@@ -101,14 +114,11 @@ func extractConversationContent(info *relaycommon.RelayInfo, outputContent strin
 		info.Other["context"] = contextMessages
 		if userMessage != nil {
 			info.Other["input_content"] = userMessage
-		} else {
-			// 如果没有找到user消息，保存最后一条消息作为输入
-			if len(messages) > 0 {
-				info.Other["input_content"] = messages[len(messages)-1]
-			}
+		} else if len(messages) > 0 {
+			// 如果没有找到user消息，保存最后一条消息作为输入(确保结构一致)
+			info.Other["input_content"] = messages[len(messages)-1]
 		}
-	} else {
-		info.Other["input_content"] = info.PromptMessages // 备用方案，保存全部输入内容
+		// 如果 messages 为空,不设置 input_content,保持字段缺失而非设置为原始数据
 	}
 
 	info.Other["output_content"] = outputContent // 保存输出内容
@@ -707,13 +717,7 @@ func FormatClaudeResponseInfo(requestMode int, claudeResponse *dto.ClaudeRespons
 		claudeInfo.Model = claudeResponse.Message.Model
 		claudeInfo.Usage.PromptTokens = claudeResponse.Message.Usage.InputTokens
 	} else if claudeResponse.Type == "content_block_delta" {
-		if claudeResponse.Delta.Text != nil {
-			claudeInfo.ResponseText.WriteString(*claudeResponse.Delta.Text)
-		}
-		// 同时累积 thinking 内容
-		if claudeResponse.Delta.Thinking != "" {
-			claudeInfo.ResponseText.WriteString(claudeResponse.Delta.Thinking)
-		}
+		accumulateThinkingContent(claudeInfo, claudeResponse.Delta)
 	} else if claudeResponse.Type == "message_delta" {
 		claudeInfo.Usage.CompletionTokens = claudeResponse.Usage.OutputTokens
 		if claudeResponse.Usage.InputTokens > 0 {
@@ -855,11 +859,7 @@ func HandleStreamResponseData(c *gin.Context, info *relaycommon.RelayInfo, claud
 			claudeInfo.Usage.PromptTokensDetails.CachedCreationTokens = claudeResponse.Message.Usage.CacheCreationInputTokens
 			claudeInfo.Usage.CompletionTokens = claudeResponse.Message.Usage.OutputTokens
 		} else if claudeResponse.Type == "content_block_delta" {
-			claudeInfo.ResponseText.WriteString(claudeResponse.Delta.GetText())
-			// 同时累积 thinking 内容
-			if claudeResponse.Delta.Thinking != "" {
-				claudeInfo.ResponseText.WriteString(claudeResponse.Delta.Thinking)
-			}
+			accumulateThinkingContent(claudeInfo, claudeResponse.Delta)
 		} else if claudeResponse.Type == "message_delta" {
 			if claudeResponse.Usage.InputTokens > 0 {
 				// 不叠加，只取最新的
@@ -963,7 +963,17 @@ func HandleClaudeResponseData(c *gin.Context, info *relaycommon.RelayInfo, claud
 	// 提取输出内容
 	var outputContent string
 	for _, content := range claudeResponse.Content {
-		outputContent += content.GetText() + content.Thinking
+		text := content.GetText()
+		thinking := content.Thinking
+		if text != "" {
+			outputContent += text
+		}
+		if thinking != "" {
+			if text != "" {
+				outputContent += "\n[Thinking]\n"
+			}
+			outputContent += thinking
+		}
 	}
 
 	// 保存输入输出内容到 info 中，供日志记录使用
