@@ -47,81 +47,152 @@ func stopReasonClaude2OpenAI(reason string) string {
 	}
 }
 
-// accumulateThinkingContent 累积 thinking 内容到 ResponseText
+// accumulateThinkingContent 累积流式响应中的文本和 thinking 内容到 ResponseText。
+// 该函数在流式处理过程中被调用,将每个 chunk 的文本和推理内容追加到总响应中。
+//
+// 参数:
+//   - claudeInfo: Claude 响应信息对象,包含 ResponseText 字符串构建器
+//   - delta: Claude 流式响应的增量消息,可能包含 Text 和/或 Thinking 字段
 func accumulateThinkingContent(claudeInfo *ClaudeResponseInfo, delta *dto.ClaudeMediaMessage) {
 	if delta.Text != nil && *delta.Text != "" {
 		claudeInfo.ResponseText.WriteString(*delta.Text)
 	}
-	// 累积 thinking 内容,添加分隔符以提高可读性
+	// 累积 thinking 内容
 	if delta.Thinking != "" {
-		// 注意: 流式处理中 thinking 和 text 通常在不同的 chunk 中,
-		// 分隔符会在最终文本中自然出现在 thinking 内容之前
+		// 如果已有内容(text 或之前的 thinking),添加分隔符以提高可读性
+		if claudeInfo.ResponseText.Len() > 0 {
+			claudeInfo.ResponseText.WriteString("\n[Thinking]\n")
+		}
 		claudeInfo.ResponseText.WriteString(delta.Thinking)
 	}
 }
 
-// extractConversationContent 提取对话内容到 info.Other，供日志记录使用
+// findLastUserMessageIndex 从消息列表中查找最后一条 user 角色消息的索引。
+// 从后往前遍历消息列表,返回第一个角色为 "user" 的消息索引。
+// 如果没有找到 user 消息,返回 -1。
+//
+// 参数:
+//   - messages: 消息列表,每个元素应为 map[string]interface{} 类型
+//
+// 返回值:
+//   - int: 最后一条 user 消息的索引,未找到则返回 -1
+func findLastUserMessageIndex(messages []interface{}) int {
+	for i := len(messages) - 1; i >= 0; i-- {
+		if msgMap, ok := messages[i].(map[string]interface{}); ok {
+			if role, exists := msgMap["role"]; exists && role == "user" {
+				return i
+			}
+		}
+	}
+	return -1
+}
+
+// extractSystemPrompt 从单个消息对象中提取 system 消息的内容。
+//
+// 参数:
+//   - msgMap: 消息对象,应包含 "content" 字段
+//
+// 返回值:
+//   - string: 消息内容的字符串表示,如果内容不存在则返回空字符串
+func extractSystemPrompt(msgMap map[string]interface{}) string {
+	if content, hasContent := msgMap["content"]; hasContent && content != nil {
+		return fmt.Sprintf("%v", content)
+	}
+	return ""
+}
+
+// processMessages 处理消息列表,按角色分类提取不同的消息内容。
+// 遍历所有消息,将它们分类为: system prompt(合并所有 system 消息)、
+// user message(最后一条用户消息)和 context messages(其他所有消息)。
+//
+// 参数:
+//   - messages: 消息列表,每个元素应为 map[string]interface{} 类型
+//   - lastUserMessageIndex: 最后一条 user 消息的索引,用于识别主要输入
+//
+// 返回值:
+//   - systemPrompt: 所有 system 消息内容的合并字符串(用换行符分隔)
+//   - userMessage: 最后一条 user 消息对象
+//   - contextMessages: 除最后一条 user 消息外的所有非 system 消息列表
+func processMessages(messages []interface{}, lastUserMessageIndex int) (systemPrompt string, userMessage interface{}, contextMessages []interface{}) {
+	for i, msg := range messages {
+		msgMap, ok := msg.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		role, exists := msgMap["role"]
+		if !exists {
+			continue
+		}
+
+		switch role {
+		case "system":
+			prompt := extractSystemPrompt(msgMap)
+			if prompt != "" {
+				if systemPrompt == "" {
+					systemPrompt = prompt
+				} else {
+					systemPrompt += "\n" + prompt
+				}
+			}
+		case "user":
+			if i == lastUserMessageIndex {
+				userMessage = msgMap
+			} else {
+				contextMessages = append(contextMessages, msgMap)
+			}
+		default:
+			contextMessages = append(contextMessages, msgMap)
+		}
+	}
+	return
+}
+
+// extractConversationContent 从 RelayInfo 中提取对话内容并保存到 info.Other 字段。
+// 该函数用于在启用 LogChatContentEnabled 设置时记录完整的对话内容到日志。
+//
+// 提取的内容包括:
+//   - system_prompt: 所有 system 角色消息的合并内容
+//   - input_content: 最后一条 user 消息(如果不存在则使用最后一条消息)
+//   - context: 除最后一条 user 消息外的所有非 system 消息
+//   - output_content: AI 的回复内容(包括 thinking 推理过程)
+//
+// 参数:
+//   - info: RelayInfo 对象,包含请求的 PromptMessages
+//   - outputContent: AI 的输出内容字符串
 func extractConversationContent(info *relaycommon.RelayInfo, outputContent string) {
 	if info.Other == nil {
 		info.Other = make(map[string]interface{})
 	}
 
-	// 提取输入内容（最后一条用户消息）和上下文（其他所有非system消息）
-	if messages, ok := info.PromptMessages.([]interface{}); ok && len(messages) > 0 {
-		var systemPrompt string
-		var contextMessages []interface{}
-		var userMessage interface{}
-		var lastUserMessageIndex = -1
-
-		// 先找出最后一条user消息的索引
-		for i := len(messages) - 1; i >= 0; i-- {
-			if msgMap, ok := messages[i].(map[string]interface{}); ok {
-				if role, exists := msgMap["role"]; exists && role == "user" {
-					lastUserMessageIndex = i
-					break
-				}
-			}
-		}
-
-		// 再遍历处理所有消息
-		for i, msg := range messages {
-			if msgMap, ok := msg.(map[string]interface{}); ok {
-				if role, exists := msgMap["role"]; exists {
-					if role == "system" {
-						// 如果是system消息，保存其内容
-						if content, hasContent := msgMap["content"]; hasContent && content != nil {
-							if systemPrompt == "" {
-								systemPrompt = fmt.Sprintf("%v", content)
-							} else {
-								systemPrompt += "\n" + fmt.Sprintf("%v", content)
-							}
-						}
-					} else if i == lastUserMessageIndex {
-						// 如果是最后一条user消息
-						userMessage = msgMap
-					} else {
-						// 其他非system消息作为上下文
-						contextMessages = append(contextMessages, msgMap)
-					}
-				}
-			}
-		}
-
-		// 保存处理后的数据
-		if systemPrompt != "" {
-			info.Other["system_prompt"] = systemPrompt
-		}
-		info.Other["context"] = contextMessages
-		if userMessage != nil {
-			info.Other["input_content"] = userMessage
-		} else if len(messages) > 0 {
-			// 如果没有找到user消息，保存最后一条消息作为输入(确保结构一致)
-			info.Other["input_content"] = messages[len(messages)-1]
-		}
-		// 如果 messages 为空,不设置 input_content,保持字段缺失而非设置为原始数据
+	messages, ok := info.PromptMessages.([]interface{})
+	if !ok || len(messages) == 0 {
+		info.Other["output_content"] = outputContent
+		return
 	}
 
-	info.Other["output_content"] = outputContent // 保存输出内容
+	// 找出最后一条 user 消息
+	lastUserMessageIndex := findLastUserMessageIndex(messages)
+
+	// 处理所有消息
+	systemPrompt, userMessage, contextMessages := processMessages(messages, lastUserMessageIndex)
+
+	// 保存处理后的数据
+	if systemPrompt != "" {
+		info.Other["system_prompt"] = systemPrompt
+	}
+	info.Other["context"] = contextMessages
+
+	// 设置 input_content: 优先使用最后一条 user 消息,
+	// 如果没有 user 消息则使用最后一条消息(任意角色)
+	// 注意: input_content 始终是单个消息对象(map[string]interface{})或不设置
+	if userMessage != nil {
+		info.Other["input_content"] = userMessage
+	} else if len(messages) > 0 {
+		info.Other["input_content"] = messages[len(messages)-1]
+	}
+
+	info.Other["output_content"] = outputContent
 }
 
 func RequestOpenAI2ClaudeComplete(textRequest dto.GeneralOpenAIRequest) *dto.ClaudeRequest {
@@ -969,7 +1040,8 @@ func HandleClaudeResponseData(c *gin.Context, info *relaycommon.RelayInfo, claud
 			outputContent += text
 		}
 		if thinking != "" {
-			if text != "" {
+			// 如果已有内容,添加分隔符
+			if outputContent != "" {
 				outputContent += "\n[Thinking]\n"
 			}
 			outputContent += thinking
