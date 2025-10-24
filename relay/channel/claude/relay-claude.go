@@ -101,6 +101,42 @@ func extractSystemPrompt(msgMap map[string]interface{}) string {
 	return ""
 }
 
+// appendSystemPrompt 将新的 system prompt 追加到现有的 prompt 中。
+//
+// 参数:
+//   - current: 当前已有的 system prompt
+//   - new: 新的 system prompt
+//
+// 返回值:
+//   - string: 合并后的 system prompt,用换行符分隔
+func appendSystemPrompt(current, new string) string {
+	if new == "" {
+		return current
+	}
+	if current == "" {
+		return new
+	}
+	return current + "\n" + new
+}
+
+// categorizeMessage 根据消息角色和位置对消息进行分类。
+//
+// 参数:
+//   - msgMap: 消息对象
+//   - role: 消息角色
+//   - index: 消息在列表中的索引
+//   - lastUserIndex: 最后一条用户消息的索引
+//
+// 返回值:
+//   - isUserMessage: 是否是最后一条用户消息
+//   - isContextMessage: 是否应作为上下文消息
+func categorizeMessage(role interface{}, index, lastUserIndex int) (isUserMessage, isContextMessage bool) {
+	if role == "user" {
+		return index == lastUserIndex, index != lastUserIndex
+	}
+	return false, role != "system"
+}
+
 // processMessages 处理消息列表,按角色分类提取不同的消息内容。
 // 遍历所有消息,将它们分类为: system prompt(合并所有 system 消息)、
 // user message(最后一条用户消息)和 context messages(其他所有消息)。
@@ -125,23 +161,17 @@ func processMessages(messages []interface{}, lastUserMessageIndex int) (systemPr
 			continue
 		}
 
-		switch role {
-		case "system":
-			prompt := extractSystemPrompt(msgMap)
-			if prompt != "" {
-				if systemPrompt == "" {
-					systemPrompt = prompt
-				} else {
-					systemPrompt += "\n" + prompt
-				}
-			}
-		case "user":
-			if i == lastUserMessageIndex {
-				userMessage = msgMap
-			} else {
-				contextMessages = append(contextMessages, msgMap)
-			}
-		default:
+		// 处理 system 消息
+		if role == "system" {
+			systemPrompt = appendSystemPrompt(systemPrompt, extractSystemPrompt(msgMap))
+			continue
+		}
+
+		// 分类其他消息
+		isUser, isContext := categorizeMessage(role, i, lastUserMessageIndex)
+		if isUser {
+			userMessage = msgMap
+		} else if isContext {
 			contextMessages = append(contextMessages, msgMap)
 		}
 	}
